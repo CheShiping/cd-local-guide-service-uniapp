@@ -1,10 +1,15 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
     <view class="navbar">
-      <view class="icon-btn" @click="goBack">
+      <view
+        class="icon-btn ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goBack"
+      >
         <text class="icon-btn__text back">‹</text>
       </view>
       <text class="navbar__title">订单管理</text>
@@ -38,14 +43,20 @@
     >
       <view class="chip-row">
         <picker class="chip-picker" mode="date" :value="filterDate" @change="onDateChange">
-          <view :class="['chip', 'chip--lead', filterDate ? 'is-on' : '']">
+          <view
+            :class="['chip', 'chip--lead', 'ds-pressable', filterDate ? 'is-on' : '']"
+            hover-class="is-pressed"
+            hover-stay-time="70"
+          >
             <text class="chip__text">{{ dateChipText }}</text>
           </view>
         </picker>
         <view
           v-for="option in statusOptions"
           :key="option.value"
-          :class="['chip', currentStatus === option.value ? 'is-on' : '']"
+          :class="['chip', 'ds-pressable', currentStatus === option.value ? 'is-on' : '']"
+          hover-class="is-pressed"
+          hover-stay-time="70"
           @click="changeStatus(option.value)"
         >
           <text class="chip__text">{{ option.label }}</text>
@@ -62,7 +73,12 @@
       @touchend="onTabTouchEnd"
     >
       <view class="list">
-        <view v-for="item in orderList" :key="item.id" class="card order">
+        <view
+          v-for="(item, index) in orderList"
+          :key="enterSeq + '-' + item.id"
+          :class="['card', 'order', enterAnim]"
+          :style="enterStyle(index)"
+        >
           <view class="order__top">
             <view class="avatar">
               <image :src="item.touristAvatarUrl" class="avatar__img" mode="aspectFill" />
@@ -93,13 +109,34 @@
             <text class="price"><text class="price__symbol">¥</text>{{ item.amount }}</text>
 
             <view class="order__actions">
-              <view v-if="canCancel(item.status)" class="btn btn--sm btn--danger" @click="cancelOrder(item)">
+              <view
+                v-if="canCancel(item.status)"
+                class="btn btn--sm btn--danger ds-pressable"
+                hover-class="is-pressed"
+                hover-stay-time="70"
+                hover-stop-propagation
+                @click="cancelOrder(item)"
+              >
                 <text class="btn__text">处理取消</text>
               </view>
-              <view v-if="canComplete(item.status)" class="btn btn--sm btn--tonal" @click="completeOrder(item)">
+              <view
+                v-if="canComplete(item.status)"
+                class="btn btn--sm btn--tonal ds-pressable"
+                hover-class="is-pressed"
+                hover-stay-time="70"
+                hover-stop-propagation
+                @click="completeOrder(item)"
+              >
                 <text class="btn__text">标记完成</text>
               </view>
-              <view v-if="canConfirm(item.status)" class="btn btn--sm btn--filled" @click="confirmOrder(item)">
+              <view
+                v-if="canConfirm(item.status)"
+                class="btn btn--sm btn--filled ds-pressable"
+                hover-class="is-pressed"
+                hover-stay-time="70"
+                hover-stop-propagation
+                @click="confirmOrder(item)"
+              >
                 <text class="btn__text">确认档期</text>
               </view>
             </view>
@@ -108,11 +145,14 @@
       </view>
 
       <view class="load-status">
-        <text v-if="loading" class="load-text">加载中…</text>
-        <text v-else-if="!hasMore && orderList.length > 0" class="load-text">没有更多了</text>
+        <view v-if="loading" class="load-row">
+          <view class="ds-spinner"></view>
+          <text class="load-text">加载中…</text>
+        </view>
+        <text v-else-if="!hasMore && orderList.length > 0" class="load-text ds-fade-in">没有更多了</text>
       </view>
 
-      <view v-if="!loading && orderList.length === 0" class="empty-box">
+      <view v-if="!loading && orderList.length === 0" class="empty-box ds-fade-in">
         <text class="empty-icon">◎</text>
         <text class="empty-title">没有符合条件的订单</text>
         <text class="empty-tip">清掉日期筛选，或换个状态看看</text>
@@ -140,6 +180,7 @@ import {
   canTransit
 } from '@/api/index.js';
 import { createTabRow } from '@/utils/hscroll.js';
+import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 /* 筛选行：激活 chip 自动滚到中间 + 列表左右滑动切换状态（见 utils/hscroll.js） */
 const filterTabRow = createTabRow({
@@ -149,6 +190,12 @@ const filterTabRow = createTabRow({
   index: (vm) => vm.activeChipIndex,
   onStep: (vm, step) => vm.stepStatus(step)
 });
+
+/* 列表入场：切状态带方向，加载更多只让新追加的那几项上浮 */
+const listEnter = createListEnter();
+
+/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
 
 const statusOptions = [
   { label: '全部状态', value: '' },
@@ -164,6 +211,8 @@ export default {
   data() {
     return {
       ...filterTabRow.data(),
+      ...listEnter.data(),
+      ...pageMotion.data(),
       statusOptions,
       currentStatus: '',
       filterDate: '',
@@ -198,8 +247,10 @@ export default {
 
   methods: {
     ...filterTabRow.methods,
+    ...listEnter.methods,
+    ...pageMotion.methods,
 
-    async loadList(refresh = false) {
+    async loadList(refresh = false, dir = ENTER_UP) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -217,6 +268,8 @@ export default {
 
         const { list, hasMore, counts } = await OrderApi.getAllOrders(params);
 
+        /* 切状态：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
+        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.orderList.length);
         this.orderList = refresh ? list : [...this.orderList, ...list];
         this.hasMore = hasMore;
         if (counts) this.counts = counts;
@@ -229,11 +282,13 @@ export default {
       }
     },
 
-    changeStatus(status) {
+    changeStatus(status, dir = 0) {
       if (this.currentStatus === status) return;
+      /* 点选时方向由下标差推出；横滑时直接用滑动方向（step） */
+      const from = this.activeChipIndex;
       this.currentStatus = status;
       this.centerActiveTab();
-      this.loadList(true);
+      this.loadList(true, dir || stepDirection(from, this.activeChipIndex));
     },
 
     /* 横滑：上/下一个状态；「全部状态」的左边就是边界 */
@@ -241,13 +296,15 @@ export default {
       const current = statusOptions.findIndex((option) => option.value === this.currentStatus);
       const next = Math.max(current, 0) + step;
       if (next < 0 || next >= statusOptions.length) return;
-      this.changeStatus(statusOptions[next].value);
+      this.changeStatus(statusOptions[next].value, step);
     },
 
     onDateChange(e) {
       this.filterDate = e.detail.value;
       /* 日期 chip 在行首：选完把行滚回最左，保证它完整可见 */
       this.tabScrollLeft = 0;
+      /* 改日期没有方向，但要换批次让卡片重播上浮入场 */
+      this.renewEnter();
       this.loadList(true);
     },
 
@@ -316,7 +373,7 @@ export default {
     },
 
     goBack() {
-      uni.navigateBack();
+      this.goBackWithMotion();
     }
   }
 };
@@ -433,6 +490,8 @@ export default {
   padding: 0 $ds-space-3;
   border-radius: $ds-shape-full;
   border: 1px solid $ds-outline;
+  /* chip 是实底选中态：底色与边框一起过渡，切换才不是硬跳 */
+  transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
     background: $ds-secondary-container;
@@ -457,6 +516,7 @@ export default {
   white-space: nowrap;
   font-size: $ds-fs-label;
   color: $ds-ink-2;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 /* ---------- 列表 ---------- */
@@ -650,6 +710,13 @@ export default {
 .load-status {
   text-align: center;
   padding: $ds-space-5;
+}
+
+.load-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $ds-space-2;
 }
 
 .load-text {

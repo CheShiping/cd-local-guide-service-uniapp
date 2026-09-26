@@ -1,10 +1,15 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
     <view class="navbar">
-      <view class="nav-back" @click="goBack">
+      <view
+        class="nav-back ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goBack"
+      >
         <text class="back-icon">‹</text>
       </view>
       <text class="nav-title">{{ title }}</text>
@@ -40,6 +45,7 @@
  *
  * 入参：type = 'user'（默认，用户协议）| 'privacy'（隐私政策）
  */
+import { createPageMotion } from '@/utils/motion.js';
 const DOCS = {
   user: {
     title: '用户协议',
@@ -93,9 +99,13 @@ const DOCS = {
   }
 };
 
+/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
+
 export default {
   data() {
     return {
+      ...pageMotion.data(),
       type: 'user',
       statusBarHeight: 20
     };
@@ -120,8 +130,10 @@ export default {
   },
 
   methods: {
+    ...pageMotion.methods,
+
     goBack() {
-      uni.navigateBack();
+      this.goBackWithMotion();
     }
   }
 };

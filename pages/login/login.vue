@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="content">
       <!-- 品牌区：零素材，靠宋体字距与竹青底色撑住气质 -->
       <view class="logo-section">
@@ -26,7 +26,9 @@
       <!-- 登录按钮 -->
       <view class="login-section">
         <button
-          class="login-btn"
+          class="login-btn ds-pressable"
+          hover-class="is-pressed"
+          hover-stay-time="70"
           open-type="getPhoneNumber"
           @getphonenumber="onGetPhoneNumber"
           @click="onPhoneLoginClick"
@@ -34,29 +36,49 @@
           <text class="btn-text">微信授权登录</text>
         </button>
 
-        <button class="login-btn outline" @click="loginWithUserInfo">
+        <button
+          class="login-btn outline ds-pressable"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="loginWithUserInfo"
+        >
           <text class="btn-text">暂不登录，先看看</text>
         </button>
       </view>
 
       <!-- 协议 -->
       <view class="agreement">
-        <view class="checkbox-wrap" @click="agreed = !agreed">
+        <view
+          class="checkbox-wrap ds-pressable"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="agreed = !agreed"
+        >
           <view :class="['checkbox', agreed ? 'checked' : '']">
-            <text v-if="agreed" class="checkbox__check">✓</text>
+            <text v-if="agreed" class="checkbox__check ds-pop-in">✓</text>
           </view>
         </view>
         <text class="agreement-text">登录即代表同意</text>
-        <text class="agreement-link" @click="goAgreement('user')">《用户协议》</text>
+        <text
+          class="agreement-link ds-pressable"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="goAgreement('user')"
+        >《用户协议》</text>
         <text class="agreement-text">和</text>
-        <text class="agreement-link" @click="goAgreement('privacy')">《隐私政策》</text>
+        <text
+          class="agreement-link ds-pressable"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="goAgreement('privacy')"
+        >《隐私政策》</text>
       </view>
     </view>
 
-    <!-- Loading -->
-    <view v-if="loading" class="loading-mask">
+    <!-- Loading：遮罩淡入，先让「正在发生什么」被看见，而不是啪一下盖住整屏 -->
+    <view v-if="loading" class="loading-mask ds-fade-in">
       <view class="loading-box">
-        <view class="loading-spinner"></view>
+        <view class="ds-spinner ds-spinner--lg"></view>
         <text class="loading-text">登录中…</text>
       </view>
     </view>
@@ -65,10 +87,15 @@
 
 <script>
 import { UserApi } from '@/api/index.js';
+import { createPageMotion } from '@/utils/motion.js';
+
+/* 页面转场：登录页只用到进入（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
 
 export default {
   data() {
     return {
+      ...pageMotion.data(),
       agreed: false,
       loading: false
     };
@@ -79,6 +106,8 @@ export default {
   },
 
   methods: {
+    ...pageMotion.methods,
+
     async checkLogin() {
       try {
         const user = await UserApi.getCurrentUser();
@@ -333,6 +362,7 @@ export default {
   align-items: center;
   justify-content: center;
   background: $ds-surface-container;
+  transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
 
   &.checked {
     background: $ds-primary;
@@ -377,19 +407,6 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid $ds-surface-high;
-  border-top-color: $ds-primary;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .loading-text {

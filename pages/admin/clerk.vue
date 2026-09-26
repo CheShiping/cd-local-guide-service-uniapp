@@ -1,10 +1,15 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
     <view class="navbar">
-      <view class="icon-btn" @click="goBack">
+      <view
+        class="icon-btn ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goBack"
+      >
         <text class="icon-btn__text back">‹</text>
       </view>
       <text class="navbar__title">地陪审核</text>
@@ -32,11 +37,16 @@
       <view
         v-for="tab in tabs"
         :key="tab.value"
-        :class="['tabline__item', currentTab === tab.value ? 'is-on' : '']"
+        :class="['tabline__item', 'ds-pressable', currentTab === tab.value ? 'is-on' : '']"
+        hover-class="is-pressed"
+        hover-stay-time="70"
         @click="changeTab(tab.value)"
       >
         <text class="tabline__text">{{ tab.label }}</text>
         <text v-if="tab.value === 0 && pendingTotal" class="tabline__badge">{{ pendingTotal }}</text>
+      </view>
+      <view class="tabline__indicator" :style="indicatorStyle">
+        <view class="tabline__bar"></view>
       </view>
     </view>
 
@@ -47,7 +57,12 @@
       @scrolltolower="loadMore"
     >
       <view class="list">
-        <view v-for="guide in guideList" :key="guide.id" class="card">
+        <view
+          v-for="(guide, index) in guideList"
+          :key="enterSeq + '-' + guide.id"
+          :class="['card', enterAnim]"
+          :style="enterStyle(index)"
+        >
           <view class="card__main">
             <view class="avatar">
               <image :src="guide.avatarUrl" class="avatar__img" mode="aspectFill" />
@@ -77,10 +92,22 @@
 
           <!-- 待审核才有操作：一单一个主操作，拒绝用描边避免同等重 -->
           <view v-if="guide.status === GUIDE_STATUS.PENDING" class="card__actions">
-            <view class="btn btn--sm btn--danger" @click="reject(guide)">
+            <view
+              class="btn btn--sm btn--danger ds-pressable"
+              hover-class="is-pressed"
+              hover-stay-time="70"
+              hover-stop-propagation
+              @click="reject(guide)"
+            >
               <text class="btn__text">拒绝</text>
             </view>
-            <view class="btn btn--sm btn--filled" @click="approve(guide)">
+            <view
+              class="btn btn--sm btn--filled ds-pressable"
+              hover-class="is-pressed"
+              hover-stay-time="70"
+              hover-stop-propagation
+              @click="approve(guide)"
+            >
               <text class="btn__text">通过</text>
             </view>
           </view>
@@ -88,11 +115,14 @@
       </view>
 
       <view class="load-status">
-        <text v-if="loading" class="load-text">加载中…</text>
-        <text v-else-if="!hasMore && guideList.length > 0" class="load-text">没有更多了</text>
+        <view v-if="loading" class="load-row">
+          <view class="ds-spinner"></view>
+          <text class="load-text">加载中…</text>
+        </view>
+        <text v-else-if="!hasMore && guideList.length > 0" class="load-text ds-fade-in">没有更多了</text>
       </view>
 
-      <view v-if="!loading && guideList.length === 0" class="empty-box">
+      <view v-if="!loading && guideList.length === 0" class="empty-box ds-fade-in">
         <text class="empty-icon">◎</text>
         <text class="empty-title">{{ currentTab === 0 ? '没有待审核的地陪' : '还没有已通过的地陪' }}</text>
         <text class="empty-tip">地陪申请开通流程为后续升级，MVP 阶段由种子数据预置</text>
@@ -110,15 +140,24 @@
  * 地陪申请开通流程本身是后续升级项（dev-003），MVP 的地陪由 mock 种子数据预置。
  */
 import { GuideApi, GUIDE_STATUS } from '@/api/index.js';
+import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 const tabs = [
   { label: '待审核', value: GUIDE_STATUS.PENDING },
   { label: '已通过', value: GUIDE_STATUS.APPROVED }
 ];
 
+/* 列表入场：切页签带方向，加载更多只让新追加的那几项上浮 */
+const listEnter = createListEnter();
+
+/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
+
 export default {
   data() {
     return {
+      ...listEnter.data(),
+      ...pageMotion.data(),
       tabs,
       currentTab: GUIDE_STATUS.PENDING,
       guideList: [],
@@ -133,6 +172,20 @@ export default {
     };
   },
 
+  computed: {
+    activeTabIndex() {
+      const i = tabs.findIndex((tab) => tab.value === this.currentTab);
+      return i < 0 ? 0 : i;
+    },
+    /* 下划线：外层跟页签等宽，靠 translateX 的百分比（按自身宽度算）整格滑动，不去动 width */
+    indicatorStyle() {
+      return {
+        width: `${100 / tabs.length}%`,
+        transform: `translateX(${this.activeTabIndex * 100}%)`
+      };
+    }
+  },
+
   onLoad() {
     const sys = uni.getSystemInfoSync();
     this.statusBarHeight = sys.statusBarHeight || 20;
@@ -141,6 +194,9 @@ export default {
   },
 
   methods: {
+    ...listEnter.methods,
+    ...pageMotion.methods,
+
     async loadTotals() {
       try {
         const [pending, approved] = await Promise.all([
@@ -154,7 +210,7 @@ export default {
       }
     },
 
-    async loadList(refresh = false) {
+    async loadList(refresh = false, dir = ENTER_UP) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -171,6 +227,8 @@ export default {
           ? await GuideApi.getPendingGuides(params)
           : await GuideApi.getGuideList(params);
 
+        /* 切页签：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
+        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.guideList.length);
         this.guideList = refresh ? list : [...this.guideList, ...list];
         this.hasMore = hasMore;
         this.pageNo++;
@@ -182,10 +240,12 @@ export default {
       }
     },
 
-    changeTab(tab) {
+    changeTab(tab, dir = 0) {
       if (this.currentTab === tab) return;
+      /* 点选时方向由下标差推出 */
+      const from = this.activeTabIndex;
       this.currentTab = tab;
-      this.loadList(true);
+      this.loadList(true, dir || stepDirection(from, this.activeTabIndex));
     },
 
     loadMore() {
@@ -227,7 +287,7 @@ export default {
     },
 
     goBack() {
-      uni.navigateBack();
+      this.goBackWithMotion();
     }
   }
 };
@@ -318,6 +378,7 @@ export default {
 
 /* ---------- 页签 ---------- */
 .tabline {
+  position: relative;
   flex-shrink: 0;
   display: flex;
   border-bottom: 1px solid $ds-outline-variant;
@@ -336,24 +397,32 @@ export default {
       color: $ds-primary;
       font-weight: 600;
     }
-
-    &::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      width: 22px;
-      height: 2px;
-      border-radius: 1px;
-      background: $ds-primary;
-    }
   }
+}
+
+/* 等宽页签用一根会滑的线：宽度由下标算，位移只用 translateX 的百分比 */
+.tabline__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: transform $ds-dur-base $ds-ease-in-out;
+}
+
+.tabline__bar {
+  width: 22px;
+  height: 2px;
+  border-radius: 1px;
+  background: $ds-primary;
 }
 
 .tabline__text {
   font-size: $ds-fs-body-sm;
   color: $ds-ink-2;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 .tabline__badge {
@@ -519,6 +588,13 @@ export default {
 .load-status {
   text-align: center;
   padding: $ds-space-5;
+}
+
+.load-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $ds-space-2;
 }
 
 .load-text {

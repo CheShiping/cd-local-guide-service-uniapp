@@ -37,6 +37,8 @@
 
 > 复用档位说明：`keep` 档在重构期间**哈希不变**（见第六节）。`pages/login/login.vue`、`pages/appointment/my.vue`、`pages/admin/appointment.vue` 原为 `keep`，因业务语义整体替换（登录页换品牌与配色、两个订单页换四态语义与视觉）先后改为 `adapt`，改动原因均登记在 `docs/legacy-assets.json` 的 `note` 里。
 
+> **feat-015（2026-09-26 动效）改了 11 条在册资产**：`App.vue`（全局 keyframes、页面转场类、按压叠层）、`uni.scss`（§1.8 动效令牌）、`pages.json`（`globalStyle.app-plus` 页面转场配置）、`README.md`（验证 8 步），以及 7 个页面（`login` / `index` / `clerk/detail` / `appointment/my` / `tabbar/mine` / `admin/clerk` / `admin/appointment`）。**档位未变**（仍是 `adapt`），只是内容更新；每条 note 均已补动效说明再刷新哈希。
+
 ## 二、MVP 落地映射（按 `docs/mvp-scope.json` 的 7 个页面）
 
 游客流程：**先选景点 → 再选能带该景点的地陪 → 详情 → 下单**（见 `dev-001`，与原始文档不同）
@@ -97,6 +99,7 @@
 7. **设计规范**（`DESIGN.md`，2026-09-26 已定稿重写）
    仍然沿用的结构约定：8px 间距基数、卡片 12px 圆角、触摸目标 ≥ 44px、列表行 ≥ 56px、自定义导航栏（status-bar + 52px navbar）。
    已替换的部分：主色由 `#FF4D6A` 改为竹青绿 `#2f6b5e`，页面底由纯白改为宣纸 `#F7F4ED`，状态色不再用系统绿橙红。令牌口径见 `DESIGN.md`，落地变量见 `uni.scss` 的 `$ds-*`。
+   **feat-015 补上动效**：`DESIGN.md` §13 定规范、`uni.scss` §1.8 定令牌、`utils/motion.js` 是列表入场的唯一入口、keyframes 集中在 `App.vue` 全局样式，`scripts/check-motion.mjs` 把关。
 
 ## 四、需要改造的部分
 

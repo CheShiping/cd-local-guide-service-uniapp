@@ -1,25 +1,35 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
     <view class="navbar">
-      <view class="icon-btn" @click="goBack">
+      <view
+        class="icon-btn ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goBack"
+      >
         <text class="icon-btn__text back">‹</text>
       </view>
       <text class="navbar__title">我的订单</text>
       <view class="icon-btn"></view>
     </view>
 
-    <!-- 四态文字页签（顺序与文案取自 api/constants.js） -->
+    <!-- 四态文字页签（顺序与文案取自 api/constants.js）；等宽，下划线是一根会滑的线 -->
     <view class="tabline">
       <view
         v-for="tab in statusTabs"
         :key="tab.value"
-        :class="['tabline__item', currentStatus === tab.value ? 'is-on' : '']"
+        :class="['tabline__item', 'ds-pressable', currentStatus === tab.value ? 'is-on' : '']"
+        hover-class="is-pressed"
+        hover-stay-time="70"
         @click="changeStatus(tab.value)"
       >
         <text class="tabline__text">{{ tab.label }}</text>
+      </view>
+      <view class="tabline__indicator" :style="indicatorStyle">
+        <view class="tabline__bar"></view>
       </view>
     </view>
 
@@ -32,7 +42,12 @@
       @touchend="onTabTouchEnd"
     >
       <view class="list">
-        <view v-for="item in orderList" :key="item.id" class="card order">
+        <view
+          v-for="(item, index) in orderList"
+          :key="enterSeq + '-' + item.id"
+          :class="['card', 'order', enterAnim]"
+          :style="enterStyle(index)"
+        >
           <view class="order__top">
             <view class="avatar avatar--sm">
               <image :src="item.guideAvatarUrl" class="avatar__img" mode="aspectFill" />
@@ -63,7 +78,10 @@
             <text class="price"><text class="price__symbol">¥</text>{{ item.amount }}</text>
             <view
               v-if="canCancel(item.status)"
-              :class="['btn', 'btn--sm', item.status === 0 ? 'btn--danger' : 'btn--outlined']"
+              :class="['btn', 'btn--sm', 'ds-pressable', item.status === 0 ? 'btn--danger' : 'btn--outlined']"
+              hover-class="is-pressed"
+              hover-stay-time="70"
+              hover-stop-propagation
               @click="cancelOrder(item)"
             >
               <text class="btn__text">取消预约</text>
@@ -73,11 +91,14 @@
       </view>
 
       <view class="load-status">
-        <text v-if="loading" class="load-text">加载中…</text>
-        <text v-else-if="!hasMore && orderList.length > 0" class="load-text">没有更多了</text>
+        <view v-if="loading" class="load-row">
+          <view class="ds-spinner"></view>
+          <text class="load-text">加载中…</text>
+        </view>
+        <text v-else-if="!hasMore && orderList.length > 0" class="load-text ds-fade-in">没有更多了</text>
       </view>
 
-      <view v-if="!loading && orderList.length === 0" class="empty-box">
+      <view v-if="!loading && orderList.length === 0" class="empty-box ds-fade-in">
         <text class="empty-icon">◎</text>
         <text class="empty-title">这里还没有订单</text>
         <text class="empty-tip">去首页挑个景点，再选能带这个景点的地陪</text>
@@ -95,12 +116,19 @@
  */
 import { OrderApi, ORDER_STATUS, ORDER_STATUS_LABELS, BOOKING_TYPES, canTransit, bookingTypeLabel } from '@/api/index.js';
 import { createTabRow } from '@/utils/hscroll.js';
+import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 /* 四态页签是等宽的（不溢出，所以不需要居中），只接「内容左右滑动切换」 */
 const statusTabRow = createTabRow({
   index: (vm) => vm.activeTabIndex,
   onStep: (vm, step) => vm.stepStatus(step)
 });
+
+/* 列表入场：切状态带方向，加载更多只让新追加的那几项上浮 */
+const listEnter = createListEnter();
+
+/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
 
 const statusTabs = [
   { label: ORDER_STATUS_LABELS[ORDER_STATUS.PENDING_CONFIRM], value: ORDER_STATUS.PENDING_CONFIRM },
@@ -113,6 +141,8 @@ export default {
   data() {
     return {
       ...statusTabRow.data(),
+      ...listEnter.data(),
+      ...pageMotion.data(),
       statusTabs,
       currentStatus: ORDER_STATUS.PENDING_CONFIRM,
       orderList: [],
@@ -129,6 +159,13 @@ export default {
     activeTabIndex() {
       const i = statusTabs.findIndex((tab) => tab.value === this.currentStatus);
       return i < 0 ? 0 : i;
+    },
+    /* 下划线：外层跟页签等宽，靠 translateX 的百分比（按自身宽度算）整格滑动，不去动 width */
+    indicatorStyle() {
+      return {
+        width: `${100 / statusTabs.length}%`,
+        transform: `translateX(${this.activeTabIndex * 100}%)`
+      };
     }
   },
 
@@ -144,15 +181,17 @@ export default {
 
   methods: {
     ...statusTabRow.methods,
+    ...listEnter.methods,
+    ...pageMotion.methods,
 
     /* 横滑：上/下一个状态；顺序与文案取自 api/constants.js */
     stepStatus(step) {
       const next = this.activeTabIndex + step;
       if (next < 0 || next >= statusTabs.length) return;
-      this.changeStatus(statusTabs[next].value);
+      this.changeStatus(statusTabs[next].value, step);
     },
 
-    async loadList(refresh = false) {
+    async loadList(refresh = false, dir = ENTER_UP) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -170,6 +209,8 @@ export default {
           status: this.currentStatus
         });
 
+        /* 切状态：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
+        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.orderList.length);
         this.orderList = refresh ? list : [...this.orderList, ...list];
         this.total = total || 0;
         this.hasMore = hasMore;
@@ -183,10 +224,12 @@ export default {
       }
     },
 
-    changeStatus(status) {
+    changeStatus(status, dir = 0) {
       if (this.currentStatus === status) return;
+      /* 点选时方向由下标差推出；横滑时直接用滑动方向（step） */
+      const from = this.activeTabIndex;
       this.currentStatus = status;
-      this.loadList(true);
+      this.loadList(true, dir || stepDirection(from, this.activeTabIndex));
     },
 
     loadMore() {
@@ -226,7 +269,7 @@ export default {
     },
 
     goBack() {
-      uni.navigateBack();
+      this.goBackWithMotion();
     }
   }
 };
@@ -283,6 +326,7 @@ export default {
 
 /* ---------- 四态页签 ---------- */
 .tabline {
+  position: relative;
   flex-shrink: 0;
   display: flex;
   border-bottom: 1px solid $ds-outline-variant;
@@ -301,24 +345,32 @@ export default {
       color: $ds-primary;
       font-weight: 600;
     }
-
-    &::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      width: 22px;
-      height: 2px;
-      border-radius: 1px;
-      background: $ds-primary;
-    }
   }
+}
+
+/* 等宽页签用一根会滑的线：宽度由下标算，位移只用 translateX 的百分比 */
+.tabline__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: transform $ds-dur-base $ds-ease-in-out;
+}
+
+.tabline__bar {
+  width: 22px;
+  height: 2px;
+  border-radius: 1px;
+  background: $ds-primary;
 }
 
 .tabline__text {
   font-size: $ds-fs-body-sm;
   color: $ds-ink-2;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 /* ---------- 列表 ---------- */
@@ -501,6 +553,13 @@ export default {
 .load-status {
   text-align: center;
   padding: $ds-space-5;
+}
+
+.load-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $ds-space-2;
 }
 
 .load-text {

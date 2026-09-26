@@ -1,10 +1,15 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
     <view class="navbar">
-      <view class="icon-btn" @click="goBack">
+      <view
+        class="icon-btn ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goBack"
+      >
         <text class="icon-btn__text back">‹</text>
       </view>
       <text class="navbar__title">地陪详情</text>
@@ -70,11 +75,13 @@
         <view
           v-for="(pkg, index) in guide.packages || []"
           :key="pkg.packageSkuId"
-          :class="['option', packageIndex === index ? 'is-on' : '']"
+          :class="['option', 'ds-pressable', packageIndex === index ? 'is-on' : '']"
+          hover-class="is-pressed"
+          hover-stay-time="70"
           @click="selectPackage(index)"
         >
           <view class="radio">
-            <text v-if="packageIndex === index" class="radio__check">✓</text>
+            <text v-if="packageIndex === index" class="radio__check ds-pop-in">✓</text>
           </view>
           <view class="option__body">
             <text class="option__name">{{ pkg.name }}</text>
@@ -95,7 +102,9 @@
             <view
               v-for="item in availableDates"
               :key="item.appointDate"
-              :class="['date', selectedDate === item.appointDate ? 'is-on' : '']"
+              :class="['date', 'ds-pressable', selectedDate === item.appointDate ? 'is-on' : '']"
+              hover-class="is-pressed"
+              hover-stay-time="70"
               @click="selectedDate = item.appointDate"
             >
               <text class="date__dow">{{ dowText(item.appointDate) }}</text>
@@ -115,7 +124,12 @@
         <text class="price-block__label">合计 · {{ selectedPackage.name || '未选套餐' }}</text>
         <text class="price price--lg"><text class="price__symbol">¥</text>{{ selectedPackage.price || 0 }}</text>
       </view>
-      <view class="btn btn--filled" @click="goCreateOrder">
+      <view
+        class="btn btn--filled ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goCreateOrder"
+      >
         <text class="btn__text">立即预约</text>
       </view>
     </view>
@@ -132,12 +146,17 @@
  *   3. 主操作从「提交」变成「立即预约」，把填写留到下一页，降低首次决策成本
  */
 import { GuideApi, bookingTypeUnit } from '@/api/index.js';
+import { createPageMotion } from '@/utils/motion.js';
 
 const DOW = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
 
 export default {
   data() {
     return {
+      ...pageMotion.data(),
       guideId: '',
       attractionId: '',
       guide: {},
@@ -184,6 +203,8 @@ export default {
   },
 
   methods: {
+    ...pageMotion.methods,
+
     async loadDetail() {
       try {
         const data = await GuideApi.getGuideDetail(this.guideId);
@@ -248,7 +269,7 @@ export default {
     },
 
     goBack() {
-      uni.navigateBack();
+      this.goBackWithMotion();
     },
 
     goCreateOrder() {
@@ -455,6 +476,7 @@ export default {
   align-items: center;
   padding: $ds-space-3 $ds-space-4;
   border-top: 1px solid $ds-outline-variant;
+  transition: background-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
     background: rgba(47, 107, 94, 0.06);
@@ -469,6 +491,10 @@ export default {
   }
 }
 
+.option__name {
+  transition: color $ds-dur-fast $ds-ease-out;
+}
+
 .radio {
   flex-shrink: 0;
   width: 20px;
@@ -478,6 +504,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
 
   .is-on & {
     background: $ds-primary;
@@ -553,6 +580,7 @@ export default {
   height: 56px;
   border-radius: $ds-shape-sm;
   background: $ds-surface-high;
+  transition: background-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
     background: $ds-primary;
@@ -567,6 +595,7 @@ export default {
 .date__dow {
   font-size: $ds-fs-caption;
   color: $ds-ink-2;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 .date__day {
@@ -574,6 +603,7 @@ export default {
   font-size: $ds-fs-label;
   font-weight: 600;
   color: $ds-ink;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 .date-empty {

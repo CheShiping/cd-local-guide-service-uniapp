@@ -105,6 +105,23 @@ $ds-grain-size: 4px;    // 宣纸颗粒间距（radial-gradient 点阵）
 $ds-grain-alpha: 0.07;  // 颗粒透明度（必须极淡）
 $ds-bamboo-alpha: 0;    // 竹影竖纹：定稿「宣纸 · 疏」为关闭
 
+/* ---------- 1.8 动效（与 DESIGN.md §13 一一对应） ---------- */
+/* 规则：只动 transform / opacity（外加颜色类）；入场一律 ease-out；UI 动效不超过 400ms。
+   超出预算的只有 $ds-dur-spin（加载指示器是常量运动，本就该用 linear 且可长）。
+   注意：下面这批时长与 utils/motion.js 的 MOTION 常量必须成对修改，
+   两边不一致时 scripts/check-motion.mjs 会直接报错。 */
+$ds-dur-press: 140ms;       // 按压反馈（要跟手，不能慢）
+$ds-dur-fast: 160ms;        // 颜色 / 背景 / 边框等状态切换
+$ds-dur-slide: 280ms;       // 指示器 / 分段滑块在屏上移动
+$ds-dur-base: 360ms;        // 内容切换：整批内容被替换，要慢到看得清是从哪边换过来的
+$ds-dur-page: 320ms;        // 页面进入（H5 用 CSS 模拟；小程序是原生转场）
+$ds-dur-page-leave: 260ms;  // 页面退出（返回前先播，H5 用；小程序是原生转场）
+$ds-dur-spin: 900ms;        // 加载指示器一圈（linear，infinite）
+$ds-ease-out: cubic-bezier(0.23, 1, 0.32, 1);      // 入场 / 出场
+$ds-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  // 屏上移动（指示器滑动）
+$ds-stagger-step: 60ms;     // 列表入场逐项延迟
+$ds-stagger-max: 300ms;     // 延迟上限：长列表越往下越慢反而像卡
+
 /* ==========================================================================
    2. uni-app 内置变量映射（这些名字被 uni-app 内部组件引用，不要改名）
    原陪玩小程序的默认值已按新设计规范重新赋值：

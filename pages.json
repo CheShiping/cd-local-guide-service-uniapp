@@ -107,6 +107,10 @@
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "成都地陪",
 		"navigationBarBackgroundColor": "#f7f4ed",
-		"backgroundColor": "#f7f4ed"
+		"backgroundColor": "#f7f4ed",
+		"app-plus": {
+			"animationType": "slide-in-right",
+			"animationDuration": 320
+		}
 	}
 }

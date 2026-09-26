@@ -69,7 +69,8 @@ MVP 明确不做：IM、实时定位、分销代理、团购、广场发单、�
 - `feature_list.json` — 功能状态唯一事实来源
 - `progress.md` — 会话连续性日志
 - `docs/legacy-assets.md` / `docs/legacy-assets.json` — 原有资产清单与保真门禁数据
-- `DESIGN.md` + `uni.scss` — 视觉规范与落地令牌（定稿主题：宣纸 · 疏，两者必须同步改）
+- `DESIGN.md` + `uni.scss` — 视觉规范与落地令牌（定稿主题：宣纸 · 疏，两者必须同步改；动效规范在 DESIGN.md §13 / 令牌在 uni.scss §1.8，通用计算在 `utils/motion.js`）
+- `utils/motion.js` — 动效通用行为（列表入场方向与错峰延迟）；页面不要各写一套延迟计算
 - `docx/database/schema.sql` + `docx/database/数据库设计.md` — 数据库表结构唯一事实来源（改表必须同步文档并跑校验）
 - `docx/` — 设计实现文档与 Bug 修复文档归档（见下节）
 - `session-handoff.md` — 跨会话交接
@@ -102,18 +103,20 @@ MVP 明确不做：IM、实时定位、分销代理、团购、广场发单、�
 ## 验证命令
 
 ```powershell
-# 完整验证（推荐，Windows，共 7 步）
+# 完整验证（推荐，Windows，共 8 步）
 ./init.ps1
 
 # 单项校验（都零依赖、秒级）
 node scripts/verify-assets.mjs   # 资产保真 + 路由一致性
 node scripts/check-tokens.mjs    # 设计令牌（SCSS 顺序 / CSS 变量 / 色值对齐）
+node scripts/check-motion.mjs    # 动效（属性白名单 / 时长预算 / keyframes 存在 / 降低动效）
 node scripts/check-schema.mjs    # 数据库表结构（命名 / 必备列 / 金额类型 / MVP 边界）
 node scripts/check-mock.mjs      # mock 数据层（规模 / 确定性 / 自洽 / MVP 边界）
 node scripts/smoke-flow.mjs      # 端到端闭环（真实运行 mock：下单→接单→确认→完成 + 负向用例）
 
 # 自检（证明门禁非空，改动校验脚本后跑一次）
 node scripts/check-tokens.mjs --self-test
+node scripts/check-motion.mjs --self-test
 node scripts/check-schema.mjs --self-test
 node scripts/smoke-flow.mjs --self-test
 
@@ -125,19 +128,34 @@ node scripts/gen-tabbar-icons.mjs --check
 npm run build:mp-weixin
 ```
 
-> 前 5 项都是**静态**校验（读文件 / 比对哈希 / 正则解析）。`scripts/smoke-flow.mjs` 是唯一的**动态**校验：
+> 除 `smoke-flow.mjs` 外都是**静态**校验（读文件 / 比对哈希 / 正则解析）。`scripts/smoke-flow.mjs` 是唯一的**动态**校验：
 > 它把 `api/` 复制到临时目录（临时目录声明 `type: module`，node 才能直接 import 项目里的 ESM 源码），
 > 然后真实跑一遍三端闭环。2026-09-26 就是它抓到了两个阻断闭环、却通过了全部静态门禁的运行时 bug。
 > **新增或修改数据层逻辑后，除了静态门禁，必须跑它。**
 
 ### 改了代码但页面没生效？（旧构建 / 旧模块缓存）
 
-本项目已三次出现「报错栈与源码对不上」，全都是运行在旧模块上。页面报 `undefined` 时**先按这套流程排除**，再判断是不是 bug：
+本项目已**四次**出现「报错栈与源码对不上」，全都是运行在旧模块 / 旧缓存的产物上。看到下面两类现象时**先按这套流程排除**，再判断是不是真 bug：
 
-1. 停掉 dev server（Ctrl+C）—— `api/mock/index.js` 的仓库是**模块级缓存**（`getDb()` 只算一次），不停进程换不干净
-2. 删缓存与产物：`Remove-Item -Recurse -Force node_modules\.vite, dist -ErrorAction SilentlyContinue`
-3. 重启 `npm run dev:h5`（或开发者工具里重新编译），浏览器**硬刷新**（Ctrl+Shift+R）
+| 现象 | 真凶 |
+|---|---|
+| 页面报 `Cannot read properties of undefined` / 报错行号在源码里对不上 | `api/mock/index.js` 的仓库是**模块级缓存**（`getDb()` 只算一次）或旧的 Vite 模块图 |
+| **`[sass] Undefined variable $ds-xxx`，而这个变量明明在 `uni.scss` 里有** | `uni.scss` 是通过 Vite 的 `additionalData` 注入的，注入内容被缓存了：`App.vue` 变了会重新编译，但注入的 `uni.scss` 还是服务启动时那一份 |
+
+排除步骤：
+
+1. 停掉 dev server（Ctrl+C / HBuilderX 点「停止运行」）—— 不停进程换不干净
+2. 删缓存与产物（按你用的工具选一行）：
+   ```powershell
+   # HBuilderX（本项目常用）
+   Remove-Item -Recurse -Force unpackage\dist\cache, unpackage\dist\dev -ErrorAction SilentlyContinue
+   # CLI
+   Remove-Item -Recurse -Force node_modules\.vite, dist -ErrorAction SilentlyContinue
+   ```
+3. 重启（HBuilderX 重新运行 / `npm run dev:h5`），浏览器**硬刷新**（Ctrl+Shift+R）
 4. 看控制台：出现 `[api] 数据层 <版本>｜数据源 mock｜模块 RegionApi / … / UserApi` 才算加载到新代码
+
+**想快速证明 SCSS 本身没问题**（而不是猜）：用 HBuilderX 自带的 dart-sass 直接把「`uni.scss` + 某个文件的样式」拼起来编译一次，能过就说明是缓存问题。
 
 数据层的版本戳在 `api/index.js` 的 `DATA_LAYER_VERSION`；缺模块时 `pickModule()` 会直接抛可操作的错误，不再是一句 `Cannot read properties of undefined`。
 
@@ -148,6 +166,7 @@ npm run build:mp-weixin
 - [ ] 目标行为已实现
 - [ ] `node scripts/verify-assets.mjs` 通过
 - [ ] 涉及样式改动时 `node scripts/check-tokens.mjs` 通过；涉及数据模型时 `node scripts/check-schema.mjs` 通过
+- [ ] 涉及动效改动时 `node scripts/check-motion.mjs` 通过（属性白名单 / 时长预算 / keyframes 存在 / 降低动效）
 - [ ] 涉及数据层 / 状态流转时 `node scripts/smoke-flow.mjs` 通过（端到端闭环 + 负向用例）
 - [ ] `npm run build:mp-weixin` 通过（或说明为何本次不适用）
 - [ ] 设计实现文档已归档到 `docx/codeimpl-sum/设计文档-feat-XXX-功能名.md`（六章节齐全）

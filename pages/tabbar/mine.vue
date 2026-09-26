@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <view class="header-content">
@@ -25,7 +25,13 @@
     <!-- 按角色分流的入口：游客看订单，地陪看接单，管理员看后台 -->
     <view class="menu-section">
       <view class="menu-group">
-        <view class="menu-item" v-if="isGuide" @click="goGuideOrders">
+        <view
+          class="menu-item ds-pressable"
+          v-if="isGuide"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="goGuideOrders"
+        >
           <text class="menu-text">接单</text>
           <view class="menu-right">
             <text class="menu-badge" v-if="waitingCount">{{ waitingCount }}</text>
@@ -33,7 +39,13 @@
           </view>
         </view>
 
-        <view class="menu-item" v-if="!isGuide" @click="goMyOrders">
+        <view
+          class="menu-item ds-pressable"
+          v-if="!isGuide"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="goMyOrders"
+        >
           <text class="menu-text">我的订单</text>
           <view class="menu-right">
             <text class="menu-badge" v-if="pendingCount">{{ pendingCount }}</text>
@@ -41,7 +53,13 @@
           </view>
         </view>
 
-        <view class="menu-item" v-if="isAdmin" @click="goAdminOrders">
+        <view
+          class="menu-item ds-pressable"
+          v-if="isAdmin"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="goAdminOrders"
+        >
           <text class="menu-text">订单管理</text>
           <view class="menu-right">
             <text class="menu-badge" v-if="adminPendingCount">{{ adminPendingCount }}</text>
@@ -49,7 +67,13 @@
           </view>
         </view>
 
-        <view class="menu-item" v-if="isAdmin" @click="goAdminGuides">
+        <view
+          class="menu-item ds-pressable"
+          v-if="isAdmin"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="goAdminGuides"
+        >
           <text class="menu-text">地陪审核</text>
           <view class="menu-right">
             <text class="menu-badge warn" v-if="pendingGuideCount">{{ pendingGuideCount }} 待审</text>
@@ -62,11 +86,21 @@
     <!-- 协议入口：登录页引用的两个协议文档 -->
     <view class="menu-section">
       <view class="menu-group">
-        <view class="menu-item" @click="goAgreement('user')">
+        <view
+          class="menu-item ds-pressable"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="goAgreement('user')"
+        >
           <text class="menu-text">用户协议</text>
           <text class="arrow">›</text>
         </view>
-        <view class="menu-item" @click="goAgreement('privacy')">
+        <view
+          class="menu-item ds-pressable"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="goAgreement('privacy')"
+        >
           <text class="menu-text">隐私政策</text>
           <text class="arrow">›</text>
         </view>
@@ -84,7 +118,9 @@
           <view
             v-for="role in roleOptions"
             :key="role.value"
-            :class="['role-chip', currentRole === role.value ? 'is-on' : '']"
+            :class="['role-chip', 'ds-pressable', currentRole === role.value ? 'is-on' : '']"
+            hover-class="is-pressed"
+            hover-stay-time="70"
             @click="switchRole(role.value)"
           >
             <text class="role-chip__text">{{ role.label }}</text>
@@ -117,6 +153,7 @@ import {
   ORDER_STATUS,
   switchMockRole
 } from '@/api/index.js';
+import { createPageMotion } from '@/utils/motion.js';
 
 const roleOptions = [
   { label: ROLE_LABELS[ROLES.TOURIST], value: ROLES.TOURIST },
@@ -124,9 +161,13 @@ const roleOptions = [
   { label: ROLE_LABELS[ROLES.ADMIN], value: ROLES.ADMIN }
 ];
 
+/* 页面转场：本页是 tabBar 页，只用到进入（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
+
 export default {
   data() {
     return {
+      ...pageMotion.data(),
       userInfo: {},
       roleOptions,
       useMock: USE_MOCK,
@@ -164,6 +205,8 @@ export default {
   },
 
   methods: {
+    ...pageMotion.methods,
+
     async loadUser() {
       try {
         const user = await UserApi.getCurrentUser();
@@ -413,6 +456,8 @@ export default {
   justify-content: center;
   border: 1px solid $ds-outline;
   border-radius: $ds-shape-full;
+  /* 实底选中态：底色与边框一起过渡，切换身份才不是硬跳 */
+  transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
     background: $ds-secondary-container;
@@ -428,6 +473,7 @@ export default {
 .role-chip__text {
   font-size: $ds-fs-label;
   color: $ds-ink-2;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 .footnote {

@@ -1,10 +1,15 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
     <view class="navbar">
-      <view class="icon-btn" @click="goBack">
+      <view
+        class="icon-btn ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goBack"
+      >
         <text class="icon-btn__text back">‹</text>
       </view>
       <text class="navbar__title">{{ title }}</text>
@@ -29,12 +34,19 @@
         <view
           v-for="chip in bookingTypeChips"
           :key="chip.value"
-          :class="['chip', bookingType === chip.value ? 'is-on' : '']"
+          :class="['chip', 'ds-pressable', bookingType === chip.value ? 'is-on' : '']"
+          hover-class="is-pressed"
+          hover-stay-time="70"
           @click="changeBookingType(chip.value)"
         >
           <text class="chip__text">{{ chip.label }}</text>
         </view>
-        <view class="chip chip--lead" @click="toggleSort">
+        <view
+          class="chip chip--lead ds-pressable"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="toggleSort"
+        >
           <text class="chip__text">{{ sortLabel }}</text>
         </view>
       </view>
@@ -51,9 +63,12 @@
     >
       <view class="list">
         <view
-          v-for="item in guideList"
-          :key="item.id"
-          class="card guide"
+          v-for="(item, index) in guideList"
+          :key="enterSeq + '-' + item.id"
+          :class="['card', 'guide', 'ds-pressable', enterAnim]"
+          :style="enterStyle(index)"
+          hover-class="is-pressed"
+          hover-stay-time="70"
           @click="goDetail(item)"
         >
           <view class="avatar">
@@ -83,7 +98,13 @@
                 <text class="price"><text class="price__symbol">¥</text>{{ item.priceFrom }}</text>
                 <text class="guide__stat">起 / {{ priceUnit(item) }}</text>
               </view>
-              <view class="btn btn--tonal btn--sm" @click.stop="goDetail(item)">
+              <view
+                class="btn btn--tonal btn--sm ds-pressable"
+                hover-class="is-pressed"
+                hover-stay-time="70"
+                hover-stop-propagation
+                @click.stop="goDetail(item)"
+              >
                 <text class="btn__text">看详情</text>
               </view>
             </view>
@@ -92,11 +113,14 @@
       </view>
 
       <view class="load-status">
-        <text v-if="loading" class="load-text">加载中…</text>
-        <text v-else-if="!hasMore && guideList.length > 0" class="load-text">没有更多了</text>
+        <view v-if="loading" class="load-row">
+          <view class="ds-spinner"></view>
+          <text class="load-text">加载中…</text>
+        </view>
+        <text v-else-if="!hasMore && guideList.length > 0" class="load-text ds-fade-in">没有更多了</text>
       </view>
 
-      <view v-if="!loading && guideList.length === 0" class="empty-box">
+      <view v-if="!loading && guideList.length === 0" class="empty-box ds-fade-in">
         <text class="empty-icon">◎</text>
         <text class="empty-title">这个景点还没有可约地陪</text>
         <text class="empty-tip">换个筛选条件，或返回上一步换个景点</text>
@@ -117,6 +141,7 @@
  */
 import { GuideApi, BOOKING_TYPES, bookingTypeLabel, bookingTypeUnit } from '@/api/index.js';
 import { createTabRow } from '@/utils/hscroll.js';
+import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 /* 预约类型 chip：激活 chip 自动滚到中间 + 列表左右滑动切换（排序 chip 不参与） */
 const bookingTabRow = createTabRow({
@@ -126,6 +151,12 @@ const bookingTabRow = createTabRow({
   index: (vm) => vm.activeChipIndex,
   onStep: (vm, step) => vm.stepBookingType(step)
 });
+
+/* 列表入场：切预约类型带方向，加载更多只让新追加的那几项上浮 */
+const listEnter = createListEnter();
+
+/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
 
 const bookingTypeChips = [
   { label: '全部', value: '' },
@@ -138,6 +169,8 @@ export default {
   data() {
     return {
       ...bookingTabRow.data(),
+      ...listEnter.data(),
+      ...pageMotion.data(),
       attractionId: '',
       attractionName: '',
       bookingTypeChips,
@@ -181,8 +214,10 @@ export default {
 
   methods: {
     ...bookingTabRow.methods,
+    ...listEnter.methods,
+    ...pageMotion.methods,
 
-    async loadGuides(refresh = false) {
+    async loadGuides(refresh = false, dir = ENTER_UP) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -201,6 +236,8 @@ export default {
 
         const { list, total, hasMore } = await GuideApi.getGuideList(params);
 
+        /* 切类型：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
+        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.guideList.length);
         this.guideList = refresh ? list : [...this.guideList, ...list];
         this.total = total || 0;
         this.hasMore = hasMore;
@@ -213,11 +250,13 @@ export default {
       }
     },
 
-    changeBookingType(value) {
+    changeBookingType(value, dir = 0) {
       if (this.bookingType === value) return;
+      /* 点选时方向由下标差推出；横滑时直接用滑动方向（step） */
+      const from = this.activeChipIndex;
       this.bookingType = value;
       this.centerActiveTab();
-      this.loadGuides(true);
+      this.loadGuides(true, dir || stepDirection(from, this.activeChipIndex));
     },
 
     /* 横滑：上/下一个预约类型；「全部」的左边就是边界 */
@@ -225,11 +264,13 @@ export default {
       const current = Math.max(bookingTypeChips.findIndex((chip) => chip.value === this.bookingType), 0);
       const next = current + step;
       if (next < 0 || next >= bookingTypeChips.length) return;
-      this.changeBookingType(bookingTypeChips[next].value);
+      this.changeBookingType(bookingTypeChips[next].value, step);
     },
 
+    /* 排序没有方向，但要换批次让卡片重播上浮入场（否则同一批 key 不会重播） */
     toggleSort() {
       this.sort = this.sort === 'priceAsc' ? '' : 'priceAsc';
+      this.renewEnter();
       this.loadGuides(true);
     },
 
@@ -253,7 +294,7 @@ export default {
     },
 
     goBack() {
-      uni.navigateBack();
+      this.goBackWithMotion();
     },
 
     goDetail(item) {
@@ -348,6 +389,8 @@ export default {
   border-radius: $ds-shape-full;
   border: 1px solid $ds-outline;
   background: transparent;
+  /* chip 是实底选中态：底色与边框一起过渡，切换才不是硬跳 */
+  transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
     background: $ds-secondary-container;
@@ -511,6 +554,13 @@ export default {
 .load-status {
   text-align: center;
   padding: $ds-space-5;
+}
+
+.load-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $ds-space-2;
 }
 
 .load-text {

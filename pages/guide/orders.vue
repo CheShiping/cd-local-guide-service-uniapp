@@ -1,14 +1,19 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏：右侧是在线开关 -->
     <view class="navbar">
-      <view class="icon-btn" @click="goBack">
+      <view
+        class="icon-btn ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goBack"
+      >
         <text class="icon-btn__text back">‹</text>
       </view>
       <text class="navbar__title">接单</text>
-      <view class="icon-btn" @click="toggleOnline">
+      <view class="icon-btn ds-pressable" hover-class="is-pressed" hover-stay-time="70" @click="toggleOnline">
         <view :class="['switch', online ? 'is-on' : '']">
           <view class="switch__knob"></view>
         </view>
@@ -31,12 +36,15 @@
       </view>
     </view>
 
-    <!-- 分段：scope 由接口负责过滤，前端不再自己筛 -->
+    <!-- 分段：scope 由接口负责过滤，前端不再自己筛；选中块是滑过去的，不是原地换底色 -->
     <view class="segmented">
+      <view class="segmented__thumb" :style="thumbStyle"></view>
       <view
         v-for="tab in scopeTabs"
         :key="tab.value"
-        :class="['segmented__item', scope === tab.value ? 'is-on' : '']"
+        :class="['segmented__item', 'ds-pressable', scope === tab.value ? 'is-on' : '']"
+        hover-class="is-pressed"
+        hover-stay-time="70"
         @click="changeScope(tab.value)"
       >
         <text class="segmented__text">{{ tab.label }}</text>
@@ -50,7 +58,12 @@
       @scrolltolower="loadMore"
     >
       <view class="list">
-        <view v-for="item in orderList" :key="item.id" class="card order">
+        <view
+          v-for="(item, index) in orderList"
+          :key="enterSeq + '-' + item.id"
+          :class="['card', 'order', enterAnim]"
+          :style="enterStyle(index)"
+        >
           <view class="order__top">
             <view class="avatar">
               <image :src="item.touristAvatarUrl" class="avatar__img" mode="aspectFill" />
@@ -83,10 +96,22 @@
             <view class="order__actions">
               <!-- 待接单：拒单描边、接单实心 —— 一单一个主操作 -->
               <template v-if="item.waitingGuideAccept">
-                <view class="btn btn--sm btn--outlined" @click="reject(item)">
+                <view
+                  class="btn btn--sm btn--outlined ds-pressable"
+                  hover-class="is-pressed"
+                  hover-stay-time="70"
+                  hover-stop-propagation
+                  @click="reject(item)"
+                >
                   <text class="btn__text">拒单</text>
                 </view>
-                <view class="btn btn--sm btn--filled" @click="accept(item)">
+                <view
+                  class="btn btn--sm btn--filled ds-pressable"
+                  hover-class="is-pressed"
+                  hover-stay-time="70"
+                  hover-stop-propagation
+                  @click="accept(item)"
+                >
                   <text class="btn__text">接单</text>
                 </view>
               </template>
@@ -96,7 +121,14 @@
                 已接单，等平台确认档期
               </text>
 
-              <view v-else class="btn btn--sm btn--tonal" @click="complete(item)">
+              <view
+                v-else
+                class="btn btn--sm btn--tonal ds-pressable"
+                hover-class="is-pressed"
+                hover-stay-time="70"
+                hover-stop-propagation
+                @click="complete(item)"
+              >
                 <text class="btn__text">完成服务</text>
               </view>
             </view>
@@ -105,11 +137,14 @@
       </view>
 
       <view class="load-status">
-        <text v-if="loading" class="load-text">加载中…</text>
-        <text v-else-if="!hasMore && orderList.length > 0" class="load-text">没有更多了</text>
+        <view v-if="loading" class="load-row">
+          <view class="ds-spinner"></view>
+          <text class="load-text">加载中…</text>
+        </view>
+        <text v-else-if="!hasMore && orderList.length > 0" class="load-text ds-fade-in">没有更多了</text>
       </view>
 
-      <view v-if="!loading && orderList.length === 0" class="empty-box">
+      <view v-if="!loading && orderList.length === 0" class="empty-box ds-fade-in">
         <text class="empty-icon">◎</text>
         <text class="empty-title">{{ emptyTitle }}</text>
         <text class="empty-tip">保持在线，有新预约会出现在这里</text>
@@ -129,6 +164,7 @@
  * 因此「进行中」的口径是 isGuideCommitted（我已接下的单），否则接完单的订单会从列表消失。
  */
 import { OrderApi, ORDER_STATUS, BOOKING_TYPES, bookingTypeLabel } from '@/api/index.js';
+import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 const ONLINE_KEY = 'guide_online';
 
@@ -137,9 +173,17 @@ const scopeTabs = [
   { label: '进行中', value: 'inProgress' }
 ];
 
+/* 列表入场：切分段带方向，加载更多只让新追加的那几项上浮 */
+const listEnter = createListEnter();
+
+/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
+
 export default {
   data() {
     return {
+      ...listEnter.data(),
+      ...pageMotion.data(),
       scopeTabs,
       scope: 'waiting',
       orderList: [],
@@ -157,6 +201,17 @@ export default {
   computed: {
     emptyTitle() {
       return this.scope === 'waiting' ? '暂时没有等着你接的单' : '还没有进行中的订单';
+    },
+    activeScopeIndex() {
+      const i = scopeTabs.findIndex((tab) => tab.value === this.scope);
+      return i < 0 ? 0 : i;
+    },
+    /* 分段滑块：宽度由段数算，位移只用 translateX 的百分比（按自身宽度算，正好一段） */
+    thumbStyle() {
+      return {
+        width: `calc((100% - 6px) / ${scopeTabs.length})`,
+        transform: `translateX(${this.activeScopeIndex * 100}%)`
+      };
     }
   },
 
@@ -172,7 +227,10 @@ export default {
   },
 
   methods: {
-    async loadOrders(refresh = false) {
+    ...listEnter.methods,
+    ...pageMotion.methods,
+
+    async loadOrders(refresh = false, dir = ENTER_UP) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -190,6 +248,8 @@ export default {
           pageSize: this.pageSize
         });
 
+        /* 切分段：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
+        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.orderList.length);
         this.orderList = refresh ? list : [...this.orderList, ...list];
         this.hasMore = hasMore;
         if (counts) this.counts = counts;
@@ -203,10 +263,12 @@ export default {
       }
     },
 
-    changeScope(scope) {
+    changeScope(scope, dir = 0) {
       if (this.scope === scope) return;
+      /* 点选时方向由下标差推出（待接单 ↔ 进行中） */
+      const from = this.activeScopeIndex;
       this.scope = scope;
-      this.loadOrders(true);
+      this.loadOrders(true, dir || stepDirection(from, this.activeScopeIndex));
     },
 
     loadMore() {
@@ -296,7 +358,7 @@ export default {
     },
 
     goBack() {
-      uni.navigateBack();
+      this.goBackWithMotion();
     }
   }
 };
@@ -351,7 +413,7 @@ export default {
   color: $ds-ink;
 }
 
-/* 在线开关 */
+/* 在线开关：圆点用 transform 滑过去，不要用 justify-content（那是硬跳） */
 .switch {
   width: 44px;
   height: 24px;
@@ -359,10 +421,10 @@ export default {
   background: $ds-outline;
   padding: 2px;
   display: flex;
+  transition: background-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
     background: $ds-primary;
-    justify-content: flex-end;
   }
 }
 
@@ -371,6 +433,11 @@ export default {
   height: 20px;
   border-radius: $ds-shape-full;
   background: $ds-on-primary;
+  transition: transform $ds-dur-base $ds-ease-out;
+}
+
+.switch.is-on .switch__knob {
+  transform: translateX(20px);
 }
 
 /* ---------- 统计条 ---------- */
@@ -409,6 +476,7 @@ export default {
 
 /* ---------- 分段控件 ---------- */
 .segmented {
+  position: relative;
   flex-shrink: 0;
   display: flex;
   margin: 0 $ds-pad-screen $ds-space-3;
@@ -417,7 +485,20 @@ export default {
   border-radius: $ds-shape-sm;
 }
 
+/* 选中块：只用 translateX 滑，不动 width / left */
+.segmented__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  border-radius: $ds-shape-xs;
+  background: $ds-surface-container;
+  transition: transform $ds-dur-base $ds-ease-in-out;
+}
+
 .segmented__item {
+  position: relative;
+  z-index: 1;
   flex: 1;
   height: 36px;
   display: flex;
@@ -426,8 +507,6 @@ export default {
   border-radius: $ds-shape-xs;
 
   &.is-on {
-    background: $ds-surface-container;
-
     .segmented__text {
       color: $ds-primary;
       font-weight: 600;
@@ -438,6 +517,7 @@ export default {
 .segmented__text {
   font-size: $ds-fs-label;
   color: $ds-ink-2;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 /* ---------- 列表 ---------- */
@@ -625,6 +705,13 @@ export default {
 .load-status {
   text-align: center;
   padding: $ds-space-5;
+}
+
+.load-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $ds-space-2;
 }
 
 .load-text {

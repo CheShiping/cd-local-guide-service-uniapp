@@ -1,10 +1,15 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
     <view class="navbar">
-      <view class="icon-btn" @click="goBack">
+      <view
+        class="icon-btn ds-pressable"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="goBack"
+      >
         <text class="icon-btn__text back">‹</text>
       </view>
       <text class="navbar__title">确认预约</text>
@@ -53,10 +58,13 @@
         <view class="form-stack" v-if="ui.showTimeSlot">
           <text class="field-label">时段</text>
           <view class="segmented">
+            <view class="segmented__thumb" :style="thumbStyle"></view>
             <view
               v-for="slot in ui.slotOptions"
               :key="slot"
-              :class="['segmented__item', timeSlot === slot ? 'is-on' : '']"
+              :class="['segmented__item', 'ds-pressable', timeSlot === slot ? 'is-on' : '']"
+              hover-class="is-pressed"
+              hover-stay-time="70"
               @click="timeSlot = slot"
             >
               <text class="segmented__text">{{ slotLabel(slot) }}</text>
@@ -68,11 +76,21 @@
         <view class="form-row" v-if="ui.showHours">
           <text class="form-row__label">小时数</text>
           <view class="stepper">
-            <view class="stepper__btn" @click="stepHours(-1)">
+            <view
+              class="stepper__btn ds-pressable"
+              hover-class="is-pressed"
+              hover-stay-time="70"
+              @click="stepHours(-1)"
+            >
               <text class="stepper__sign">－</text>
             </view>
             <text class="stepper__num">{{ hours }}</text>
-            <view class="stepper__btn" @click="stepHours(1)">
+            <view
+              class="stepper__btn ds-pressable"
+              hover-class="is-pressed"
+              hover-stay-time="70"
+              @click="stepHours(1)"
+            >
               <text class="stepper__sign">＋</text>
             </view>
           </view>
@@ -81,11 +99,22 @@
         <view class="form-row">
           <text class="form-row__label">人数</text>
           <view class="stepper">
-            <view class="stepper__btn" @click="stepPeople(-1)">
+            <!-- 数字本身不动：用户正在读的数不该为了好看而抖 -->
+            <view
+              class="stepper__btn ds-pressable"
+              hover-class="is-pressed"
+              hover-stay-time="70"
+              @click="stepPeople(-1)"
+            >
               <text class="stepper__sign">－</text>
             </view>
             <text class="stepper__num">{{ peopleCount }}</text>
-            <view class="stepper__btn" @click="stepPeople(1)">
+            <view
+              class="stepper__btn ds-pressable"
+              hover-class="is-pressed"
+              hover-stay-time="70"
+              @click="stepPeople(1)"
+            >
               <text class="stepper__sign">＋</text>
             </view>
           </view>
@@ -114,7 +143,14 @@
         <text class="price-block__label">合计</text>
         <text class="price"><text class="price__symbol">¥</text>{{ amount }}</text>
       </view>
-      <view :class="['btn', 'btn--filled', submitting ? 'is-disabled' : '']" @click="submit">
+      <view
+        :class="['btn', 'btn--filled', 'ds-pressable', submitting ? 'is-disabled' : '']"
+        hover-class="is-pressed"
+        hover-stay-time="70"
+        @click="submit"
+      >
+        <!-- 提交中给一个常量运动的转圈：进度不该有缓动，也不要让用户以为卡住了 -->
+        <view v-if="submitting" class="ds-spinner ds-spinner--on-primary btn__spinner"></view>
         <text class="btn__text">{{ submitting ? '提交中…' : '提交预约' }}</text>
       </view>
     </view>
@@ -133,14 +169,19 @@
  *   半日 → 选上午/下午；全天 → 隐藏时段；小时加购 → 显示小时数
  */
 import { GuideApi, OrderApi, BOOKING_TYPE_UI, TIME_SLOT_LABELS } from '@/api/index.js';
+import { createPageMotion } from '@/utils/motion.js';
 
 const DOW = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 const MAX_PEOPLE = 9;
 const MAX_HOURS = 8;
 
+/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
+
 export default {
   data() {
     return {
+      ...pageMotion.data(),
       guideId: '',
       attractionId: '',
       packageSkuId: '',
@@ -182,6 +223,16 @@ export default {
     amount() {
       const price = this.selectedPackage.price || 0;
       return this.ui.showHours ? price * this.hours : price;
+    },
+
+    /* 分段滑块：宽度由段数算，位移只用 translateX 的百分比（按自身宽度算，正好一段） */
+    thumbStyle() {
+      const options = this.ui.slotOptions || [];
+      const index = Math.max(options.indexOf(this.timeSlot), 0);
+      return {
+        width: `calc((100% - 6px) / ${options.length || 1})`,
+        transform: `translateX(${index * 100}%)`
+      };
     }
   },
 
@@ -212,6 +263,8 @@ export default {
   },
 
   methods: {
+    ...pageMotion.methods,
+
     async loadGuide() {
       try {
         const data = await GuideApi.getGuideDetail(this.guideId);
@@ -278,7 +331,7 @@ export default {
     },
 
     goBack() {
-      uni.navigateBack();
+      this.goBackWithMotion();
     },
 
     async submit() {
@@ -468,13 +521,27 @@ export default {
 }
 
 .segmented {
+  position: relative;
   display: flex;
   padding: 3px;
   background: $ds-surface-high;
   border-radius: $ds-shape-sm;
 }
 
+/* 选中块：只用 translateX 滑，不动 width / left */
+.segmented__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  border-radius: $ds-shape-xs;
+  background: $ds-surface-container;
+  transition: transform $ds-dur-base $ds-ease-in-out;
+}
+
 .segmented__item {
+  position: relative;
+  z-index: 1;
   flex: 1;
   height: 38px;
   display: flex;
@@ -483,8 +550,6 @@ export default {
   border-radius: $ds-shape-xs;
 
   &.is-on {
-    background: $ds-surface-container;
-
     .segmented__text {
       color: $ds-primary;
       font-weight: 600;
@@ -495,6 +560,7 @@ export default {
 .segmented__text {
   font-size: $ds-fs-body-sm;
   color: $ds-ink-2;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 .stepper {
@@ -601,6 +667,10 @@ export default {
   &.is-disabled {
     background: $ds-primary-dim;
   }
+}
+
+.btn__spinner {
+  margin-right: $ds-space-2;
 }
 
 .btn__text {

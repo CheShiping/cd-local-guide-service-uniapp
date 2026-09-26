@@ -3,9 +3,9 @@
 ## 当前状态
 
 **最后更新：** 2026-09-26
-**当前功能：** 无进行中 —— **MVP 全部功能已完成**（feat-001 ~ feat-014 中 14 个全部 `done`）
-**验证入口：** `./init.ps1` / `bash init.sh` 共 **7 步**（本轮新增第 6 步「端到端闭环校验」，见下方 bug 记录）
-**当前阶段：** 阶段 0「保留原有资产」= 完成；阶段 1「成都景点地陪小程序」= **7 个页面全部落地、三端闭环打通**，剩余工作只剩真机人工走查与后端对接
+**当前功能：** 无进行中 —— **MVP 全部功能已完成**（feat-001 ~ feat-015 中 15 个全部 `done`）
+**验证入口：** `./init.ps1` / `bash init.sh` 共 **8 步**（第 7 步「端到端闭环校验」见下方 bug 记录；第 4 步「动效校验」为本轮 feat-015 新增）
+**当前阶段：** 阶段 0「保留原有资产」= 完成；阶段 1「成都景点地陪小程序」= **7 个页面全部落地、三端闭环打通、动效规范落地**，剩余工作只剩真机人工走查与后端对接
 
 ## 阶段 1 范围（已锁定）
 
@@ -77,6 +77,29 @@
 - [x] **feat-011 接单页**：`pages/guide/orders` + `mine.vue` 角色分流 + 演示身份切换
 - [x] **feat-012 后台**：订单管理视觉重做 + 地陪审核页重写，`gap-003` 关闭
 - [x] **feat-013 令牌收口与文档同步**：8 页面令牌化 + tabBar/manifest/README/App.vue + 删除过渡适配层
+- [x] **feat-015 动效规范与落地**：内容横向切换的方向性入场、页签/分段滑动指示器、加载更多（转圈 + 新卡片上浮）、状态过渡、按压反馈、降低动效；新增 `utils/motion.js` 与 `scripts/check-motion.mjs`
+
+### 动效清单（feat-015 落地了什么）
+
+| 场景 | 做法 | 时长 / 曲线 |
+|---|---|---|
+| 切分类（六个列表） | 卡片按行进方向入场（左右各 24px），逐项 +60ms 封顶 300ms | **360ms** `--ease-out` |
+| 加载更多 | 加载态换 `linear` 转圈；新追加卡片上浮 8px | **360ms** `--ease-out` |
+| **页面进入**（navigateTo / 首次显示） | 根节点常带 `is-page-in`；**仅 H5**（小程序是原生转场；App 用 `pages.json` 的 `app-plus`） | 320ms `--ease-out` |
+| **页面返回**（导航栏返回键） | 换 `is-page-out` → 播完再 `navigateBack()`；刻意不淡到 0，避免闪空底 | 260ms `--ease-in-out` |
+| 等宽页签（我的订单 4 态 / 地陪审核 2 态） | 单根滑动下划线 `translateX(下标 × 100%)` | 280ms `--ease-in-out` |
+| 分段控件（接单 / 下单） | 滑动滑块，宽度由段数算，只动 `transform` | 280ms `--ease-in-out` |
+| 横向滚动页签行（首页区域） | 下划线改真实元素，`scaleX(0)→scaleX(1)` 收放，不动 `width` | 360ms / 160ms |
+| chip / 套餐单选 / 可约日期 / 角色切换 | 底色 + 边框 + 文字色过渡 | 160ms `--ease-out` |
+| 在线开关 | 圆点 `translateX(20px)` 滑过去（原来是换 `justify-content` 硬跳） | 360ms `--ease-out` |
+| **按压反馈**（全部可点元素） | `hover-class="is-pressed"` + `scale(0.96)`，再叠一层 8% `currentColor`（照 §8 规范，不用 opacity 变暗） | 140ms `--ease-out` |
+| 空状态 / 「没有更多了」/ 登录遮罩 | 淡入 | 360ms `--ease-out` |
+| 勾选符号 / 套餐单选圈 | 弹入（scale 0.6 → 1） | 140ms `--ease-out` |
+| 降低动效 | 去掉位移与回弹，**保留淡入**；页面转场只留淡入淡出 | — |
+
+按压反馈覆盖：卡片、按钮、四态页签、chip、分段项、菜单行、返回图标、步进器、勾选框、协议链接、在线开关。
+
+明确**不做**动效：金额与统计数字、步进器的人数/小时数（用户正在读的数）、Toast / Modal / picker / 下拉刷新（平台自带）、排序重排（需 FLIP）、**不给小程序自己加页面转场**（微信是原生转场，再加一层就是双重动画）
 
 ### 进行中
 
@@ -85,14 +108,17 @@
 ### 下一步
 
 1. **人工走查（首要，也是唯一没做过的验证维度）**：在 H5（`npm run dev:h5`）或微信开发者工具里跑一遍三端闭环 —— 游客下单 → 地陪接单 → 平台确认 → 地陪完成；重点看页签切换、下拉刷新、图片兜底、弹窗确认的观感。
-   > 数据层闭环已由 `scripts/smoke-flow.mjs` 证明跑得通（28/28），但它证明不了渲染与交互。
+   > 数据层闭环已由 `scripts/smoke-flow.mjs` 证明跑得通（50/50），但它证明不了渲染与交互。
+   > **feat-015 的动效尤其需要真机看**：`hover-class` 的按压反馈、`translateX` 百分比驱动的滑动指示器、`prefers-reduced-motion` 在小程序端是否生效，都只有真机能确认。
 2. **跑一次真实构建**：`./init.ps1 -Full`（会安装依赖 + `npm run build:mp-weixin`），确认 `api/mock/seed.json` 的 JSON import、`uni.scss` 令牌、`env(safe-area-inset-bottom)` 与 `max(#{$ds-space-3}, ...)` 写法在编译期都没问题。
 3. 若走查发现问题 → 按规则产出 `docx/bugfix/BUG修复-YYYYMMDD-简述.md` 并登记到本文件。
 4. 后续升级路线见「未来候选」。
 
 ## 阻塞 / 风险
 
-- [ ] 缺依赖：无 `node_modules`，`npm run build:mp-weixin` 无法执行；`./init.ps1 -Full` 会自动安装（需联网）。**真实构建一次都没跑过**
+- [x] ~~缺依赖：无 `node_modules`~~ **已安装**（HBuilderX / npm 装的都在）。但 **`npm run build:mp-weixin` 在本仓库跑不通，且与本轮改动无关**：根目录是 HBuilderX「普通项目」布局（源码在根），而 `@dcloudio/uni-cli` 期望源码在 `src/`，报 `ENOENT: src/manifest.json`。要么把源码挪进 `src/`（大改目录结构，需单独评估），要么接受「真实编译走 HBuilderX」。`./init.ps1` 第 8 步因此长期只能跳过
+- [ ] **新增 WXSS 未在 HBuilderX 里真机确认过**（feat-015）：`/* #ifdef H5 */` 条件编译段、`.is-pressed::after` 叠层、`animation-fill-mode: backwards`、`@media (prefers-reduced-motion)` 这四样只有真编译才知道小程序端表现如何。已用 HBuilderX 自带的 dart-sass 验证过 12 个样式块能编译（见 `docx/bugfix/BUG修复-20260926-SCSS变量未定义实为注入缓存陈旧.md`）
+- [ ] **H5 返回转场的「换页那一下」只能靠眼睛验收**：上一页是被缓存复用的，返回时不会再播进入动画；已用「不淡到 0 + 同色宣纸底」把跳变压到最小，但顺不顺必须人工看
 - [ ] **本轮 8 个功能全部未做真机人工走查**：静态门禁只能证明结构与数据自洽，证明不了交互与观感
 - [x] ~~无测试框架~~ **部分解决**：新增 `scripts/smoke-flow.mjs`（第 7 项门禁，动态运行 mock 数据层跑三端闭环 + 负向用例 + 自检）。剩余缺口是「页面层」没有自动化：模板渲染、交互与样式仍只能靠人工走查
 - [x] ~~静态门禁看不见运行时问题~~ **已验证**：本轮两个阻断级 bug（mock 仓库缺字典表、档期生成恒空）都通过了全部静态门禁，只有动态门禁抓到 —— 已归档为两份 bugfix 文档
@@ -132,12 +158,61 @@
 - **「不新建 `/pages/admin/clerk/edit`」**：审核只需通过/拒绝（gap-003）
 - **价格用整数「元」**，不改造 `utils/index.js` 的 `formatPrice`（它把入参当分且无人调用，保持 `keep` 档）
 - **产出文档纳入完成定义**：feat 标 `done` 前必须有设计文档；改 bug 必须有 bugfix 文档
+- **动效只解决三件事**（feat-015）：内容被整批替换时不要瞬移、页面被整批替换时不要瞬移、状态切换要看得见。除此之外不加动效；用户正在读的数字（金额 / 统计 / 步进器）一律不动
+- **动效一律只动 `transform` 与 `opacity`**（外加 `color` / `background-color` / `border-color`）：动 `width` / `left` 会触发 layout + paint；滑动指示器一律用 `translateX(下标 × 100%)` 的百分比，天然等于一格宽，不需要测量
+- **入场用 CSS 动画 + 节点批次重建，不用 `transition` + 时序标志位**：后者依赖「先渲染隐藏态 → 下一帧移除」，mock 返回过快时可能整段不播；前者靠 `:key="enterSeq + '-' + id"` 让节点重建，动画必定从首帧开始，不需要任何 hack
+- **内容切换刻意放慢（360ms，逐项 +60ms 封顶 300ms）**：一类动效一次替换整屏、且不常发生，慢一点才看得清「新内容是从哪边换过来的」；反过来按压反馈必须跟手（140ms）。UI 动效预算因此从 300ms 放宽到 **400ms**
+- **页面转场要分平台处理**（feat-015）：小程序（含微信）的 `navigateTo` / `navigateBack` 是**原生转场**，自己再加就是双重动画；H5 的官方 `animationType` 不生效，得用 CSS 模拟（进入 `is-page-in` / 返回先播 `is-page-out` 再 `navigateBack()`）；App 才认 `pages.json` 的 `globalStyle.app-plus`。三端差异写进 `DESIGN.md` §13.4
+- **H5 的返回离场刻意不淡到 0**（`opacity: 0.15` + 右移 40%）：全站页面底色都是同一张宣纸，露出来的那块与上一页底色一致，换页那一下几乎看不出来；淡到 0 反而会先闪一块空底
+- **keyframes 只放 `App.vue` 全局样式**：页面样式是 `scoped` 的，同名 keyframes 会被编译成七个不同名字；顺带统一掉登录页自带的 `@keyframes spin`
+- **入场 `animation-fill-mode` 用 `backwards` 而不是 `both`**：`both` 会残留 `transform: translateX(0)`，把按压反馈的 `scale` 盖掉
+- **降低动效不是「全部关掉」**：`prefers-reduced-motion` 下保留淡入（帮助理解状态变化），只去掉位移与回弹；因此入场动画名必须写在 class 里，不能内联 `animation-name`（内联优先级高于样式表的降级规则）
+- **动效也进门禁**（feat-015）：新增 `scripts/check-motion.mjs` 拦 **12 类**违规（`transition: all`、动 layout 属性、`ease-in`、`transition` 用 `linear`、`animation` 用 `linear`、`scale(0)`、`:hover`、页面内 `@keyframes`、动画名不存在、内联 `animationName`、超 400ms、**`utils/motion.js` 的 `MOTION` 与 `uni.scss` 时长令牌不一致**），并接入 `init.ps1` 第 4 步
+- **按压反馈用 `hover-class="is-pressed"` 而不是 `:active`**：小程序里 `:active` 不可靠；并配 `hover-stay-time="70"`（默认 400ms 会让按下后迟迟不回弹）。按压是两层：`scale(0.96)` 回弹 + `::after` 8% `currentColor` 叠层（照 `DESIGN.md` §8「用 8% 主色叠层，不用 opacity 变暗」）
+- **JS 时长必须与 SCSS 令牌对齐**（feat-015）：页面返回要「等动画播完再 `navigateBack()`」，`setTimeout` 用的是 `MOTION.pageLeave`、动画用的是 `$ds-dur-page-leave`，两边不等就会截断动画或白等 —— 所以门禁里加了逐项比对
 
 ## 未来候选（MVP 之后再说，现在不许实现）
 
-地陪自助申请开通 + 平台审核、后台区域管理界面（表结构已就绪，只差页面）、景点池继续扩展、评价与评分体系、真实后端 HTTP 对接、在线开关落库、支付与自动结算、IM 聊天、多城市、动态定价、团购/分销、广场发单、达人等级、复杂排班、行程日志与轨迹回放、门店管理、把 tabBar 图标形状换成成都主题图形（生成器已就绪，改 `SHAPES` 即可）
+地陪自助申请开通 + 平台审核、后台区域管理界面（表结构已就绪，只差页面）、景点池继续扩展、评价与评分体系、真实后端 HTTP 对接、在线开关落库、支付与自动结算、IM 聊天、多城市、动态定价、团购/分销、广场发单、达人等级、复杂排班、行程日志与轨迹回放、门店管理、把 tabBar 图标形状换成成都主题图形（生成器已就绪，改 `SHAPES` 即可）、排序切换的列表重排动画（需 FLIP，与「只动 transform」的预算冲突，MVP 不做）、接单页与地陪审核页的横滑切换（`createTabRow()` 已就绪，接上只需 5 行）
 
 ## 本次会话修改的文件
+
+### 本轮（feat-015 动效）
+
+- `DESIGN.md` - 新增 §13 动效规范（时长/曲线、只动 transform 与 opacity、四组动效、明确不做、降低动效、工程约定），原 §13 变更记录顺延为 §14；变更记录补一行
+- `uni.scss` - 新增 §1.8 动效令牌：`$ds-dur-press/fast/base/spin`、`$ds-ease-out`、`$ds-ease-in-out`、`$ds-stagger-step`、`$ds-stagger-max`
+- `utils/motion.js` - **新建**：动效通用行为（`MOTION` / `enterAnimClass` / `staggerDelay` / `stepDirection` / `createListEnter`），与 `utils/hscroll.js` 同构
+- `App.vue` - 全局样式新增动效段：6 个 `@keyframes`、`.ds-enter-*` / `.ds-fade-in` / `.ds-pop-in` / `.ds-spinner`（含 `--on-primary` / `--lg`）/ `.ds-pressable` / `.is-pressed` + `prefers-reduced-motion` 降级
+- `pages/index/index.vue` - 切区域卡片方向入场 + 加载更多上浮 + 区域下划线改真实元素（`scaleX` 收放）+ 转圈加载态 + 卡片按压反馈
+- `pages/guide/list.vue` - 切预约类型方向入场 + 加载更多上浮 + chip 选中态过渡 + 转圈 + 卡片/「看详情」按压反馈；排序切换走 `renewEnter()`
+- `pages/appointment/my.vue` - 四态页签改**单根滑动下划线** + 切状态方向入场 + 加载更多上浮 + 转圈 + 取消按钮按压反馈
+- `pages/guide/orders.vue` - 分段控件改**滑动滑块** + 切分段方向入场 + 加载更多上浮 + 转圈 + 在线开关圆点改 `translateX` 滑动 + 三个操作按钮按压反馈
+- `pages/admin/appointment.vue` - 切状态方向入场（改日期走 `renewEnter()`）+ 加载更多上浮 + chip 选中态过渡 + 转圈 + 三个操作按钮按压反馈
+- `pages/admin/clerk.vue` - 两个页签改**单根滑动下划线** + 切页签方向入场 + 加载更多上浮 + 转圈 + 通过/拒绝按压反馈
+- `pages/clerk/detail.vue` - 套餐选中底色/单选圈过渡 + 勾选符号弹入 + 可约日期过渡 + 套餐行/日期块/主按钮按压反馈
+- `pages/order/create.vue` - 时段分段改**滑动滑块** + 提交按钮转圈（`ds-spinner--on-primary`）+ 步进器与主按钮按压反馈
+- `pages/tabbar/mine.vue` - 菜单行与角色 chip 按压反馈 + chip 选中态过渡
+- `pages/login/login.vue` - 删除自带 `@keyframes spin` 与 `.loading-spinner`，改用全局 `ds-spinner--lg` + 遮罩淡入；按钮与协议勾选框按压反馈 + 勾选符号弹入
+- `scripts/check-motion.mjs` - **新建：第 4 项门禁，动效校验（11 类违规 + `--self-test` 全检出）**
+- `init.ps1` / `init.sh` - 验证入口由 7 步扩为 **8 步**，插入「动效校验」
+- `AGENTS.md` - 验证命令、完成定义与「必需产物」加入 `check-motion.mjs` 与 `utils/motion.js`；静态校验说明改为「除 smoke-flow 外」
+- `README.md` - 验证一节由 6 步更新为 8 步并补说明
+- `docx/codeimpl-sum/设计文档-feat-015-动效规范与落地.md` - 新建：本轮设计文档（六章节齐全，含三端页面转场差异与按压两层实现）
+- `docs/legacy-assets.json` - **11 条**被改资产的 note 先补动效说明，再 `--update` 刷新哈希（App.vue / uni.scss / pages.json / README.md / login / index / clerk-detail / my / mine / admin-clerk / admin-appointment）
+- `feature_list.json` - 新增 feat-015 并写 `done` 与证据
+- `progress.md` / `session-handoff.md` - 本文件与交接文件
+
+**本轮追加（用户反馈：返回也要动画、按钮也要按压、内容切换再慢一点）**
+
+- `uni.scss` - 动效令牌扩为 9 个：新增 `$ds-dur-slide`（280ms 指示器）、`$ds-dur-page`（320ms）、`$ds-dur-page-leave`（260ms）；`$ds-dur-base` 220→**360ms**、`$ds-stagger-step` 40→**60ms**、`$ds-stagger-max` 200→**300ms**；时长预算 300→400ms
+- `utils/motion.js` - `MOTION` 同步扩为 9 项；**新增 `createPageMotion()`**（`pageMotion` + `goBackWithMotion()`，H5 先播离场再 `navigateBack`，其余平台直接返回）
+- `App.vue` - 新增 `ds-page-in` / `ds-page-out` / `ds-page-fade-out` 三个 keyframes 与 `.is-page-in` / `.is-page-out`（条件编译只对 H5）；按压补 `::after` 的 8% `currentColor` 叠层；`.icon-btn` / `.nav-back` 补圆角（否则叠层是方块）；降级段补页面转场
+- `pages.json` - `globalStyle` 补 `app-plus` 页面转场配置（`slide-in-right` / 320ms；App 端跳转默认无动画且只认这份配置）
+- 11 个页面 - 根节点加 `:class="['page', pageMotion]"` 并 spread `createPageMotion()`；有返回键的 8 页 `goBack()` 改走 `goBackWithMotion()`；返回图标、页签、chip、分段项、菜单行、步进器、勾选框、协议链接、在线开关全部补按压反馈
+- `scripts/check-motion.mjs` - 预算 300→400ms；**新增第 12 类校验：`utils/motion.js` 的 `MOTION` 与 `uni.scss` 时长令牌逐项比对**；自检补 `utils/motion.js` 夹具并修正临时目录创建（原先只建 `pages/x`，加夹具后 `ENOENT`）
+- `AGENTS.md` - 「改了代码但页面没生效？」章节重写：现象改表格（新增 `[sass] Undefined variable $ds-xxx` 一类）、清理命令补 HBuilderX 的 `unpackage\dist\cache` / `dev`、补 SCSS 自证方法
+- `DESIGN.md` - §13 大幅修订：新增 §13.4 页面转场（三端三套机制对照表 + `goBackWithMotion()` 实现 + 为什么离场不淡到 0）、§13.5 按压反馈两层、时长表补 row 并调为 360/320/280/260ms、预算改 400ms、门禁改 12 类；变更记录补一行
+- `docx/bugfix/BUG修复-20260926-SCSS变量未定义实为注入缓存陈旧.md` - 新建：`[sass] Undefined variable $ds-dur-page` 的排查归档（根因是 Vite 的 `additionalData` 注入内容被缓存，源码用同一编译器自证 12/12 通过）
 
 ### 本轮（feat-006 ~ feat-013）
 
@@ -233,9 +308,16 @@
 - [x] tabBar 一致性：`node scripts/gen-tabbar-icons.mjs` → 4 张图标 81×81、主色分别 rgb(107,104,98)/rgb(47,107,94)，与 `$ds-ink-2` / `$ds-primary` 逐项一致；`--check` 复检通过；4 条图标资产已登记 `keep → replace` 并刷新哈希
 - [x] 地陪头像素材：`node scripts/check-mock.mjs` → **39 张本地素材（可解析姓名 38 个），姓名对齐命中 39/50 个地陪 → /static/guide/**；`node scripts/smoke-flow.mjs` → **37/37**（含「地陪头像取自本地素材」）
 - [x] harness 审计：`validate-harness.mjs` 100/100
-- [x] 标准入口：`./init.ps1` → **7 步全绿**
-- [ ] 小程序真实构建：未执行（缺依赖，需 `./init.ps1 -Full`）
-- [ ] 页面层人工走查：未执行（数据层已由动态门禁覆盖，但渲染与交互没有自动化）
+- [x] 标准入口：`./init.ps1` → **8 步全绿**（1 环境 / 2 资产保真 / 3 设计令牌 / 4 **动效（feat-015 新增）** / 5 表结构 / 6 mock / 7 端到端闭环 / 8 构建或跳过）
+- [x] **动效门禁（feat-015 新增）**：`node scripts/check-motion.mjs` → 通过（**9 个 `@keyframes`** / 9 个动画名全部存在；**9 个时长令牌与 `utils/motion.js` 的 `MOTION` 逐项一致**）；`--self-test` → 通过（**12 类**违规都能检出：超长时长、`transition: all`、动 layout 属性、`ease-in`、`transition` 用 `linear`、`animation` 用 `linear`、`scale(0)`、`:hover`、页面内 `@keyframes`、动画名不存在、缺降级、`MOTION` 与令牌不一致）
+- [x] 动效门禁首跑就抓到真实问题：登录页自带 `@keyframes spin`（scoped 会让七个页面各编译一份）+ 动画名 `spin` 在 App.vue 不存在 + `0.8s` 裸时长 + `linear` 未标注 —— 已统一到全局 `.ds-spinner`
+- [x] 自检也修过一次：`walkDeclarations` 原按行切样式，漏掉 `transition: all 200ms` 这类「一行写完」的声明；改成花括号状态机后才全绿
+- [x] 令牌与规范同步：`check-tokens` → **106** 个变量（含 9 个动效时长令牌）/ 15 处引用无未定义 / DESIGN.md 20 个色值全对齐（§13 未引入新色值）
+- [x] **SCSS 实际编译验证**：用 **HBuilderX 自带的 dart-sass** 把「`uni.scss` 全文 + 12 个文件的样式块」逐个 `renderSync` → **12/12 通过**。这条是为排查 `[sass] Undefined variable $ds-dur-page` 加的，结论是注入缓存陈旧而非代码问题（见下方 bugfix 文档）
+- [x] 改动资产全部先登记再刷新：**11 条** note 补动效说明 → `verify-assets --update` → 复跑通过，保真告警 **0** 条
+- [x] `init.ps1` 的 UTF-8 BOM 仍在校验：首字节 `ef bb bf`
+- [ ] 小程序真实构建：**`npm run build:mp-weixin` 跑不通且与本轮无关**（CLI 期望 `src/` 布局，本仓库是 HBuilderX 根目录布局）→ 实际编译走 HBuilderX
+- [ ] 页面层人工走查：未执行（数据层已由动态门禁覆盖，但渲染与交互没有自动化；**动效观感、尤其 H5 返回转场只能靠眼睛**）
 - [x] **旧构建缓存是排查陷阱（已记录）**：用户报的「地陪审核 byId undefined」经核对是修复前的构建产物（报错栈与当前源码行号对得上、但源码里字典表已在）。处置：先重启 dev server / 重新构建再判断；同时已把 `byId` 的报错改成可读信息、并把审核链路纳入闭环门禁
 
 ## 给下一会话的备注
@@ -258,3 +340,12 @@
 - **横滑不用 `swiper`**：`swiper` 要为每个分类维护独立列表状态（分页 / `hasMore` / 刷新 / 空态 × N），与「切分类 = 重拉第一页」的现有数据流是两套语义；手势方案保持一份列表状态，分页与下拉刷新全部复用
 - **横向滚动容器里的 chip / 页签必须写 `flex: none` + `white-space: nowrap`**：否则 flex 子项会被压窄、文字竖排换行（`scroll-view` 的 `white-space: nowrap` 管不了 flex 收缩）。
 - 统计类字段要检查「数据里是否真的存在这种记录」：mock 里所有订单都排在明天之后时，「今日订单」必然恒为 0。
+- **动效只走三条路**：CSS 动画（`ds-enter-*` 类 + `enterStyle(index)` 给延迟）、`translateX` 百分比驱动的滑动指示器、颜色类 `transition`。**不要**用 JS 逐帧、不要用 `transition: all`、不要动 `width` / `left`（`check-motion.mjs` 会拦）。
+- **页面转场分平台，别一把梭**：小程序（含微信）是原生转场，**什么都不要加**；H5 用 `createPageMotion()` 的 `is-page-in` / `is-page-out`；App 用 `pages.json` 的 `globalStyle.app-plus`。新页面接入只需：根节点绑 `:class="['page', pageMotion]"`、data/methods 各 spread 一次、`goBack()` 调 `goBackWithMotion()`。
+- **改了 `uni.scss` 的时长令牌，必须同步 `utils/motion.js` 的 `MOTION`**：两边不等会让「等离场动画播完再返回」截断或白等；`check-motion.mjs` 会直接报错（kebab ↔ camel 逐项比对）。
+- **看到 `[sass] Undefined variable $ds-xxx` 先别改代码**：`uni.scss` 是靠 Vite 的 `additionalData` 注入的，注入内容会被缓存 —— 新 `App.vue` × 旧 `uni.scss` 就会报这个。停运行 → 删 `unpackage\dist\cache` 与 `unpackage\dist\dev` → 重跑。想自证源码没问题：用 HBuilderX 自带的 dart-sass 把 `uni.scss` 与样式块拼起来 `renderSync` 一次。
+- **列表入场不要各写一套**：`utils/motion.js` 的 `createListEnter()` 给 `enterAnim` / `enterBase` / `enterSeq` 与 `beginEnter(dir, base)` / `renewEnter()` / `enterStyle(index)`；`enterSeq` 必须进 `:key`，否则切分类时同一批 key 不会重播入场。新列表页接入只需 data/methods 各 spread 一次。
+- **无方向的整批刷新（改排序、改日期筛选）调 `renewEnter()`**：只换批次 + 上浮，不要假装有左右方向。
+- **动效改动必须跑 `node scripts/check-motion.mjs`**；改设计与令牌时 `DESIGN.md` §13 与 `uni.scss` §1.8 必须同步改（和颜色、字阶同一条规矩）。
+- **入场 `animation-fill-mode` 保持 `backwards`**：改成 `both` 会残留 `transform`，把按压反馈的 `scale(0.97)` 盖掉（这条踩过）。
+- **不要给正在读的数字加动效**：金额、统计条、步进器的人数是「用户正在读或正在操作的数据」，动了只会干扰。

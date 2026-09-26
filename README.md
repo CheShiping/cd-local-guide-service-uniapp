@@ -71,11 +71,14 @@ npm run build:mp-weixin  # 生产构建
 ### 验证（零依赖，不需要先 install）
 
 ```bash
-./init.ps1      # Windows PowerShell；共 6 步
+./init.ps1      # Windows PowerShell；共 8 步
 bash init.sh    # Git Bash / macOS / Linux
 ```
 
-6 步 = 环境检查 → 资产保真 → 设计令牌 → 数据库表结构 → mock 数据层 → 构建（`-Full` 时才装依赖并真实构建）。
+8 步 = 环境检查 → 资产保真 → 设计令牌 → 动效 → 数据库表结构 → mock 数据层 → 端到端闭环 → 构建（`-Full` 时才装依赖并真实构建）。
+
+前三项与动效、表结构、mock 都是**静态**校验；`scripts/smoke-flow.mjs` 是唯一的**动态**校验（真实跑一遍三端闭环）。
+新增或修改数据层逻辑后，除了静态门禁，必须跑它。
 
 ### 数据源
 

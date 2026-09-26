@@ -1,5 +1,5 @@
 <template>
-  <view class="page">
+  <view :class="['page', pageMotion]">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 页面标题：宋体大标题 + 一句把下一步说清楚的副标题 -->
@@ -20,18 +20,24 @@
     >
       <view class="tabline__inner">
         <view
-          :class="['tabline__item', regionTypeId === '' ? 'is-on' : '']"
+          :class="['tabline__item', 'ds-pressable', regionTypeId === '' ? 'is-on' : '']"
+          hover-class="is-pressed"
+          hover-stay-time="70"
           @click="changeRegion('')"
         >
           <text class="tabline__text">全部</text>
+          <view class="tabline__bar"></view>
         </view>
         <view
           v-for="region in regionList"
           :key="region.id"
-          :class="['tabline__item', regionTypeId === region.id ? 'is-on' : '']"
+          :class="['tabline__item', 'ds-pressable', regionTypeId === region.id ? 'is-on' : '']"
+          hover-class="is-pressed"
+          hover-stay-time="70"
           @click="changeRegion(region.id)"
         >
           <text class="tabline__text">{{ region.name }}</text>
+          <view class="tabline__bar"></view>
         </view>
       </view>
     </scroll-view>
@@ -47,9 +53,12 @@
     >
       <view class="list">
         <view
-          v-for="item in attractionList"
-          :key="item.id"
-          class="card attract"
+          v-for="(item, index) in attractionList"
+          :key="enterSeq + '-' + item.id"
+          :class="['card', 'attract', 'ds-pressable', enterAnim]"
+          :style="enterStyle(index)"
+          hover-class="is-pressed"
+          hover-stay-time="70"
           @click="goGuideList(item)"
         >
           <view class="thumb">
@@ -69,11 +78,14 @@
       </view>
 
       <view class="load-status">
-        <text v-if="loading" class="load-text">加载中…</text>
-        <text v-else-if="!hasMore && attractionList.length > 0" class="load-text">没有更多了</text>
+        <view v-if="loading" class="load-row">
+          <view class="ds-spinner"></view>
+          <text class="load-text">加载中…</text>
+        </view>
+        <text v-else-if="!hasMore && attractionList.length > 0" class="load-text ds-fade-in">没有更多了</text>
       </view>
 
-      <view v-if="!loading && attractionList.length === 0" class="empty-box">
+      <view v-if="!loading && attractionList.length === 0" class="empty-box ds-fade-in">
         <text class="empty-icon">◎</text>
         <text class="empty-title">这个区域还没有景点</text>
         <text class="empty-tip">换个区域看看，或先选「全部」</text>
@@ -93,6 +105,7 @@
  */
 import { RegionApi, AttractionApi } from '@/api/index.js';
 import { createTabRow } from '@/utils/hscroll.js';
+import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 /* 区域页签：激活项自动滚到可视区中间 + 内容左右滑动切换（见 utils/hscroll.js） */
 const regionTabRow = createTabRow({
@@ -103,10 +116,18 @@ const regionTabRow = createTabRow({
   onStep: (vm, step) => vm.stepRegion(step)
 });
 
+/* 列表入场：切区域带方向（卡片从行进方向那一侧进来），加载更多只让新追加的那几项上浮 */
+const listEnter = createListEnter();
+
+/* 页面转场：首页是 tabBar 页，只用到进入（H5；小程序是原生转场） */
+const pageMotion = createPageMotion();
+
 export default {
   data() {
     return {
       ...regionTabRow.data(),
+      ...listEnter.data(),
+      ...pageMotion.data(),
       regionList: [],
       regionTypeId: '',
       attractionList: [],
@@ -136,6 +157,8 @@ export default {
 
   methods: {
     ...regionTabRow.methods,
+    ...listEnter.methods,
+    ...pageMotion.methods,
 
     async loadRegions() {
       try {
@@ -145,7 +168,7 @@ export default {
       }
     },
 
-    async loadAttractions(refresh = false) {
+    async loadAttractions(refresh = false, dir = ENTER_UP) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -164,6 +187,8 @@ export default {
 
         const { list, total, hasMore } = await AttractionApi.getAttractionList(params);
 
+        /* 切换区域：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
+        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.attractionList.length);
         this.attractionList = refresh ? list : [...this.attractionList, ...list];
         this.total = total || 0;
         this.hasMore = hasMore;
@@ -176,11 +201,13 @@ export default {
       }
     },
 
-    changeRegion(regionTypeId) {
+    changeRegion(regionTypeId, dir = 0) {
       if (this.regionTypeId === regionTypeId) return;
+      /* 点选时方向由下标差推出；横滑时直接用滑动方向（step） */
+      const from = this.activeTabIndex;
       this.regionTypeId = regionTypeId;
       this.centerActiveTab();
-      this.loadAttractions(true);
+      this.loadAttractions(true, dir || stepDirection(from, this.activeTabIndex));
     },
 
     /* 横滑：上/下一个区域；到两端就停住 */
@@ -188,7 +215,7 @@ export default {
       const tabs = ['', ...this.regionList.map((region) => region.id)];
       const next = this.activeTabIndex + step;
       if (next < 0 || next >= tabs.length) return;
-      this.changeRegion(tabs[next]);
+      this.changeRegion(tabs[next], step);
     },
 
     loadMore() {
@@ -272,24 +299,33 @@ export default {
       font-weight: 600;
     }
 
-    &::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      width: 22px;
-      height: 2px;
-      border-radius: 1px;
-      background: $ds-primary;
+    /* 激活下划线：宽度固定 22px，只用 scaleX 收放，不去动 width */
+    .tabline__bar {
+      opacity: 1;
+      transform: translateX(-50%) scaleX(1);
     }
   }
+}
+
+.tabline__bar {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 22px;
+  height: 2px;
+  border-radius: 1px;
+  background: $ds-primary;
+  /* 切换时旧项的线收回去、新项的线展开，读起来就是「线移过去了」 */
+  opacity: 0;
+  transform: translateX(-50%) scaleX(0);
+  transition: transform $ds-dur-base $ds-ease-out, opacity $ds-dur-fast $ds-ease-out;
 }
 
 .tabline__text {
   white-space: nowrap;
   font-size: $ds-fs-body-sm;
   color: $ds-ink-2;
+  transition: color $ds-dur-fast $ds-ease-out;
 }
 
 /* ---------- 列表 ---------- */
@@ -387,6 +423,13 @@ export default {
 .load-status {
   text-align: center;
   padding: $ds-space-5;
+}
+
+.load-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $ds-space-2;
 }
 
 .load-text {

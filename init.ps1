@@ -7,31 +7,35 @@ param([switch]$Full)
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
-Write-Host '=== 1/7 环境检查 ==='
+Write-Host '=== 1/8 环境检查 ==='
 node -v
 
 Write-Host ''
-Write-Host '=== 2/7 资产保真校验（零依赖） ==='
+Write-Host '=== 2/8 资产保真校验（零依赖） ==='
 node scripts/verify-assets.mjs
 
 Write-Host ''
-Write-Host '=== 3/7 设计令牌校验（零依赖） ==='
+Write-Host '=== 3/8 设计令牌校验（零依赖） ==='
 node scripts/check-tokens.mjs
 
 Write-Host ''
-Write-Host '=== 4/7 数据库表结构校验（零依赖） ==='
+Write-Host '=== 4/8 动效校验（零依赖） ==='
+node scripts/check-motion.mjs
+
+Write-Host ''
+Write-Host '=== 5/8 数据库表结构校验（零依赖） ==='
 node scripts/check-schema.mjs
 
 Write-Host ''
-Write-Host '=== 5/7 mock 数据层校验（零依赖） ==='
+Write-Host '=== 6/8 mock 数据层校验（零依赖） ==='
 node scripts/check-mock.mjs
 
 Write-Host ''
-Write-Host '=== 6/7 端到端闭环校验（零依赖，真实运行 mock 数据层） ==='
+Write-Host '=== 7/8 端到端闭环校验（零依赖，真实运行 mock 数据层） ==='
 node scripts/smoke-flow.mjs
 
 Write-Host ''
-Write-Host '=== 7/7 构建验证 ==='
+Write-Host '=== 8/8 构建验证 ==='
 if (-not (Test-Path node_modules)) {
   Write-Host '未安装依赖（node_modules 缺失）。'
   if ($Full) {

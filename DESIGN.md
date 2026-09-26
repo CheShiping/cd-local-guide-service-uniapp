@@ -247,9 +247,98 @@ $ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Mic
 
 ---
 
-## 13. 变更记录
+## 13. 动效（Motion）
+
+动效只解决三件事：**内容被整批替换时不要瞬移**、**页面被整批替换时不要瞬移**、**状态切换要看得见**。除此之外一律不加动效。
+
+### 13.1 时长与曲线（落地为 `uni.scss` §1.8 的 `$ds-dur-*` / `$ds-ease-*`）
+
+| 场景 | 时长 | 曲线 | SCSS |
+|---|---|---|---|
+| 按压反馈 | 140ms | `--ease-out` | `$ds-dur-press` |
+| 颜色 / 背景 / 边框等状态切换（chip、页签文字、单选、开关底） | 160ms | `--ease-out` | `$ds-dur-fast` |
+| 页签指示器滑动、分段滑块 | 280ms | `--ease-in-out` | `$ds-dur-slide` |
+| **内容切换**（分类切换、加载更多的新项） | **360ms** | `--ease-out` | `$ds-dur-base` |
+| 页面进入 | 320ms | `--ease-out` | `$ds-dur-page` |
+| 页面退出（返回） | 260ms | `--ease-in-out` | `$ds-dur-page-leave` |
+| 加载指示器转一圈 | 900ms | `linear` + `infinite` | `$ds-dur-spin` |
+
+曲线取强缓动，不用 CSS 内置关键字：
+
+```scss
+$ds-ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* 入场 / 出场 */
+$ds-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* 屏上移动 */
+```
+
+**内容切换刻意用满预算（360ms）。** 这一类动效一次替换整屏内容、且不常发生，慢一点才能看清「新内容是从哪边换过来的」；按压反馈反过来必须跟手（140ms）。**UI 动效一律 ≤ 400ms。** 唯一超预算的是加载指示器：它是常量运动（进度），本就该用 `linear` 且可以慢。
+
+`uni.scss` 的这批时长与 `utils/motion.js` 的 `MOTION` 常量**必须成对修改**（JS 里的 `setTimeout` 要用同一份时长），`scripts/check-motion.mjs` 会逐项比对，不一致直接失败。
+
+### 13.2 只动 transform 与 opacity
+
+`width / height / margin / padding / top / left` 会触发 layout + paint + composite，一律禁止。允许动画的属性白名单：
+
+`transform`、`opacity`、`color`、`background-color`、`border-color`
+
+页签指示器与分段滑块**只改 `transform`**：等宽页签用 `translateX(100% × 下标)`（百分比按自身宽度算，天然等于一个页签宽），不碰 `width`。
+
+### 13.3 五组动效与它们的用途
+
+| 动效 | 位置 | 用途 | 落法 |
+|---|---|---|---|
+| 内容切换（方向性入场） | 景点列表 / 地陪列表 / 订单 / 接单 / 后台 | 防止瞬移 + 空间一致性：从行进方向那一侧进来 | 卡片 `ds-enter-next` / `ds-enter-prev`，逐项延迟 +60ms 封顶 300ms |
+| 加载更多（上浮入场） | 同上五个列表 | 防止瞬移：只有新追加的那几项入场 | 卡片 `ds-enter-up`，延迟基准 = 追加前的列表长度 |
+| 页面转场（进入 / 返回） | 全部 11 个页面 | 防止瞬移：换页时不要硬切 | 根节点 `is-page-in` / `is-page-out`，见 §13.4 |
+| 指示器移动 | 四态页签、地陪审核页签、两段分段控件 | 状态指示：说明当前在哪一项 | 页签下划线 / 分段滑块 `translateX`，280ms `--ease-in-out` |
+| 状态过渡 | chip 选中、套餐单选、可约日期、在线开关、角色切换 | 状态指示：让变化被看见 | 颜色类属性 160ms `--ease-out`；开关滑块改 `transform` |
+
+### 13.4 页面转场（多端差异必须清楚）
+
+三个平台的页面切换走的是三套不同机制，**不能一套代码硬套**：
+
+| 平台 | 机制 | 我们的做法 |
+|---|---|---|
+| 小程序（含微信） | `navigateTo` / `navigateBack` **本身就是原生转场动画** | 什么都不加。自己再动一层会变成双重动画 |
+| H5 | 官方配置 `animationType` **不生效**，要自己用 CSS 模拟 | 进入：根节点常带 `is-page-in`，页面被创建时播一次；返回：`is-page-out` 播完再真正 `navigateBack()` |
+| App | 官方配置生效 | `pages.json` 的 `globalStyle.app-plus` 配 `slide-in-right` / 320ms |
+
+H5 这套实现放在 `utils/motion.js` 的 `createPageMotion()`（`pageMotion` + `goBackWithMotion()`），各页 `goBack()` 只调 `goBackWithMotion()`。**进/出动画与两个 class 都用条件编译只对 H5 生效**，所以小程序端行为与没加过完全一致。
+
+返回的离场动画刻意**不淡到 0**（`opacity → 0.15` + 右移 40%）：全站页面底色都是同一张宣纸，露出来的那一块与上一页的底色一致，换页那一下几乎看不出来；淡到 0 反而会先闪一下空底再切。
+
+### 13.5 按压反馈
+
+统一用 uni-app 的 `hover-class="is-pressed"`（小程序里 `:active` 不可靠），并配 `hover-stay-time="70"`（默认 400ms 会让按下后迟迟不回弹）。一个按压状态由两层组成：
+
+1. `transform: scale(0.96)` + 140ms `--ease-out` —— 物理回弹感
+2. `::after` 叠一层 `currentColor` 8% —— 照 §8 按钮规范「用 8% 主色叠层，不用 opacity 变暗」；叠的是元素自己的文字色，深底按钮上就是一层浅色高光
+
+**凡是可点的东西都要有**：卡片、按钮、页签、chip、分段项、菜单行、返回图标、步进器、勾选框、协议链接。
+
+### 13.6 明确不做动效的地方
+
+- **数字**：金额、统计条、步进器的人数 / 小时数 —— 用户正在读或正在操作的数字不要为了好看而动
+- **Toast、Modal、picker、下拉刷新**：平台自带，不加自定义动效
+- **长期高频的操作**：列表滚动 —— 天天几十上百次的东西，越安静越好
+
+### 13.7 降低动效
+
+`prefers-reduced-motion: reduce` 时**不是关掉全部**，而是去掉位移与回弹、保留淡入（淡入帮助理解状态变化）。规则写在 `App.vue` 的全局样式末尾：列表入场与页面进入统一换成 `ds-fade-in`，页面退出换成 `ds-page-fade-out` —— 这也是入场动画名必须写在 class 里、而不是内联 `animation-name` 的原因（内联样式覆盖不掉）。
+
+### 13.8 工程约定
+
+- keyframes 全部放在 `App.vue` 的**全局**样式里：页面样式是 `scoped` 的，各自声明会被编译成不同名字，七屏共用不了
+- 入场动画的 `animation-fill-mode` 用 **`backwards`** 而不是 `both`：延迟期间先按首帧藏住，播完交还普通样式；用 `both` 会残留一个 `transform: translateX(0)`，把按压反馈的 `scale` 盖掉
+- 页面侧的通用计算在 `utils/motion.js`（`createListEnter()` / `createPageMotion()` / `staggerDelay()` / `stepDirection()`），不要各页自己算延迟、也不要各页自己写返回动画
+- 动效约束由 `scripts/check-motion.mjs` 把关（禁 `transition: all`、禁 `ease-in`、禁超 400ms、禁 `scale(0)`、禁动画 layout 属性、禁页面内 `@keyframes`、禁内联 `animationName`、禁 `:hover`、禁 `utils/motion.js` 与 `uni.scss` 的时长不一致）
+
+---
+
+## 14. 变更记录
 
 | 日期 | 变更 |
 |---|---|
 | 2026-09-26 | 定稿「宣纸 · 疏」。替换原陪玩小程序 Linear 风格规范（原文件已删除）；确立竹青绿主调、M3 令牌骨架、图片来自后端 URL 的策略。原型：`design/html/prototype.html` |
 | 2026-09-26 | tabBar 图标改为**代码生成**（线性 24 网格 / stroke 1.6；未选中 `$ds-ink-2`、选中 `$ds-primary`），修掉「粉色图标 + 竹青文字」的不一致。生成器：`scripts/gen-tabbar-icons.mjs` |
+| 2026-09-26 | 新增 §13 动效：时长/曲线令牌（`uni.scss` §1.8）、属性白名单（只动 transform / opacity + 颜色）、四组动效（内容切换 / 加载更多 / 指示器移动 / 状态过渡）、按压反馈用 `hover-class`、`prefers-reduced-motion` 降级、明确不做的地方。门禁：`scripts/check-motion.mjs` |
+| 2026-09-26 | §13 修订：① 内容切换放慢到 **360ms**（逐项 +60ms 封顶 300ms），预算由 300ms 放宽到 400ms；新增 `$ds-dur-slide`（指示器 280ms）；② 新增 §13.4 **页面转场**（小程序原生 / H5 用 CSS 模拟进入与返回 / App 用 `pages.json` 的 `app-plus`）；③ §13.5 按压反馈补 `::after` 8% 叠层，并把按压覆盖到全部可点元素；④ 门禁加「`utils/motion.js` ↔ `uni.scss` 时长一致性」 |
