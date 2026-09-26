@@ -25,8 +25,8 @@
       "name": "协议页与图片兜底统一（gap-001/002）",
       "description": "新建协议页并在 pages.json 注册（消 gap-002）；把现有 6 处硬编码 /static/images/default-avatar.png 改为读取图片字段（avatarUrl/coverUrl）+ primary-container 底色兜底，按 dev-006 不新增本地占位图片文件（消 gap-001）。无依赖，可最先做",
       "dependencies": ["feat-002"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "pages/webview/agreement.vue 新建并注册（type=user/privacy，条款为占位文本并已在页面内声明）；6 处头像引用全部改为接口字段（guideAvatarUrl/touristAvatarUrl/avatar/avatarUrl）+ 容器 $ds-primary-container 兜底；node scripts/verify-assets.mjs 告警由 3 条降为 1 条（仅剩 gap-003 归 feat-012）；check-mock 页面扫描 7 → 8 页且无页面直连 api/mock；改动 7 条资产已登记原因并刷新哈希；产出 docx/codeimpl-sum/设计文档-feat-003-协议页与图片兜底.md"
     },
     {
       "id": "feat-004",
@@ -41,72 +41,72 @@
       "name": "订单四态状态机",
       "description": "把现有 3 态（0 待服务/1 已完成/2 已取消）升级为 MVP 4 态（0 待确认/1 已确认/2 已完成/3 已取消），并把 statusLabels 与时段枚举从各页面收口到统一常量，避免多页面各写一套",
       "dependencies": ["feat-004"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "my.vue 与 admin/appointment.vue 的本地 statusLabels/timeSlots 已删除，页签与标签全部取自 api/constants.js 的 ORDER_STATUS_LABELS；两页数据源由 AppointmentApi 改为 OrderApi（getMyOrders / getAllOrders），字段随新模型更新；后台三个操作（确认档期 0→1 / 标记完成 1→2 / 处理取消 0/1→3）改为按 canTransit 白名单显示；新增 .status-3 保证第 4 态有样式；getGuideOrders/getAllOrders 增加 touristNickname/touristAvatarUrl（接口层 join）；产出 docx/codeimpl-sum/设计文档-feat-005-订单四态状态机.md"
     },
     {
       "id": "feat-006",
       "name": "游客端-景点列表页（首页）",
       "description": "改造 pages/index/index.vue（原型 01 屏）：宋体大标题 + 区域文字页签（数据来自 region_types，前台只展示「启用且下有在售景点」的区域）+ 景点卡（coverUrl 封面 76×76 / 名称 / 所属区域 / 场景短描述 /「N 位地陪可约」）+ 20 条数据的分页（pageSize=10 → 2 页），点卡进入该景点的地陪列表。按定稿原型移除原搜索框与性别/价格筛选抽屉（MVP 不做景点搜索与筛选）",
       "dependencies": ["feat-004"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "pages/index/index.vue 重写为景点列表页（首页）：区域文字页签（RegionApi.getRegionList，含「全部」）+ 景点卡（coverUrl 76×76 / 名称 / 区域·场景 /「N 位地陪可约」）+ 分页 pageSize 10（20 个景点 → 2 页）+ 空/加载态；按定稿原型移除陪玩时期的搜索框与性别/价格筛选抽屉；点卡进入 /pages/guide/list?attractionId=&name=；全页改用 $ds-* 令牌；产出 docx/codeimpl-sum/设计文档-feat-006-景点列表页.md"
     },
     {
       "id": "feat-007",
       "name": "游客端-地陪列表页（按景点筛选）",
       "description": "新增 pages/guide/list?attractionId=xxx 并注册到 pages.json（原型 02 屏）：摘要行 + chip 筛选（半日/全天/专项/价格）+ 地陪卡（avatarUrl 头像 / 昵称 / 接单数 / 擅长区域标签 / 服务类型 / 朱砂价格 / 看详情），只列能带该景点的地陪；复用现有列表页的分页三态与空状态",
       "dependencies": ["feat-004", "feat-006"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "新增 pages/guide/list.vue 并注册（pages.json 共 11 个页面）：摘要行 + chip 筛选（半日/全天/专项 + 价格排序）+ 地陪卡（avatarUrl / 昵称 / 接单数 / 区域标签 / 服务类型 / 朱砂起价「¥300 起 / 半日」/ 看详情），只列能带该景点的已通过地陪；分页三态与空状态复用列表范式；新增 BOOKING_TYPE_UNITS 常量，页面不自建单位映射；产出 docx/codeimpl-sum/设计文档-feat-007-地陪列表页.md"
     },
     {
       "id": "feat-008",
       "name": "游客端-地陪详情页",
       "description": "改造 pages/clerk/detail.vue（原型 03 屏）：身份块（头像 / 昵称 / 区域标签 / 简介 / 接单·本周可约·套餐数三项指标）→ 擅长景点 → 3 个套餐单选 → 可约日期横条 → 底部固定操作栏（合计 + 立即预约，进入下单页）；按 dev-002 移除评价区块；预约表单整体剥离到 feat-009",
       "dependencies": ["feat-004", "feat-007"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "pages/clerk/detail.vue 重写：身份块（头像/昵称/区域标签/简介）+ 三项指标（接单 / 本周可约 / 套餐数）+ 擅长景点 + 套餐单选（决定下游控件与金额）+ 可约日期横条（按套餐类型过滤，切换套餐自动校正选中日期）+ 底部固定操作栏「立即预约」；按 dev-002 移除评价区块，预约表单整体剥离到 feat-009；接口层为 Guide 补 attractions[{id,code,name}] 避免页面逐个查景点；产出 docx/codeimpl-sum/设计文档-feat-008-地陪详情页.md"
     },
     {
       "id": "feat-009",
       "name": "游客端-下单页",
       "description": "新增 pages/order/create 并注册到 pages.json（原型 04 屏）：景点/地陪/套餐三行只读回显（景点可在地陪擅长景点内更换）+ 预约日期 + 时段分段控件 + 人数步进器 + 备注 + 费用说明（门票餐饮交通不含）+ 底部固定操作栏（合计 + 提交预约）。预约类型跟随所选套餐：半日显示上午/下午分段，全天隐藏时段，小时加购显示小时数步进器",
       "dependencies": ["feat-005", "feat-008"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "新增 pages/order/create.vue 并注册：景点/地陪/套餐三行只读回显（景点可在地陪擅长景点内更换）+ 日期 picker（限今天~+14 天）+ 时段分段控件 + 小时数步进（1-8）+ 人数步进（1-9）+ 备注 + 费用说明 + 底部合计与提交；控件全部由 BOOKING_TYPE_UI 决定（半日显示上午/下午、全天隐藏时段、小时加购按「单价 × 小时数」计费）；提交走 OrderApi.createOrder，成功后 redirectTo 订单页；未登录先引导登录；产出 docx/codeimpl-sum/设计文档-feat-009-下单页.md"
     },
     {
       "id": "feat-010",
       "name": "游客端-订单页",
-      "description": "改造 pages/appointment/my.vue（原型 05 屏）：四态页签（待确认/已确认/已完成/已取消）+ 订单卡（头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约），保留分页与下拉刷新",
+      "description": "改造 pages/appointment/my.vue（原型 05 屏）：四态页签（待确认/已确认/已完成/已取消）+ 订单卡（头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约），保留分页与下拉刷新。注：状态机、页签语义与数据源已在 feat-005 落地，本 feat 只做视觉与订单卡字段补全",
       "dependencies": ["feat-005", "feat-009"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "pages/appointment/my.vue 按原型 05 屏重做：四态文字页签（待确认/已确认/已完成/已取消，默认待确认）+ 订单卡（地陪头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约）+ 四态固定配色（姜黄/竹青/灰/朱砂）+ 分页与下拉刷新（pages.json 开 enablePullDownRefresh）；时段与金额文案含小时加购分支；产出 docx/codeimpl-sum/设计文档-feat-010-订单页.md"
     },
     {
       "id": "feat-011",
       "name": "地陪端-接单页",
       "description": "新增 pages/guide/orders 并注册到 pages.json（原型 06 屏）：顶部统计条（待接单/进行中/今日完成）+ 在线开关 + 待接单卡（拒单描边 / 接单实心）+ 进行中卡（完成服务）。地陪身份由 mock 预置；mine.vue 按角色分流入口，登录后仍统一落首页（pages/login/login.vue 属 keep 档，不改）",
       "dependencies": ["feat-005"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "新增 pages/guide/orders.vue 并注册：统计条（待接单/进行中/今日完成，取自接口 counts）+ 在线开关（后端订单表暂无该字段，MVP 仅前端记忆并在文档中标注）+ 待接单卡（拒单描边 / 接单实心）+ 已接单「等平台确认」+ 已确认「完成服务」+ 分页与下拉刷新；mine.vue 重写为按角色分流（游客→我的订单 / 地陪→接单 / 管理员→订单管理+地陪审核）+ 协议入口 + mock 演示身份切换；顺带修掉 getGuideOrders 的 counts 随 scope 归零的问题、新增 todayFinished、明确 inProgress = 地陪已接下的单（否则接单后订单会从两个列表同时消失）；产出 docx/codeimpl-sum/设计文档-feat-011-接单页.md"
     },
     {
       "id": "feat-012",
       "name": "管理端-后台订单管理与地陪审核",
-      "description": "改造 pages/admin/appointment.vue（原型 07 屏：统计条「待确认/已确认/今日订单」+ 日期与状态筛选行 + 订单卡 + 确认档期 / 处理取消）与 pages/admin/clerk.vue（地陪审核，套用 07 屏列表样式，保留通过/拒绝与待审徽标）。按 MVP 砍范围：移除指向不存在的 /pages/admin/clerk/edit 的「添加/编辑达人」入口，不新建该页面；投诉不做",
+      "description": "改造 pages/admin/appointment.vue（原型 07 屏：统计条「待确认/已确认/今日订单」+ 日期与状态筛选行 + 订单卡 + 确认档期 / 处理取消）与 pages/admin/clerk.vue（地陪审核，套用 07 屏列表样式，保留通过/拒绝与待审徽标）。按 MVP 砍范围：移除指向不存在的 /pages/admin/clerk/edit 的「添加/编辑达人」入口，不新建该页面；投诉不做。注：四态语义与三个操作已在 feat-005 落地，本 feat 只做视觉重做与统计条（接口已返回 counts）",
       "dependencies": ["feat-005", "feat-011"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "admin/appointment.vue 按原型 07 屏视觉重做：统计条（待确认/已确认/今日订单，取自接口 counts）+ 日期 picker 与状态 chip 筛选 + 订单卡（游客头像/昵称、地陪、时间、备注、金额）+ 一单一个主操作（确认档期 filled / 标记完成 tonal / 处理取消 danger），后台密度比游客端高一档；admin/clerk.vue 重写为地陪审核（统计条 + 待审核/已通过页签 + 通过/拒绝，GUIDE_STATUS 白名单），移除指向未创建页面的「添加/编辑达人」入口——保真告警由 3 条降为 **0 条**，gap-003 关闭；产出 docx/codeimpl-sum/设计文档-feat-012-后台订单与地陪审核.md"
     },
     {
       "id": "feat-013",
       "name": "令牌收口与文档同步",
       "description": "把 6 个页面里硬编码的旧色值（#FF4D6A / #E5E5E5 等）换成 $ds-* 令牌，pages.json 的 tabBar selectedColor/color 跟随（gap-004 收口）；README 去掉未使用的 Pinia 描述并同步 MVP 范围（gap-005）；manifest.json 更新名称与描述为地陪小程序。DESIGN.md 与 uni.scss 已于 2026-09-26 定稿，本轮只做页面与配置的收口，不再改规范口径",
       "dependencies": ["feat-010", "feat-012"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "pages.json tabBar 改主色 #2f6b5e / 未选中 #6b6862、globalStyle 背景改宣纸 #f7f4ed、页面标题改地陪口径；8 个页面（含登录页，档位 keep→adapt 并已登记原因）全部改用 $ds-* 令牌，仓库内 #FF4D6A / #ff6b81 的实际引用清零（gap-004 关闭）；README 重写为 MVP 口径并去掉未使用的 Pinia（gap-005 关闭）；manifest 名称/描述更新；App.vue 全局样式改令牌并移除废弃的微信云开发初始化；删除过渡适配层 ClerkApi/CategoryApi/AppointmentApi（页面已无引用，删除条件达成）；产出 docx/codeimpl-sum/设计文档-feat-013-令牌收口与文档同步.md"
     },
     {
       "id": "feat-014",

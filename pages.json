@@ -12,10 +12,17 @@
 			}
 		},
 		{
+			"path": "pages/webview/agreement",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "协议"
+			}
+		},
+		{
 			"path": "pages/index/index",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "发现达人"
+				"navigationBarTitleText": "今天去哪儿"
 			}
 		},
 		{
@@ -25,17 +32,40 @@
 			}
 		},
 		{
+			"path": "pages/guide/list",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "地陪列表"
+			}
+		},
+		{
 			"path": "pages/clerk/detail",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "达人详情"
+				"navigationBarTitleText": "地陪详情"
+			}
+		},
+		{
+			"path": "pages/order/create",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "确认预约"
 			}
 		},
 		{
 			"path": "pages/appointment/my",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "我的预约"
+				"navigationBarTitleText": "我的订单",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/guide/orders",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "接单",
+				"enablePullDownRefresh": true
 			}
 		},
 		{
@@ -54,10 +84,10 @@
 		}
 	],
 	"tabBar": {
-		"color": "#999999",
-		"selectedColor": "#ff6b81",
+		"color": "#6b6862",
+		"selectedColor": "#2f6b5e",
 		"borderStyle": "white",
-		"backgroundColor": "#ffffff",
+		"backgroundColor": "#fbfaf5",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
@@ -74,9 +104,9 @@
 		]
 	},
 	"globalStyle": {
-		"navigationBarTextStyle": "white",
-		"navigationBarTitleText": "陪玩小程序",
-		"navigationBarBackgroundColor": "#ffffff",
-		"backgroundColor": "#f5f5f5"
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "成都地陪",
+		"navigationBarBackgroundColor": "#f7f4ed",
+		"backgroundColor": "#f7f4ed"
 	}
 }

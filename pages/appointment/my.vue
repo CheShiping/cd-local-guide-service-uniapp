@@ -1,107 +1,121 @@
 <template>
   <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
-    
+
     <!-- 导航栏 -->
     <view class="navbar">
-      <view class="nav-back" @click="goBack">
-        <text class="back-icon">‹</text>
+      <view class="icon-btn" @click="goBack">
+        <text class="icon-btn__text back">‹</text>
       </view>
-      <text class="nav-title">我的预约</text>
-      <view class="nav-right"></view>
+      <text class="navbar__title">我的订单</text>
+      <view class="icon-btn"></view>
     </view>
 
-    <!-- Tab 切换 -->
-    <view class="tab-bar">
-      <view 
-        v-for="(tab, index) in statusTabs" 
-        :key="index"
-        :class="['tab-item', currentStatus === tab.value ? 'active' : '']"
+    <!-- 四态文字页签（顺序与文案取自 api/constants.js） -->
+    <view class="tabline">
+      <view
+        v-for="tab in statusTabs"
+        :key="tab.value"
+        :class="['tabline__item', currentStatus === tab.value ? 'is-on' : '']"
         @click="changeStatus(tab.value)"
       >
-        <text class="tab-text">{{ tab.label }}</text>
+        <text class="tabline__text">{{ tab.label }}</text>
       </view>
     </view>
 
-    <!-- 预约列表 -->
-    <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMore">
-      <view class="appointment-list">
-        <view 
-          v-for="item in appointmentList" 
-          :key="item._id" 
-          class="appointment-card"
-        >
-          <view class="card-header">
-            <image 
-              :src="item.clerkAvatar || '/static/images/default-avatar.png'" 
-              class="card-avatar" 
-              mode="aspectFill" 
-            />
-            <view class="card-info">
-              <text class="info-name">{{ item.clerkName }}</text>
-              <text class="info-date">{{ item.appointDate }} {{ timeSlotLabel(item.timeSlot) }}</text>
+    <scroll-view
+      scroll-y
+      class="list-scroll"
+      :show-scrollbar="false"
+      @scrolltolower="loadMore"
+      @touchstart="onTabTouchStart"
+      @touchend="onTabTouchEnd"
+    >
+      <view class="list">
+        <view v-for="item in orderList" :key="item.id" class="card order">
+          <view class="order__top">
+            <view class="avatar avatar--sm">
+              <image :src="item.guideAvatarUrl" class="avatar__img" mode="aspectFill" />
             </view>
-            <view :class="['status-tag', 'status-' + item.status]">
-              <text>{{ statusLabel(item.status) }}</text>
+            <view class="order__head">
+              <text class="order__title">{{ item.attractionName }} · {{ item.packageName }}</text>
+              <text class="order__no">#{{ item.orderNo }}</text>
+            </view>
+            <text :class="['tag', 'tag--state', 'tag--' + item.status]">{{ item.statusLabel }}</text>
+          </view>
+
+          <view class="order__body">
+            <view class="kv">
+              <text class="kv__k">时间</text>
+              <text class="kv__v">{{ timeText(item) }}</text>
+            </view>
+            <view class="kv">
+              <text class="kv__k">地陪</text>
+              <text class="kv__v">{{ item.guideNickname }}</text>
+            </view>
+            <view class="kv" v-if="item.remark">
+              <text class="kv__k">备注</text>
+              <text class="kv__v">{{ item.remark }}</text>
             </view>
           </view>
-          
-          <view class="card-body" v-if="item.remark">
-            <text class="body-label">备注</text>
-            <text class="body-value">{{ item.remark }}</text>
-          </view>
-          
-          <view class="card-footer">
-            <text class="footer-time">{{ formatTime(item.createTime) }}</text>
-            <view v-if="item.status === 0" class="footer-action" @click="cancelAppointment(item._id)">
-              <text>取消预约</text>
+
+          <view class="order__foot">
+            <text class="price"><text class="price__symbol">¥</text>{{ item.amount }}</text>
+            <view
+              v-if="canCancel(item.status)"
+              :class="['btn', 'btn--sm', item.status === 0 ? 'btn--danger' : 'btn--outlined']"
+              @click="cancelOrder(item)"
+            >
+              <text class="btn__text">取消预约</text>
             </view>
           </view>
         </view>
       </view>
 
       <view class="load-status">
-        <text v-if="loading" class="load-text">加载中...</text>
-        <text v-else-if="!hasMore && appointmentList.length > 0" class="load-text">没有更多了</text>
+        <text v-if="loading" class="load-text">加载中…</text>
+        <text v-else-if="!hasMore && orderList.length > 0" class="load-text">没有更多了</text>
       </view>
 
-      <view v-if="!loading && appointmentList.length === 0" class="empty-box">
-        <text class="empty-icon">📅</text>
-        <text class="empty-title">暂无预约记录</text>
-        <text class="empty-tip">去首页找位达人吧</text>
+      <view v-if="!loading && orderList.length === 0" class="empty-box">
+        <text class="empty-icon">◎</text>
+        <text class="empty-title">这里还没有订单</text>
+        <text class="empty-tip">去首页挑个景点，再选能带这个景点的地陪</text>
       </view>
     </scroll-view>
   </view>
 </template>
 
 <script>
-import { AppointmentApi } from '@/api/index.js';
+/**
+ * 游客端 · 我的订单（原型 05 屏）
+ *
+ * 四态语义与数据源在 feat-005 已收口到 api/constants.js + OrderApi；
+ * 本页只做视觉重做与订单卡字段补全（订单号 / 景点·套餐 / 金额 / 人数）。
+ */
+import { OrderApi, ORDER_STATUS, ORDER_STATUS_LABELS, BOOKING_TYPES, canTransit, bookingTypeLabel } from '@/api/index.js';
+import { createTabRow } from '@/utils/hscroll.js';
+
+/* 四态页签是等宽的（不溢出，所以不需要居中），只接「内容左右滑动切换」 */
+const statusTabRow = createTabRow({
+  index: (vm) => vm.activeTabIndex,
+  onStep: (vm, step) => vm.stepStatus(step)
+});
 
 const statusTabs = [
-  { label: '全部', value: '' },
-  { label: '待服务', value: 0 },
-  { label: '已完成', value: 1 },
-  { label: '已取消', value: 2 }
+  { label: ORDER_STATUS_LABELS[ORDER_STATUS.PENDING_CONFIRM], value: ORDER_STATUS.PENDING_CONFIRM },
+  { label: ORDER_STATUS_LABELS[ORDER_STATUS.CONFIRMED], value: ORDER_STATUS.CONFIRMED },
+  { label: ORDER_STATUS_LABELS[ORDER_STATUS.COMPLETED], value: ORDER_STATUS.COMPLETED },
+  { label: ORDER_STATUS_LABELS[ORDER_STATUS.CANCELLED], value: ORDER_STATUS.CANCELLED }
 ];
-
-const timeSlots = {
-  morning: '上午',
-  afternoon: '下午',
-  evening: '晚上'
-};
-
-const statusLabels = {
-  0: '待服务',
-  1: '已完成',
-  2: '已取消'
-};
 
 export default {
   data() {
     return {
+      ...statusTabRow.data(),
       statusTabs,
-      currentStatus: '',
-      appointmentList: [],
+      currentStatus: ORDER_STATUS.PENDING_CONFIRM,
+      orderList: [],
       pageNo: 1,
       pageSize: 10,
       total: 0,
@@ -110,51 +124,59 @@ export default {
       statusBarHeight: 20
     };
   },
-  
+
+  computed: {
+    activeTabIndex() {
+      const i = statusTabs.findIndex((tab) => tab.value === this.currentStatus);
+      return i < 0 ? 0 : i;
+    }
+  },
+
   onLoad() {
     const sys = uni.getSystemInfoSync();
     this.statusBarHeight = sys.statusBarHeight || 20;
-    this.loadList();
+    this.loadList(true);
   },
-  
+
   onPullDownRefresh() {
     this.loadList(true);
   },
-  
+
   methods: {
-    goBack() {
-      uni.navigateBack();
+    ...statusTabRow.methods,
+
+    /* 横滑：上/下一个状态；顺序与文案取自 api/constants.js */
+    stepStatus(step) {
+      const next = this.activeTabIndex + step;
+      if (next < 0 || next >= statusTabs.length) return;
+      this.changeStatus(statusTabs[next].value);
     },
 
     async loadList(refresh = false) {
       if (this.loading) return;
+      if (!refresh && !this.hasMore) return;
 
       this.loading = true;
       if (refresh) {
         this.pageNo = 1;
-        this.appointmentList = [];
+        this.orderList = [];
         this.hasMore = true;
       }
 
       try {
-        const params = {
+        const { list, total, hasMore } = await OrderApi.getMyOrders({
           pageNo: this.pageNo,
-          pageSize: this.pageSize
-        };
-        
-        if (this.currentStatus !== '') {
-          params.status = this.currentStatus;
-        }
+          pageSize: this.pageSize,
+          status: this.currentStatus
+        });
 
-        const { list, total } = await AppointmentApi.getMyAppointments(params);
-        
-        this.appointmentList = refresh ? list : [...this.appointmentList, ...list];
-        this.total = total;
-        this.hasMore = this.appointmentList.length < total;
+        this.orderList = refresh ? list : [...this.orderList, ...list];
+        this.total = total || 0;
+        this.hasMore = hasMore;
         this.pageNo++;
       } catch (e) {
-        console.error('加载失败', e);
-        uni.showToast({ title: '加载失败', icon: 'none' });
+        console.error('加载订单失败', e);
+        uni.showToast({ title: (e && e.message) || '加载失败', icon: 'none' });
       } finally {
         this.loading = false;
         uni.stopPullDownRefresh();
@@ -162,46 +184,49 @@ export default {
     },
 
     changeStatus(status) {
+      if (this.currentStatus === status) return;
       this.currentStatus = status;
       this.loadList(true);
     },
 
     loadMore() {
-      if (this.hasMore) {
-        this.loadList();
+      this.loadList();
+    },
+
+    /** 时间行：全天/半日显示时段，小时加购显示小时数 */
+    timeText(item) {
+      const [, month, day] = String(item.appointDate).split('-');
+      const when = `${month}-${day}`;
+      if (item.bookingType === BOOKING_TYPES.HOURLY) {
+        return `${when} · ${bookingTypeLabel(item.bookingType)} ${item.hours || 1} 小时 · ${item.peopleCount} 人`;
       }
+      const slot = item.timeSlotLabel || '';
+      return `${when} ${slot} · ${item.peopleCount} 人`;
     },
 
-    timeSlotLabel(slot) {
-      return timeSlots[slot] || slot;
+    canCancel(status) {
+      return canTransit(status, ORDER_STATUS.CANCELLED);
     },
 
-    statusLabel(status) {
-      return statusLabels[status] || '';
-    },
-
-    formatTime(time) {
-      if (!time) return '';
-      const date = new Date(time);
-      return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-    },
-
-    async cancelAppointment(id) {
+    cancelOrder(order) {
       uni.showModal({
-        title: '提示',
-        content: '确定要取消预约吗？',
+        title: '取消预约',
+        content: '确定要取消这笔预约吗？取消后不可恢复。',
         success: async (res) => {
-          if (res.confirm) {
-            try {
-              await AppointmentApi.cancelAppointment(id);
-              uni.showToast({ title: '取消成功', icon: 'success' });
-              this.loadList(true);
-            } catch (e) {
-              uni.showToast({ title: '取消失败', icon: 'none' });
-            }
+          if (!res.confirm) return;
+          try {
+            await OrderApi.cancelOrder(order.id, { reason: '游客取消' });
+            uni.showToast({ title: '已取消', icon: 'success' });
+            this.loadList(true);
+          } catch (e) {
+            uni.showToast({ title: (e && e.message) || '取消失败', icon: 'none' });
           }
         }
       });
+    },
+
+    goBack() {
+      uni.navigateBack();
     }
   }
 };
@@ -209,246 +234,301 @@ export default {
 
 <style lang="scss" scoped>
 .page {
-  background: #F5F5F5;
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: $ds-surface;
 }
 
 .status-bar {
-  background: #FFFFFF;
+  flex-shrink: 0;
 }
 
-/* 导航栏 */
+/* ---------- 导航栏 ---------- */
 .navbar {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  height: 44px;
-  padding: 0 8px;
-  background: #FFFFFF;
-  border-bottom: 1px solid #E5E5E5;
+  height: $ds-h-navbar;
+  padding: 0 $ds-space-2;
 }
 
-.nav-back {
-  width: 36px;
-  height: 36px;
+.icon-btn {
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.back-icon {
+.icon-btn__text {
   font-size: 24px;
-  color: #000000;
+  line-height: 1;
+  color: $ds-ink;
 }
 
-.nav-title {
+.back {
+  font-size: 26px;
+}
+
+.navbar__title {
   flex: 1;
   text-align: center;
-  font-size: 17px;
-  font-weight: 600;
-  color: #000000;
+  font-family: $ds-font-title;
+  font-size: $ds-fs-title;
+  font-weight: 700;
+  letter-spacing: $ds-ls-title;
+  color: $ds-ink;
 }
 
-.nav-right {
-  width: 36px;
-}
-
-/* Tab */
-.tab-bar {
+/* ---------- 四态页签 ---------- */
+.tabline {
+  flex-shrink: 0;
   display: flex;
-  background: #FFFFFF;
-  padding: 0 8px;
-  border-bottom: 1px solid #E5E5E5;
+  border-bottom: 1px solid $ds-outline-variant;
 }
 
-.tab-item {
-  flex: 1;
-  text-align: center;
-  padding: 14px 0;
+.tabline__item {
   position: relative;
-  
-  &.active {
-    .tab-text {
-      color: #FF4D6A;
+  flex: 1;
+  min-height: $ds-h-touch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.is-on {
+    .tabline__text {
+      color: $ds-primary;
       font-weight: 600;
     }
-    
+
     &::after {
       content: '';
       position: absolute;
-      bottom: 0;
       left: 50%;
+      bottom: 0;
       transform: translateX(-50%);
-      width: 24px;
+      width: 22px;
       height: 2px;
-      background: #FF4D6A;
       border-radius: 1px;
+      background: $ds-primary;
     }
   }
 }
 
-.tab-text {
-  font-size: 14px;
-  color: #666666;
+.tabline__text {
+  font-size: $ds-fs-body-sm;
+  color: $ds-ink-2;
 }
 
-/* 列表 */
+/* ---------- 列表 ---------- */
 .list-scroll {
-  height: calc(100vh - 130px);
+  flex: 1;
+  height: 0;
 }
 
-.appointment-list {
-  padding: 16px;
+.list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: $ds-space-3;
+  padding: $ds-space-4 $ds-pad-screen 0;
 }
 
-.appointment-card {
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  border: 1px solid #F0F0F0;
+.card {
+  background: $ds-surface-container;
+  border: $ds-card-border;
+  border-radius: $ds-shape-md;
 }
 
-.card-header {
+.order {
+  padding: $ds-space-4;
+}
+
+.order__top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
-.card-avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  background: #F5F5F5;
-}
-
-.card-info {
-  flex: 1;
-  margin-left: 12px;
-}
-
-.info-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #000000;
-  display: block;
-}
-
-.info-date {
-  font-size: 13px;
-  color: #999999;
-  margin-top: 4px;
-  display: block;
-}
-
-.status-tag {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  
-  &.status-0 {
-    background: #FFF4E5;
-    
-    text {
-      color: #FF9500;
-    }
-  }
-  
-  &.status-1 {
-    background: #E6FFF2;
-    
-    text {
-      color: #34C759;
-    }
-  }
-  
-  &.status-2 {
-    background: #F5F5F5;
-    
-    text {
-      color: #999999;
-    }
-  }
-}
-
-.card-body {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #F0F0F0;
-  display: flex;
-}
-
-.body-label {
-  font-size: 13px;
-  color: #999999;
-  width: 50px;
+.avatar {
+  position: relative;
   flex-shrink: 0;
-}
+  overflow: hidden;
+  background: $ds-primary-container;
 
-.body-value {
-  font-size: 13px;
-  color: #666666;
-  flex: 1;
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #F0F0F0;
-}
-
-.footer-time {
-  font-size: 12px;
-  color: #999999;
-}
-
-.footer-action {
-  padding: 6px 14px;
-  background: #F5F5F5;
-  border-radius: 6px;
-  
-  text {
-    font-size: 13px;
-    color: #666666;
+  &--sm {
+    width: 44px;
+    height: 44px;
+    border-radius: $ds-shape-xs;
   }
 }
 
-/* 加载状态 */
+.avatar__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.order__head {
+  flex: 1;
+  min-width: 0;
+  margin: 0 $ds-space-3;
+}
+
+.order__title {
+  font-size: $ds-fs-body-sm;
+  font-weight: 600;
+  color: $ds-ink;
+}
+
+.order__no {
+  display: block;
+  margin-top: $ds-space-1;
+  font-size: $ds-fs-caption;
+  color: $ds-ink-2;
+}
+
+/* 状态标签：四态固定配色 */
+.tag {
+  flex-shrink: 0;
+  padding: 2px $ds-space-2;
+  border-radius: $ds-shape-xs;
+  font-size: $ds-fs-caption;
+
+  &--0 {
+    background: $ds-warning-container;
+    color: $ds-warning;
+  }
+
+  &--1 {
+    background: $ds-success-container;
+    color: $ds-success;
+  }
+
+  &--2 {
+    background: $ds-surface-high;
+    color: $ds-ink-2;
+  }
+
+  &--3 {
+    background: $ds-error-container;
+    color: $ds-error;
+  }
+}
+
+.order__body {
+  margin-top: $ds-space-3;
+  padding-top: $ds-space-3;
+  border-top: 1px solid $ds-outline-variant;
+}
+
+.kv {
+  display: flex;
+  margin-bottom: $ds-space-2;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.kv__k {
+  flex-shrink: 0;
+  width: 44px;
+  font-size: $ds-fs-label;
+  color: $ds-ink-2;
+}
+
+.kv__v {
+  flex: 1;
+  font-size: $ds-fs-label;
+  color: $ds-ink;
+}
+
+.order__foot {
+  margin-top: $ds-space-3;
+  padding-top: $ds-space-3;
+  border-top: 1px solid $ds-outline-variant;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.price {
+  font-size: $ds-fs-title-lg;
+  font-weight: 700;
+  color: $ds-tertiary;
+}
+
+.price__symbol {
+  font-size: $ds-fs-label-sm;
+  font-weight: 600;
+}
+
+/* ---------- 按钮：一屏一个主操作，取消类用朱砂 ---------- */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $ds-shape-sm;
+
+  &--sm {
+    height: $ds-h-btn-sm;
+    padding: 0 $ds-space-4;
+  }
+
+  &--outlined {
+    border: 1px solid $ds-outline;
+
+    .btn__text {
+      color: $ds-ink-2;
+    }
+  }
+
+  &--danger {
+    border: 1px solid $ds-error;
+
+    .btn__text {
+      color: $ds-error;
+    }
+  }
+}
+
+.btn__text {
+  font-size: $ds-fs-label;
+  font-weight: 600;
+}
+
+/* ---------- 状态区 ---------- */
 .load-status {
   text-align: center;
-  padding: 20px;
+  padding: $ds-space-5;
 }
 
 .load-text {
-  font-size: 13px;
-  color: #999999;
+  font-size: $ds-fs-label;
+  color: $ds-ink-2;
 }
 
-/* 空状态 */
 .empty-box {
   text-align: center;
-  padding: 60px 0;
+  padding: 64px $ds-pad-screen;
 }
 
 .empty-icon {
-  font-size: 48px;
+  font-size: 40px;
+  color: $ds-primary-dim;
 }
 
 .empty-title {
-  font-size: 15px;
-  color: #1A1A1A;
-  margin-top: 12px;
   display: block;
+  margin-top: $ds-space-3;
+  font-size: $ds-fs-body-sm;
+  color: $ds-ink;
 }
 
 .empty-tip {
-  font-size: 13px;
-  color: #999999;
-  margin-top: 6px;
   display: block;
+  margin-top: $ds-space-2;
+  font-size: $ds-fs-label;
+  color: $ds-ink-2;
 }
 </style>

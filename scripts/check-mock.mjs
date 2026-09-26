@@ -7,7 +7,9 @@
  *   2. 规模：52 用户 / 50 地陪 / 20 景点 / 7 区域 / 3 套餐（docs/mvp-scope.json 的 mockScale）
  *   3. 确定性：同一 seed + 同一时间生成两次结果完全一致
  *   4. 自洽性：地陪的擅长景点落在自己的区域标签内；价格落在套餐建议价区间；四态订单齐全；订单号合法且唯一
- *   5. MVP 边界：生成的数据里不得出现评价字段；页面不得直接引用 api/mock/
+ *   5. 地陪头像素材：seed.json 的素材池与 static/guide/ 目录双向一致；每个地陪头像都是本地素材；
+ *      姓名拼音表覆盖全部姓与名；「头像与姓名对齐」确实生效（不再静默退化成随机）
+ *   6. MVP 边界：生成的数据里不得出现评价字段；页面不得直接引用 api/mock/
  *
  * 说明：api/constants.js 与 api/mock/generate.js 是刻意写成「无 import」的纯模块，
  *      本脚本用去 ESM 关键字的方式直接求值它们（项目没有测试框架，这是最轻的运行时校验）。
@@ -251,7 +253,70 @@ async function analyze(targetRoot) {
   }
   notes.push(`自洽性：地陪 ${approved.length} 已通过 / ${pending.length} 待审 / ${rejected.length} 拒绝；订单号 ${orderNos.size} 个唯一；待接单 ${waiting} 单`);
 
-  /* ---------- 6. MVP 边界 ---------- */
+  /* ---------- 6. 地陪头像素材（static/guide 本地图片） ---------- */
+  const avatarConfig = seedJson.generators || {};
+  const avatarDir = avatarConfig.guideAvatarDir || '';
+  const avatarPool = Array.isArray(avatarConfig.guideAvatarFiles) ? avatarConfig.guideAvatarFiles : [];
+
+  if (!avatarPool.length) {
+    failures.push('seed.json 的 generators.guideAvatarFiles 为空：地陪头像会退回网络占位图');
+  }
+  if (!avatarDir) {
+    failures.push('seed.json 的 generators.guideAvatarDir 为空：本地头像路径拼不出来');
+  }
+
+  let diskAvatars = [];
+  try {
+    diskAvatars = (await readdir(path.join(targetRoot, 'static', 'guide')))
+      .filter((name) => /\.(png|jpe?g|webp)$/i.test(name));
+  } catch (e) {
+    failures.push('static/guide/ 目录读不到：地陪头像素材缺失');
+  }
+
+  const missingOnDisk = avatarPool.filter((file) => diskAvatars.indexOf(file) < 0);
+  const missingInPool = diskAvatars.filter((file) => avatarPool.indexOf(file) < 0);
+  if (missingOnDisk.length) {
+    failures.push(`头像素材池里有 ${missingOnDisk.length} 个文件在 static/guide/ 不存在：${missingOnDisk.slice(0, 6).join(', ')}`);
+  }
+  if (missingInPool.length) {
+    failures.push(`static/guide/ 里有 ${missingInPool.length} 个文件没登记进素材池：${missingInPool.slice(0, 6).join(', ')}`);
+  }
+
+  // 每个地陪的头像都必须是本地素材（素材池为空时允许网络兜底）
+  const badAvatars = first.guides.filter((guide) => (avatarPool.length
+    ? !String(guide.avatarUrl).startsWith(avatarDir)
+    : !/^https?:\/\//.test(String(guide.avatarUrl))));
+  if (badAvatars.length) {
+    failures.push(`有 ${badAvatars.length} 个地陪的头像不是本地素材：${badAvatars.slice(0, 4).map((guide) => guide.avatarUrl).join(', ')}`);
+  }
+
+  // 姓名拼音表必须覆盖所有姓与名，否则「按姓名对齐头像」会静默失效
+  const surnamePinyin = avatarConfig.surnamesPinyin || {};
+  const givenPinyin = avatarConfig.givenNamesPinyin || {};
+  const missSurname = (avatarConfig.surnames || []).filter((item) => !surnamePinyin[item]);
+  const missGiven = (avatarConfig.givenNames || []).filter((item) => !givenPinyin[item]);
+  if (missSurname.length || missGiven.length) {
+    failures.push(`姓名拼音表未覆盖：姓「${missSurname.join('') || '无'}」/ 名「${missGiven.join('') || '无'}」`);
+  }
+  if (first.stats.guideAvatarMatched < first.stats.guideAvatarNamed) {
+    failures.push(
+      `头像与姓名对齐的地陪只有 ${first.stats.guideAvatarMatched} 个，少于素材里可解析的姓名数 ${first.stats.guideAvatarNamed} 个` +
+        '（说明有素材的姓名没被用上）'
+    );
+  }
+  notes.push(
+    `地陪头像：${avatarPool.length} 张本地素材（可解析姓名 ${first.stats.guideAvatarNamed} 个），` +
+      `姓名对齐命中 ${first.stats.guideAvatarMatched}/${first.guides.length} 个地陪 → ${avatarDir}`
+  );
+  notes.push(
+    '头像示例：' +
+      first.guides
+        .slice(0, 3)
+        .map((guide) => `${guide.nickname} → ${String(guide.avatarUrl).replace(avatarDir, '')}`)
+        .join('；')
+  );
+
+  /* ---------- 7. MVP 边界 ---------- */
   const keys = collectKeys(first);
   ['rating', 'review', 'reviewCount', 'score'].forEach((banned) => {
     if (keys.has(banned)) {

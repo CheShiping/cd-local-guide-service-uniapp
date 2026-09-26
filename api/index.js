@@ -16,42 +16,54 @@
 
 import * as mockAdapter from './mock/index.js';
 import { createHttpAdapter, ROUTES, createRequester } from './http.js';
-import { notImplemented } from './errors.js';
 
 /** MVP 阶段：数据源 = mock。对接真实后端时改为 false 并按 api/http.js 的说明补实现 */
 export const USE_MOCK = true;
 
+/** 数据层版本戳：排查「旧构建 / 旧模块缓存」时，看控制台那一行就知道跑的是哪一版 */
+export const DATA_LAYER_VERSION = '2026-09-26.2';
+
+const MODULE_NAMES = ['RegionApi', 'AttractionApi', 'PackageApi', 'GuideApi', 'OrderApi', 'UserApi'];
+
 const adapter = USE_MOCK ? mockAdapter : createHttpAdapter();
 
-/* ---------- 业务模块（新页面用这些） ---------- */
-export const RegionApi = adapter.RegionApi;
-export const AttractionApi = adapter.AttractionApi;
-export const PackageApi = adapter.PackageApi;
-export const GuideApi = adapter.GuideApi;
-export const OrderApi = adapter.OrderApi;
-export const UserApi = adapter.UserApi;
-
-/* ---------- 过渡适配层（陪玩时期的模块名，feat-006 ~ feat-012 迁移完成后删除） ---------- */
-const LEGACY_METHODS = [
-  'getCategoryList', 'createCategory',
-  'getClerkList', 'getClerkDetail', 'createClerk', 'updateClerk', 'getPendingClerks', 'auditClerk',
-  'createAppointment', 'getMyAppointments', 'getAllAppointments', 'cancelAppointment', 'completeAppointment'
-];
-
-function legacyUnavailable(moduleName) {
-  const module = {};
-  const fail = async () => {
-    throw notImplemented(`${moduleName} 是 mock 阶段的过渡适配层，接入 HTTP 后请改用新模块（RegionApi / AttractionApi / GuideApi / PackageApi / OrderApi）`);
-  };
-  LEGACY_METHODS.forEach((method) => {
-    module[method] = fail;
-  });
+/**
+ * 取模块并做存在性检查
+ *
+ * 少了这个检查，旧模块缓存的表现是页面里一句
+ *   Cannot read properties of undefined (reading 'getAllOrders')
+ * 看不出「数据层缺模块」还是「页面写错」。改成抛出可操作的错误。
+ * 见 docx/bugfix/BUG修复-20260926-数据层缺模块报错不可读.md
+ */
+function pickModule(name) {
+  const module = adapter[name];
+  if (!module) {
+    throw new Error(
+      `数据层缺少模块 ${name}（数据层版本 ${DATA_LAYER_VERSION}，数据源 ${USE_MOCK ? 'mock' : 'http'}）。` +
+        '若刚改过 api/ 目录：停掉 dev server → 删除 node_modules/.vite 与 dist → 重启，并硬刷新浏览器。'
+    );
+  }
   return module;
 }
 
-export const CategoryApi = adapter.CategoryApi || legacyUnavailable('CategoryApi');
-export const ClerkApi = adapter.ClerkApi || legacyUnavailable('ClerkApi');
-export const AppointmentApi = adapter.AppointmentApi || legacyUnavailable('AppointmentApi');
+/* ---------- 业务模块（新页面用这些） ---------- */
+export const RegionApi = pickModule('RegionApi');
+export const AttractionApi = pickModule('AttractionApi');
+export const PackageApi = pickModule('PackageApi');
+export const GuideApi = pickModule('GuideApi');
+export const OrderApi = pickModule('OrderApi');
+export const UserApi = pickModule('UserApi');
+
+/* 启动自报家门：控制台看不到这一行（或模块列表里没有 OrderApi），就说明页面加载的是旧模块 */
+console.log(
+  `[api] 数据层 ${DATA_LAYER_VERSION}｜数据源 ${USE_MOCK ? 'mock' : 'http'}｜模块 ${MODULE_NAMES.join(' / ')}`
+);
+
+/* ---------- 过渡适配层已删除 ----------
+   ClerkApi / CategoryApi / AppointmentApi 是陪玩时期的入口，曾把新模型映射回旧形状
+   （其中订单状态做了「4 态压缩成 3 态」的映射）。feat-006 ~ feat-012 把 7 个页面
+   全部迁到新模块后，页面对它们已无引用，故于 feat-013 整体移除。
+   历史映射关系见 docx/接口文档.md 第 8 节。 */
 
 /* ---------- 常量与错误（页面从这里取，避免到处复制映射表） ---------- */
 export * from './constants.js';

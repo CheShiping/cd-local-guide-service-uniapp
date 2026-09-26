@@ -145,6 +145,7 @@ $ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Mic
 - 渲染：`<image :src="item.coverUrl" mode="aspectFill" />`，固定容器尺寸、圆角由容器控制
 - 占位与兜底：`mini-program` 加载失败或字段为空时，容器显示 `primary-container` 底色 + 竹青描边（不发散、不拉伸、不显示破图）
 - MVP 阶段统一使用**网络占位图**（原型中即为真实网络链接），后端接入后直接替换 URL，样式与尺寸不变
+- **例外：地陪头像**用仓库内本地素材 `static/guide/`（39 张，文件名 = 姓名拼音，如 `caoyiming.jpg` = 曹一鸣）。素材池在 `api/mock/seed.json` 的 `generators.guideAvatarFiles`，由 `scripts/check-mock.mjs` 校验与目录一致，池空时自动退回网络占位图。**注意包体**：这 39 张合计 12.56MB，超出小程序主包 2MB 上限，上小程序前需压缩或改走后端 URL
 - **禁止**用抽象几何插画或自绘 SVG 冒充景点照片
 
 | 位置 | 尺寸 | 圆角 | 说明 |
@@ -177,7 +178,7 @@ $ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Mic
 - **头像**：方形圆角 + 内嵌发丝框（见第 7 节）。
 - **表单行**：左标签右值，高 56px，值可带一行小字说明；备注用 textarea。
 - **底部操作栏**：左侧金额（`Title Large` + 朱砂）+ 右侧主按钮，sticky 贴底，向上柔影。
-- **tabBar**：当前 2 项（首页 / 我的）。M3 建议 3-5 项，等"订单"独立成 tab 后再补第三项。
+- **tabBar**：当前 2 项（首页 / 我的）。M3 建议 3-5 项，等"订单"独立成 tab 后再补第三项。背景 `$ds-surface-container`、上发丝线（见第 12 节第 5 条），图标为代码生成的线性图标（见第 9 节）。二级页面（地陪列表 / 详情 / 下单 / 订单 / 接单 / 后台）不显示 tabBar，改为「返回 + 底部操作栏」，底部操作栏的底色与 tabBar 一致，视觉上仍是一条连续的下沿。
 - **统计条**：3 格均分，中间为关键数（朱砂），用于地陪端与后台。
 - **开关**：竹青实底 + 白色圆点，关闭态为灰底。
 
@@ -189,6 +190,12 @@ $ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Mic
 - 线性描边与竹青气质一致，避免圆润填充型图标带来的"消费类 App"感
 - 图标不作为图片资源引入：优先图标字体或本地 `.svg`；原型中的内联 `<use>` 仅为演示
 - 颜色只用 `currentColor`，随文字色变化，不单独给图标上色
+
+**tabBar 图标是唯一例外**：小程序 tabBar 只接受本地图片（不支持 svg 与字体图标），颜色必须落在文件里。因此 `static/tabbar/{home,mine}{,-active}.png` 由 `scripts/gen-tabbar-icons.mjs` **代码生成**：按本节规范（24 网格 / stroke 1.6）栅格化、4×4 超采样抗锯齿、PNG 由 node 内置 zlib 手写，颜色**直接从 `uni.scss` 读取**（未选中 `$ds-ink-2`、选中 `$ds-primary`）。
+
+- 改令牌后重跑：`node scripts/gen-tabbar-icons.mjs`
+- 校验现有图标与令牌是否一致：`node scripts/gen-tabbar-icons.mjs --check`
+- **不要手工替换这 4 张图**（重构前遗留的灰+粉图标就是这样与设计系统脱钩的）
 
 ---
 
@@ -236,7 +243,7 @@ $ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Mic
 2. 小程序端需替换的 CSS：`color-mix()` → 直接写色值；`inset: 0` → `top/right/bottom/left: 0`；`backdrop-filter` → 去掉或用不透明底色；`::before/::after` 伪元素在 `view` 上可用但避免复杂组合
 3. 原型用 px，落地建议整体换算 `rpx`（1px 视觉 ≈ 2rpx），页面安全边距 20px → 40rpx
 4. 保留 `pages.json` 的 `navigationStyle: custom`，自绘 `status-bar`（`uni.getSystemInfoSync().statusBarHeight`）+ 52px 导航栏
-5. tabBar 颜色：`selectedColor` 用 `#2F6B5E`，未选中 `#6B6862`，背景 `#FFFFFF`，`borderStyle: white`
+5. tabBar：`selectedColor` 用 `#2F6B5E`，未选中配色 `#6B6862`，**背景用 `#FBFAF5`（`$ds-surface-container`）而不是纯白** —— 原型里是「宣纸 + 8% 白」的 `color-mix`，小程序配置不支持 `color-mix`，取最接近的令牌；`borderStyle: white`（平台只支持 black/white，发丝线用白更接近 `outline-variant` 的观感）。图标由 `scripts/gen-tabbar-icons.mjs` 生成，见第 9 节
 
 ---
 
@@ -245,3 +252,4 @@ $ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Mic
 | 日期 | 变更 |
 |---|---|
 | 2026-09-26 | 定稿「宣纸 · 疏」。替换原陪玩小程序 Linear 风格规范（原文件已删除）；确立竹青绿主调、M3 令牌骨架、图片来自后端 URL 的策略。原型：`design/html/prototype.html` |
+| 2026-09-26 | tabBar 图标改为**代码生成**（线性 24 网格 / stroke 1.6；未选中 `$ds-ink-2`、选中 `$ds-primary`），修掉「粉色图标 + 竹青文字」的不一致。生成器：`scripts/gen-tabbar-icons.mjs` |

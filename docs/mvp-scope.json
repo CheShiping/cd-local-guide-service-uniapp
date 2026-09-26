@@ -59,6 +59,14 @@
       "decision": "景点池扩到 20 个，新增的 10 个用于补齐原先空着的区域，使 7 类区域都有景点",
       "impact": "seed.sql 与 mock 的景点数据变为 20 条；景点列表页需要分页（pageSize=10 → 2 页）；地陪擅长景点范围随之扩大。区域管理界面仍不纳入实现计划（用户确认：把数据结构做足、界面延后）",
       "reason": "用户 2026-09-26 拍板：再来 10 个景点"
+    },
+    {
+      "id": "dev-009",
+      "original": "dev-006 约定图片一律来自后端 URL，原型阶段用网络占位图",
+      "decision": "地陪头像的 mock 数据改用仓库内本地素材 static/guide/（39 张，文件名 = 地陪姓名拼音），不再用 i.pravatar.cc",
+      "impact": "mock 的 guide.avatarUrl 形如 /static/guide/caoyiming.jpg；有素材的地陪直接采用文件名反查出的姓名，保证头像与姓名一致（39 张素材全部用上）；景点封面与游客/管理员头像仍是网络占位图。接真实后端后 avatarUrl 重新由后端返回完整 URL，页面代码不变",
+      "reason": "用户 2026-09-26 提供素材并指定：地陪 mock 图片从这个目录取",
+      "caveat": "39 张素材合计 12.56MB，超出微信小程序主包 2MB 上限（6.3 倍）。H5 演示不受影响；上小程序前需压缩（建议长边 240px）或改走后端/CDN URL"
     }
   ],
   "designSystem": {
@@ -74,6 +82,7 @@
   "imageStrategy": {
     "source": "后端接口返回完整 URL：景点 coverUrl、地陪 avatarUrl",
     "mvp": "先用网络占位图（原型即为真实网络链接），后端接通后直接替换 URL，样式与尺寸不变",
+    "mockGuideAvatar": "例外（dev-009）：地陪头像用仓库内本地素材 static/guide/（39 张，文件名 = 姓名拼音，如 caoyiming.jpg = 曹一鸣）。素材池登记在 api/mock/seed.json 的 generators.guideAvatarFiles，由 scripts/check-mock.mjs 校验「素材池 ↔ 目录」一致；素材池为空时自动退回网络占位图",
     "render": "<image :src=\"...\" mode=\"aspectFill\"/>，容器固定尺寸，圆角由容器控制",
     "fallback": "字段为空或加载失败时露出 primary-container 底色，不出现破图、拉伸",
     "forbidden": "禁止用自绘几何插画或 SVG 冒充景点照片与人物头像",

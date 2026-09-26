@@ -20,8 +20,8 @@
       "category": "入口",
       "purpose": "应用启动、全局样式（page/button 重置/安全区）、未登录时重定向到登录页、微信云开发初始化",
       "reuse": "adapt",
-      "note": "云环境 ID peiwan-lite-xxx 与登录跳转逻辑保留；全局色彩随新设计规范调整",
-      "sha256": "1a6681ce3482ef6c33e09d7f85c7aed1ddb8ac7b7a5be7f63189a35ebee203ca"
+      "note": "2026-09-26 feat-013：全局样式改用 $ds-* 令牌；移除已废弃的微信云开发初始化（重构后走 HTTP，占位环境 ID 会在真机上报错）；未登录重定向登录页的逻辑保留",
+      "sha256": "a2b1b5fd3b29c941281fd4c7c8aa3ea66352fb15324a58efa2cc0e5b0048a2bf"
     },
     {
       "path": "main.js",
@@ -36,16 +36,16 @@
       "category": "配置",
       "purpose": "应用名称/描述/版本、mp-weixin 与 h5 平台配置（h5 hash 路由、端口 8080）",
       "reuse": "adapt",
-      "note": "name/description/appid 需替换为成都景点地陪小程序信息；h5 配置保留",
-      "sha256": "b69a76777b484744afdb37d00e8736d6baa01d5a46811e0548ea9fdd718e4877"
+      "note": "2026-09-26 feat-013：name 改「成都地陪」，description 改为景点地陪预约；h5 配置保留；mp-weixin 的 appid 仍为空，发布前需填真实小程序 appid",
+      "sha256": "1b81535296cd3b01456587369bcbe2cff836031456b12bc02a2dfb5add01691c"
     },
     {
       "path": "pages.json",
       "category": "配置",
       "purpose": "页面注册、tabBar（首页/我的）与全局样式，全部页面使用 navigationStyle: custom",
       "reuse": "adapt",
-      "note": "路由骨架与自定义导航风格保留；页面路径与 tabBar 文案随新业务调整",
-      "sha256": "371691bed9049f0d04c7821634ce6d8a9ddca84470abf17ec226b8891248b27d"
+      "note": "路由骨架与自定义导航风格保留。2026-09-26 feat-003 注册 pages/webview/agreement（消 gap-002）；feat-006~013 完成：共注册 11 个页面（新增 guide/list、order/create、guide/orders），tabBar 主色改 #2f6b5e、未选中 #6b6862、**底色由纯白改 #fbfaf5（$ds-surface-container，与原型「宣纸+8%白」对齐）**，globalStyle 背景改宣纸 #f7f4ed，页面标题改为地陪口径",
+      "sha256": "49889e776b7978324fd990080e338dd27e8430e0f2a691729572aa543628a8b7"
     },
     {
       "path": "package.json",
@@ -76,7 +76,7 @@
       "category": "样式",
       "purpose": "uni-app 内置 SCSS 变量 + 项目设计令牌（$ds-*，与 DESIGN.md 一一对应）",
       "reuse": "adapt",
-      "note": "2026-09-26 定稿「宣纸 · 疏」后重写：主色改为竹青绿 #2f6b5e，新增 $ds-* 令牌体系（色彩角色 / 字阶 / 形状 / 间距 / 层级）。仍存在的偏差：各页面内硬编码的 #FF4D6A 与 pages.json tabBar 的 #ff6b81 待 feat-013 统一",
+      "note": "2026-09-26 定稿「宣纸 · 疏」后重写：主色改为竹青绿 #2f6b5e，新增 $ds-* 令牌体系（色彩角色 / 字阶 / 形状 / 间距 / 层级）。feat-013 完成收口：8 个页面与 pages.json tabBar 的旧色值已全部换成 $ds-* / 新色值，仓库中已无 #FF4D6A 与 #ff6b81 的实际引用",
       "sha256": "67a153293fcc2614c1adfd51c7c058e0ee8ff269a762c916d99b5335a806758c"
     },
     {
@@ -84,16 +84,16 @@
       "category": "文档",
       "purpose": "项目说明：目录结构、功能模块、运行方式、云开发配置、技术栈",
       "reuse": "adapt",
-      "note": "目录结构与运行方式章节保留，业务描述替换",
-      "sha256": "72582aa4c6b5cb18eb98abbac18fc2acdc22159583ff014329843c2df86849d5"
+      "note": "2026-09-26 feat-013 重写：改为 MVP 范围（3 件事 / 7 页面 / 3 角色）、页面与角色对照表、mock 数据层与 6 步验证说明、设计系统入口；技术栈去掉未实际使用的 Pinia 与云开发（gap-005）",
+      "sha256": "6041e924668095e4d9227ce24ccfbe169ee6a4a52bbf33870f8af54c9dcaef31"
     },
     {
       "path": "api/index.js",
       "category": "数据层",
       "purpose": "数据层统一出口：数据源可切换（USE_MOCK）+ 分层结构（constants / errors / mock / http）",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-004 重写：原「云开发 + useMock」单文件改为 mock 优先的分层结构；导出 RegionApi/AttractionApi/GuideApi/PackageApi/OrderApi/UserApi，并保留 ClerkApi/CategoryApi/AppointmentApi 过渡适配层（feat-006~012 迁移完成后删除）。云开发分支已移除（后续走 HTTP，路由表见 api/http.js）；页面禁止直连 api/mock/，由 scripts/check-mock.mjs 把关",
-      "sha256": "20d25cd0626ca349351a85a5cf7078dbd66b91e4d55f551a14922826331f77e9"
+      "note": "2026-09-26 feat-004 重写：原「云开发 + useMock」单文件改为 mock 优先的分层结构；导出 RegionApi/AttractionApi/GuideApi/PackageApi/OrderApi/UserApi。feat-013 删除过渡适配层（ClerkApi/CategoryApi/AppointmentApi）——7 个页面全部迁到新模块后已无引用，删除条件达成；云开发分支已移除（后续走 HTTP，路由表见 api/http.js）；页面禁止直连 api/mock/，由 scripts/check-mock.mjs 把关。同日加固：`pickModule()` 缺模块时抛可操作错误、`DATA_LAYER_VERSION` 版本戳 + 启动日志（用于识别旧模块缓存），导出面由 scripts/smoke-flow.mjs 断言",
+      "sha256": "de9556c6a4aff6a55882c785e755850931d4aab163e0b2148cc2869b857e6674"
     },
     {
       "path": "utils/index.js",
@@ -106,90 +106,90 @@
     {
       "path": "pages/login/login.vue",
       "category": "页面",
-      "purpose": "登录页：Logo/特性介绍/微信授权登录/免登录进入/协议勾选/Loading",
-      "reuse": "keep",
-      "note": "已实现平台双通道：MP-WEIXIN 走 uni.login，H5 走 dev_code 模拟 code；开放能力按钮在 H5 用 click 兜底。改写文案即可复用",
-      "sha256": "84c8fed3c0856057fea986c273cb47f0f631d4b2e9d6507f96e900ee93b33618"
+      "purpose": "登录页：品牌区/价值说明/微信授权登录/免登录进入/协议勾选/Loading",
+      "reuse": "adapt",
+      "note": "平台双通道登录逻辑原样保留（MP-WEIXIN 走 uni.login，H5 走 dev_code 模拟 code，开放能力按钮在 H5 用 click 兜底）。2026-09-26 feat-013：档位由 keep 改为 adapt 并重写样式与文案——品牌「蜀」字块 + 竹青底 + $ds-* 令牌，避免首屏仍是陪玩粉而与全站矛盾；同时修掉 checkLogin 判断旧字段 _id 导致免登录判断失效的问题",
+      "sha256": "fa598cfe96d985e00a6ca45edfcbe65d985bc89058c269d932c179391ab90998"
     },
     {
       "path": "pages/index/index.vue",
       "category": "页面",
       "purpose": "首页：状态栏占位、搜索框、横向分类标签、卡片列表、分页加载、空状态、右滑筛选抽屉（性别/价格区间）",
       "reuse": "adapt",
-      "note": "MVP 景点列表页（首页，dev-001）：卡片字段换成景点（封面/名称/所属区域/区域类型标签/场景短描述），顶部标签换成 3 类区域。同一范式在第二级地陪列表页复用（卡片：头像/昵称/擅长区域/服务类型/价格，不含评分与评价，dev-002）。保留点：列表骨架、分页三态、抽屉交互",
-      "sha256": "d29de4c6330b7f447f1d453aeba52e61ba744dff8db0c8bcb582fb57ca73df66"
+      "note": "2026-09-26 feat-006 重写为景点列表页（首页）：区域文字页签（RegionApi）+ 景点卡（coverUrl 76×76 / 名称 / 区域·场景 /「N 位地陪可约」）+ 20 条数据分页（pageSize 10 → 2 页）；按定稿原型移除陪玩时期的搜索框与性别/价格筛选抽屉（MVP 不做景点搜索与筛选）；全部改用 $ds-* 令牌。同日修复：区域页签在横向滚动容器里被 flex 压缩导致文字竖排（.tabline__item 补 flex: none + white-space: nowrap）。同日交互增强：接入 utils/hscroll.js —— 激活区域自动滚到可视区中间（scroll-into-view 只会停在边缘被裁掉），列表可左右滑动切换区域",
+      "sha256": "218ed958eb02e720b4f60757620f17e8ba5301ac58f7c8d1c0defcb731d8ad5a"
     },
     {
       "path": "pages/clerk/detail.vue",
       "category": "页面",
       "purpose": "详情页：达人信息卡、服务项目单选、日期 picker、时段（上午/下午/晚上）、备注、合计价格、提交预约",
       "reuse": "adapt",
-      "note": "MVP 地陪详情页：保留个人介绍、擅长景点、服务套餐、可约日期；按 dev-002 移除评价区块；预约表单与底部合计栏整体剥离到新增的下单页 /pages/order/create",
-      "sha256": "dd2e37086e030186c2a61ed7266f78e104aaa1432890dd41f542ecdf69f65d5d"
+      "note": "2026-09-26 feat-008 重写：身份块（头像/昵称/区域标签/简介 + 接单·本周可约·套餐数三项指标）→ 擅长景点 → 套餐单选 → 可约日期横条 → 底部「立即预约」；按 dev-002 移除评价区块、预约表单整体剥离到 /pages/order/create；改用 GuideApi（含新增的 attractions 字段）与 $ds-* 令牌",
+      "sha256": "16e9d6043bdb731473b651cb054071e2afc1e2d3708651d945a26a734a3e4a93"
     },
     {
       "path": "pages/appointment/my.vue",
       "category": "页面",
       "purpose": "我的预约：状态 Tab（全部/待服务/已完成/已取消）、卡片列表、取消预约、下拉刷新",
       "reuse": "adapt",
-      "note": "MVP 订单页：状态由 3 态升级为 4 态（待确认/已确认/已完成/已取消），保留分页、下拉刷新、取消预约；补充套餐/人数/备注展示",
-      "sha256": "3b674060bfbc450ea8bd22bf02aa7382207bf03828e3c3b7767e25dd37f483c5"
+      "note": "2026-09-26 feat-010 重写：四态文字页签（待确认/已确认/已完成/已取消，顺序与文案取自 api/constants.js）+ 订单卡（地陪头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约）；保留分页与下拉刷新（pages.json 已开 enablePullDownRefresh）；状态标签四态固定配色；改用 $ds-* 令牌。同日交互增强：四态页签接入 utils/hscroll.js 的横滑切换（等宽不溢出，无需居中）",
+      "sha256": "17637da0d3a44098f712985df8bf62e3b9d4cdb4ac29496324323ab584ffcca4"
     },
     {
       "path": "pages/tabbar/mine.vue",
       "category": "页面",
       "purpose": "个人中心：用户卡、统计（预约/收藏/余额）、菜单组、管理员入口（达人管理/预约管理）、设置/关于占位",
       "reuse": "adapt",
-      "note": "保留用户卡 + 菜单组 + 管理员分区的布局；MVP 仅做角色分流（游客/地陪/管理员入口），该页不属于 MVP 7 个页面",
-      "sha256": "db5d9df6b8e74b33199c33d8f74aab3cd7351f4ae8bc6642345838e92226735a"
+      "note": "2026-09-26 feat-011 重写：按角色分流入口（游客→我的订单 / 地陪→接单 / 管理员→订单管理 + 地陪审核）+ 协议入口（复用 feat-003 的协议页）+ mock 演示身份切换（USE_MOCK 为真时可一键切三端，接后端后删除）；移除钱包/收藏/设置/关于等 MVP 外的「开发中」占位项；改用 $ds-* 令牌",
+      "sha256": "ccbcc0c560fe59932a25f7df25c77ed7ae77807d1d7655ab5499afcb97abdc1e"
     },
     {
       "path": "pages/admin/clerk.vue",
       "category": "页面",
       "purpose": "达人管理：已通过/待审核 Tab、待审数量徽标、列表、（审核通过/拒绝、编辑、添加，其中编辑/添加页尚未创建）",
       "reuse": "adapt",
-      "note": "MVP 后台的地陪审核：保留通过/拒绝与待审徽标。按 MVP 砍掉范围——移除指向未创建的 /pages/admin/clerk/edit 的「添加/编辑达人」入口，不新建该页面（见 gap-003）",
-      "sha256": "b639a7eb8aa39ac874cefe01ed4c0a280fbfdd5c6e6cc0a0125cb748ce84eb79"
+      "note": "2026-09-26 feat-012 重写为「地陪审核」：统计条（待审核/已通过/合计）+ 待审核与已通过页签 + 通过/拒绝（GUIDE_STATUS 白名单）；**移除**指向未创建页面的「添加/编辑达人」入口，gap-003 随之关闭（全仓库已无悬空页面引用，保真校验告警 0 条）；改用 GuideApi 与 $ds-* 令牌",
+      "sha256": "ddb08a96e70cb2234149d864db49a28e7657aeafc64cf8ff87e9019908c7de38"
     },
     {
       "path": "pages/admin/appointment.vue",
       "category": "页面",
       "purpose": "预约管理：按日期 + 状态筛选、预约列表、标记完成",
       "reuse": "adapt",
-      "note": "MVP 后台订单管理：筛选与流转骨架复用；新增「人工确认档期」与「处理取消」，状态对齐 4 态",
-      "sha256": "c96168c1d74d894d3d9271e948bcc5ddd0a1ed7ef043446a0f5adcf2b666dc38"
+      "note": "2026-09-26 feat-012 视觉重做（原型 07 屏）：统计条（待确认/已确认/今日订单，取自接口 counts）+ 日期 picker 与状态 chip 筛选 + 订单卡（游客信息）+ 一单一个主操作（确认档期 filled / 标记完成 tonal / 处理取消 danger）；按后台密度收紧字号与内边距；改用 $ds-* 令牌。同日修复：筛选 chip 与日期 picker 在横向滚动容器里被 flex 压缩导致竖排换行（.chip / .chip-picker / .chip__text 补 flex: none + white-space: nowrap）。同日交互增强：状态 chip 激活项自动滚到中间 + 列表左右滑动切换状态；日期 chip 在行首，选完滚回最左保证完整可见",
+      "sha256": "14dbc475cf8b93aa5096dfe5bc35a428fc294b069df7d8da37ded6d397cc6e80"
     },
     {
       "path": "static/tabbar/home.png",
       "category": "静态资源",
       "purpose": "tabBar 首页图标（未选中）",
-      "reuse": "keep",
-      "note": "可选：后续替换为成都景点主题图标",
-      "sha256": "c29e8b88f2e48b30f8532b304caa1012964fb0c77e6c5784cbac286bba52910e"
+      "reuse": "replace",
+      "note": "2026-09-26 修复：原图标是陪玩时期的灰+粉红填充图，与 tabBar 的竹青 selectedColor 冲突（选中态出现「粉图标 + 绿文字」）。现按 DESIGN.md §9 的线性规范（24 网格 / stroke 1.6）由 scripts/gen-tabbar-icons.mjs 代码生成，颜色直接取自 uni.scss 的 $ds-ink-2。改令牌后重跑该脚本即可，不做手工图片维护",
+      "sha256": "6b8505d80b7358eb71372bc88438d7680acf80e3884a03d86a5e9c23fdd5e42b"
     },
     {
       "path": "static/tabbar/home-active.png",
       "category": "静态资源",
       "purpose": "tabBar 首页图标（选中）",
-      "reuse": "keep",
-      "note": "",
-      "sha256": "91716edf3893d1905601f2a25b27e2cf9a548e0a41adea7934afd42628b4577d"
+      "reuse": "replace",
+      "note": "2026-09-26 修复：同上，选中态改为 $ds-primary 竹青绿（原为陪玩粉 #FF4D6A 系）",
+      "sha256": "a664e0ccf00c5a9a91032fc98b1ff07d1cec2033eabd9da4142d9c041a26dd77"
     },
     {
       "path": "static/tabbar/mine.png",
       "category": "静态资源",
       "purpose": "tabBar 我的图标（未选中）",
-      "reuse": "keep",
-      "note": "",
-      "sha256": "cfa9f7f563bfdd3c0466bf1f7a78a5c658b130f375f4b2aecc99ee791bdb4de0"
+      "reuse": "replace",
+      "note": "2026-09-26 修复：同 home.png，线性人形 + $ds-ink-2 灰",
+      "sha256": "ed3fea7a875cd9e55dec3e2a1742dd464af1243a11169c470b4d5fc0c434af39"
     },
     {
       "path": "static/tabbar/mine-active.png",
       "category": "静态资源",
       "purpose": "tabBar 我的图标（选中）",
-      "reuse": "keep",
-      "note": "",
-      "sha256": "1d90e6e04f63acb5ad3f443372f0b21ea9d9eccacba14f5e6fa9ef17cd9ad4db"
+      "reuse": "replace",
+      "note": "2026-09-26 修复：同 home-active.png，选中态改为 $ds-primary 竹青绿",
+      "sha256": "97488f66ec7a86be5790f88e8f9493bd43ca738a9a1c78f1215cb10acdffd1f9"
     }
   ],
   "removedAssets": [
@@ -208,33 +208,35 @@
       "issue": "/static/images/default-avatar.png 被 6 处页面引用，但 static/images/ 目录不存在",
       "impact": "头像全部加载失败，界面出现空白/裂图",
       "plannedFeature": "feat-003",
-      "resolution": "按 dev-006 不新增本地占位图：改为读取图片字段（avatarUrl / coverUrl），字段为空或加载失败时露出 primary-container 底色兜底"
+      "resolution": "按 dev-006 不新增本地占位图：改为读取图片字段（avatarUrl / coverUrl），字段为空或加载失败时露出 primary-container 底色兜底。2026-09-26 feat-003 已完成：6 处引用全部改为接口字段"
     },
     {
       "id": "gap-002",
       "issue": "pages/login/login.vue 跳转 /pages/webview/agreement，该页面未在 pages.json 注册",
       "impact": "点击《用户协议》/《隐私政策》报错",
       "plannedFeature": "feat-003",
-      "resolution": "新建协议页并在 pages.json 注册（改 pages.json 需先登记原因再 --update）"
+      "resolution": "新建协议页并在 pages.json 注册（改 pages.json 需先登记原因再 --update）。2026-09-26 feat-003 已完成：pages/webview/agreement.vue 已注册，支持 type=user/privacy"
     },
     {
       "id": "gap-003",
       "issue": "pages/admin/clerk.vue 跳转 /pages/admin/clerk/edit（添加/编辑达人），该页面不存在",
       "impact": "管理端添加/编辑达人不可用",
       "plannedFeature": "feat-012",
-      "resolution": "按 MVP 砍范围处理：移除该入口，不新建页面（地陪审核只需通过/拒绝）"
+      "resolution": "按 MVP 砍范围处理：移除该入口，不新建页面（地陪审核只需通过/拒绝）。2026-09-26 feat-012 已完成：pages/admin/clerk.vue 重写后不再有任何 /pages/admin/clerk/edit 引用，verify-assets 的告警由 3 → 0 条"
     },
     {
       "id": "gap-004",
       "issue": "uni.scss 与 pages.json tabBar 原用 #ff6b81、页面与旧 DESIGN.md 用 #FF4D6A，三处主色互不一致",
       "impact": "2026-09-26 已部分收敛：uni.scss 与 DESIGN.md 统一为竹青绿 #2f6b5e；页面内硬编码 #FF4D6A 与 pages.json tabBar #ff6b81 仍未改",
-      "plannedFeature": "feat-013"
+      "plannedFeature": "feat-013",
+      "resolution": "2026-09-26 feat-013 已完成：pages.json tabBar 改为主色 #2f6b5e / 未选中 #6b6862、背景改宣纸 #f7f4ed；8 个页面（含登录页）全部改用 $ds-* 令牌，仓库中对 #FF4D6A / #ff6b81 的实际引用已清零"
     },
     {
       "id": "gap-005",
       "issue": "package.json 声明了 Pinia 相关技术栈描述（README），但项目内未安装也未使用 Pinia",
       "impact": "README 与实际实现不符",
-      "plannedFeature": "feat-013"
+      "plannedFeature": "feat-013",
+      "resolution": "2026-09-26 feat-013 已完成：README 技术栈删除 Pinia，改为「原生 uni.request 封装（未引入状态管理库，状态由页面与 storage 管理）」；同时移除不再使用的云开发描述"
     }
   ]
 }

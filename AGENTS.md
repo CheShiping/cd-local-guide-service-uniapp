@@ -17,7 +17,7 @@
 
 1. 确认工作目录为仓库根目录
 2. 阅读本文件
-3. 阅读业务范围：`docs/MVP 范围：只做 3 件事.md`（人读）+ `docs/mvp-scope.json`（机读：10 景点 / 3 区域 / 3 套餐 / 4 态订单 / 7 页面 / 4 处修订见 `deviations`）
+3. 阅读业务范围：`docs/MVP 范围：只做 3 件事.md`（人读）+ `docs/mvp-scope.json`（机读：20 景点 / 7 类区域 / 3 套餐 / 4 态订单 / 7 页面 / 8 处修订见 `deviations`）
 4. 运行 `./init.ps1`（Windows PowerShell）或 `bash init.sh`（Git Bash），确认基线为绿
 5. 阅读 `feature_list.json`，只看当前一个功能
 6. 涉及改动范围与复用策略时，查 `docs/legacy-assets.md`
@@ -27,7 +27,7 @@
 
 ## 铁律（不变量）
 
-- **不许丢原有资产**：`docs/legacy-assets.json` 中登记的 23 个文件是重构基础。删除或移动会让 `node scripts/verify-assets.mjs` 失败。
+- **不许丢原有资产**：`docs/legacy-assets.json` 中登记的 22 个文件是重构基础。删除或移动会让 `node scripts/verify-assets.mjs` 失败。
 - **要改就必须登记**：确需改动某资产时，先改 `docs/legacy-assets.json` 的 `reuse` / `note` 说明理由，确认后再运行 `node scripts/verify-assets.mjs --update` 刷新哈希。禁止用 `--update` 掩盖无意的误改。
 - **一次只做一个功能**：从 `feature_list.json` 精确挑一个，其余不动，不做顺手的额外重构。
 - **没有验证证据不算完成**：必须运行验证命令并把输出写进 `feature_list.json` 的 `evidence`。
@@ -102,21 +102,44 @@ MVP 明确不做：IM、实时定位、分销代理、团购、广场发单、�
 ## 验证命令
 
 ```powershell
-# 完整验证（推荐，Windows，共 5 步）
+# 完整验证（推荐，Windows，共 7 步）
 ./init.ps1
 
 # 单项校验（都零依赖、秒级）
 node scripts/verify-assets.mjs   # 资产保真 + 路由一致性
 node scripts/check-tokens.mjs    # 设计令牌（SCSS 顺序 / CSS 变量 / 色值对齐）
 node scripts/check-schema.mjs    # 数据库表结构（命名 / 必备列 / 金额类型 / MVP 边界）
+node scripts/check-mock.mjs      # mock 数据层（规模 / 确定性 / 自洽 / MVP 边界）
+node scripts/smoke-flow.mjs      # 端到端闭环（真实运行 mock：下单→接单→确认→完成 + 负向用例）
 
 # 自检（证明门禁非空，改动校验脚本后跑一次）
 node scripts/check-tokens.mjs --self-test
 node scripts/check-schema.mjs --self-test
+node scripts/smoke-flow.mjs --self-test
+
+# tabBar 图标（改了 uni.scss 令牌后重跑生成；平时用 --check 校验）
+node scripts/gen-tabbar-icons.mjs
+node scripts/gen-tabbar-icons.mjs --check
 
 # 小程序产物构建
 npm run build:mp-weixin
 ```
+
+> 前 5 项都是**静态**校验（读文件 / 比对哈希 / 正则解析）。`scripts/smoke-flow.mjs` 是唯一的**动态**校验：
+> 它把 `api/` 复制到临时目录（临时目录声明 `type: module`，node 才能直接 import 项目里的 ESM 源码），
+> 然后真实跑一遍三端闭环。2026-09-26 就是它抓到了两个阻断闭环、却通过了全部静态门禁的运行时 bug。
+> **新增或修改数据层逻辑后，除了静态门禁，必须跑它。**
+
+### 改了代码但页面没生效？（旧构建 / 旧模块缓存）
+
+本项目已三次出现「报错栈与源码对不上」，全都是运行在旧模块上。页面报 `undefined` 时**先按这套流程排除**，再判断是不是 bug：
+
+1. 停掉 dev server（Ctrl+C）—— `api/mock/index.js` 的仓库是**模块级缓存**（`getDb()` 只算一次），不停进程换不干净
+2. 删缓存与产物：`Remove-Item -Recurse -Force node_modules\.vite, dist -ErrorAction SilentlyContinue`
+3. 重启 `npm run dev:h5`（或开发者工具里重新编译），浏览器**硬刷新**（Ctrl+Shift+R）
+4. 看控制台：出现 `[api] 数据层 <版本>｜数据源 mock｜模块 RegionApi / … / UserApi` 才算加载到新代码
+
+数据层的版本戳在 `api/index.js` 的 `DATA_LAYER_VERSION`；缺模块时 `pickModule()` 会直接抛可操作的错误，不再是一句 `Cannot read properties of undefined`。
 
 ## 完成定义
 
@@ -125,6 +148,7 @@ npm run build:mp-weixin
 - [ ] 目标行为已实现
 - [ ] `node scripts/verify-assets.mjs` 通过
 - [ ] 涉及样式改动时 `node scripts/check-tokens.mjs` 通过；涉及数据模型时 `node scripts/check-schema.mjs` 通过
+- [ ] 涉及数据层 / 状态流转时 `node scripts/smoke-flow.mjs` 通过（端到端闭环 + 负向用例）
 - [ ] `npm run build:mp-weixin` 通过（或说明为何本次不适用）
 - [ ] 设计实现文档已归档到 `docx/codeimpl-sum/设计文档-feat-XXX-功能名.md`（六章节齐全）
 - [ ] 涉及的 Bug 已归档到 `docx/bugfix/BUG修复-YYYYMMDD-简述.md`

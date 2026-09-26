@@ -69,6 +69,13 @@ export const BOOKING_TYPE_LABELS = {
   [BOOKING_TYPES.HOURLY]: '小时加购'
 };
 
+/** 价格的单位文案（列表页「¥300 起 / 半日」用），同样是唯一来源 */
+export const BOOKING_TYPE_UNITS = {
+  [BOOKING_TYPES.HALF_DAY]: '半日',
+  [BOOKING_TYPES.FULL_DAY]: '全天',
+  [BOOKING_TYPES.HOURLY]: '小时'
+};
+
 /** 下单页控件规则：类型跟随套餐，不单独放类型选择器 */
 export const BOOKING_TYPE_UI = {
   [BOOKING_TYPES.HALF_DAY]: { showTimeSlot: true, showHours: false, slotOptions: ['morning', 'afternoon'] },
@@ -181,6 +188,10 @@ export function bookingTypeLabel(bookingType) {
   return BOOKING_TYPE_LABELS[bookingType] || '';
 }
 
+export function bookingTypeUnit(bookingType) {
+  return BOOKING_TYPE_UNITS[bookingType] || '';
+}
+
 export function timeSlotLabel(timeSlot) {
   return TIME_SLOT_LABELS[timeSlot] || '';
 }
@@ -196,7 +207,21 @@ export function isWaitingGuideAccept(order) {
   return !!order && order.status === ORDER_STATUS.PENDING_CONFIRM && !order.guideAcceptedAt;
 }
 
-/** 订单在业务上是否属于「进行中」（平台已确认且未完成） */
+/** 订单在业务上是否属于「进行中」（平台已确认且未完成）—— 后台口径 */
 export function isInProgress(order) {
   return !!order && order.status === ORDER_STATUS.CONFIRMED;
+}
+
+/**
+ * 地陪是否已「接下」这一单 —— 地陪端口径，与后台口径不同
+ *
+ * 接单只写 guideAcceptedAt，状态仍是 0 待确认（等平台人工确认档期）。
+ * 若地陪端「进行中」只按 status === 1 统计，地陪接完单后订单会同时从
+ * 「待接单」与「进行中」两个列表里消失。因此地陪端的「进行中」=
+ * 我已接下的单：待平台确认 + 平台已确认。
+ */
+export function isGuideCommitted(order) {
+  if (!order) return false;
+  if (order.status === ORDER_STATUS.CONFIRMED) return true;
+  return order.status === ORDER_STATUS.PENDING_CONFIRM && !!order.guideAcceptedAt;
 }

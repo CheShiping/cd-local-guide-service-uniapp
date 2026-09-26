@@ -43,9 +43,13 @@
     "touristNickname": "小舟",
     "adminNickname": "平台管理员",
     "avatarPoolSize": 70,
+    "guideAvatarDir": "/static/guide/",
+    "guideAvatarFiles": ["baiahe.jpg", "baixiaoyu.jpg", "caoyiming.jpg", "caozhuoyan.png", "chenchenmo.png", "chenqinghe.png", "chenshitou.jpg", "chenxiaolu.png", "hanahe.png", "hanguizhou.png", "hanzhuoyan.png", "hetingyu.jpg", "heyiming.jpg", "jiangchenmo.jpg", "jiangguizhou.png", "leimingming.png", "linsujie.jpg", "qinxiaolin.jpg", "qinxiaoman.png", "sunanshan.jpg", "tangsiyuan.jpg", "tangtingyu.jpg", "wangazhe.jpg", "xiexiaoyu.jpg", "xiongyutong.png", "xiongyutonge.png", "yuanmingming.png", "yuanqinghe.png", "yuansiyuan.png", "yuantingyu.png", "yuanxiaolin.png", "yuanxiaoman.png", "yuanxiaoyu.png", "zhongahe.jpg", "zhongsiyuan.jpg", "zhongxiaolin.jpg", "zhounanshan.jpg", "zhouqinghe.png", "zhoutingyu.jpg"],
     "areaPrefixes": ["青羊", "锦江", "武侯", "成华", "金牛", "高新", "都江堰", "大邑", "双流", "崇州", "龙泉驿"],
     "surnames": ["林", "苏", "陈", "何", "周", "邓", "罗", "蒋", "谢", "韩", "唐", "曹", "袁", "雷", "钟", "汪", "田", "熊", "白", "秦"],
     "givenNames": ["小林", "阿杰", "苏姐", "陈默", "小雨", "阿哲", "小满", "语彤", "一鸣", "思远", "拙言", "明明", "阿禾", "石头", "南山", "小鹿", "阿宁", "庭玉", "归舟", "清和"],
+    "surnamesPinyin": { "林": "lin", "苏": "su", "陈": "chen", "何": "he", "周": "zhou", "邓": "deng", "罗": "luo", "蒋": "jiang", "谢": "xie", "韩": "han", "唐": "tang", "曹": "cao", "袁": "yuan", "雷": "lei", "钟": "zhong", "汪": "wang", "田": "tian", "熊": "xiong", "白": "bai", "秦": "qin" },
+    "givenNamesPinyin": { "小林": "xiaolin", "阿杰": "ajie", "苏姐": "sujie", "陈默": "chenmo", "小雨": "xiaoyu", "阿哲": "azhe", "小满": "xiaoman", "语彤": "yutong", "一鸣": "yiming", "思远": "siyuan", "拙言": "zhuoyan", "明明": "mingming", "阿禾": "ahe", "石头": "shitou", "南山": "nanshan", "小鹿": "xiaolu", "阿宁": "aning", "庭玉": "tingyu", "归舟": "guizhou", "清和": "qinghe" },
     "introduceTemplates": [
       "在{area}长大，做地陪第 {years} 年，喜欢带人从人少的巷子绕进去。",
       "擅长{scene}线路，路线熟悉，能帮忙避开排队高峰。",

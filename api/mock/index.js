@@ -86,6 +86,13 @@ function paginate(list, { pageNo, pageSize } = {}) {
 }
 
 function byId(list, id) {
+  // 字典表缺失时报「哪个表缺了」，而不是一句 Cryptic 的 "Cannot read properties of undefined"
+  if (!Array.isArray(list)) {
+    throw new Error(
+      `mock 仓库缺少字典表：byId 收到 ${typeof list}（id=${id}）。` +
+        '请检查 api/mock/generate.js 的返回值——regionTypes / packageSkus / attractions 必须原样带出'
+    );
+  }
   return list.find((item) => item.id === Number(id));
 }
 
@@ -187,6 +194,11 @@ function toGuide(store, guide) {
       .filter(Boolean)
       .map((region) => ({ id: region.id, code: region.code, name: region.name })),
     attractionIds,
+    /* 详情页要展示「擅长景点」的名称：接口层一次补齐，避免页面再发一次请求逐个查 */
+    attractions: attractionIds
+      .map((id) => byId(store.attractions, id))
+      .filter(Boolean)
+      .map((attraction) => ({ id: attraction.id, code: attraction.code, name: attraction.name })),
     bookingTypes: guideBookingTypes(store, guide.id),
     priceFrom: guidePriceFrom(store, guide.id),
     packages: guidePackageRows(store, guide.id).map((row) => toPackage(store, byId(store.packageSkus, row.packageSkuId), row.price))
@@ -226,6 +238,19 @@ function toOrder(order) {
     cancelReason: order.cancelReason,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt
+  };
+}
+
+/**
+ * 地陪端 / 管理端需要知道下单的游客是谁：接口层做一次 join
+ * （HTTP 版本由后端 JOIN users；订单表只存 tourist_user_id，符合「不使用外键」的设计）
+ */
+function withTourist(store, order) {
+  const tourist = store.users.find((user) => user.id === order.touristUserId);
+  return {
+    ...toOrder(order),
+    touristNickname: tourist ? tourist.nickname : '',
+    touristAvatarUrl: tourist ? tourist.avatarUrl : ''
   };
 }
 
@@ -522,11 +547,21 @@ export const OrderApi = {
       throw invalidRequest('未指定地陪，且当前身份不是地陪', [`guideId=${guideId}`]);
     }
 
-    let list = store.orders.filter((order) => order.guideId === targetGuideId);
+    // counts 必须基于「我的全部订单」而不是筛选后的结果，否则带 scope 调接口时统计会归零
+    const mine = store.orders.filter((order) => order.guideId === targetGuideId);
+    const counts = {
+      waiting: mine.filter((order) => C.isWaitingGuideAccept(order)).length,
+      inProgress: mine.filter((order) => C.isGuideCommitted(order)).length,
+      todayFinished: mine.filter(
+        (order) => order.status === C.ORDER_STATUS.COMPLETED && order.appointDate === C.formatDate(new Date())
+      ).length
+    };
+
+    let list = mine;
     if (scope === 'waiting') {
       list = list.filter((order) => C.isWaitingGuideAccept(order));
     } else if (scope === 'inProgress') {
-      list = list.filter((order) => C.isInProgress(order));
+      list = list.filter((order) => C.isGuideCommitted(order));
     }
     if (status !== undefined && status !== '' && status !== null) {
       list = list.filter((order) => order.status === Number(status));
@@ -534,11 +569,7 @@ export const OrderApi = {
     list = list.slice().sort((a, b) => (a.appointDate < b.appointDate ? -1 : a.appointDate > b.appointDate ? 1 : b.id - a.id));
 
     const page = paginate(list, { pageNo, pageSize });
-    const counts = {
-      waiting: list.filter((order) => C.isWaitingGuideAccept(order)).length,
-      inProgress: list.filter((order) => C.isInProgress(order)).length
-    };
-    return { ...page, counts, list: page.list.map(toOrder) };
+    return { ...page, counts, list: page.list.map((order) => withTourist(store, order)) };
   },
 
   /** GET /api/v1/admin/orders —— 后台订单管理（状态 + 日期筛选） */
@@ -561,7 +592,7 @@ export const OrderApi = {
       todayAppoint: store.orders.filter((order) => order.appointDate === C.formatDate(new Date())).length,
       total: store.orders.length
     };
-    return { ...page, counts, list: page.list.map(toOrder) };
+    return { ...page, counts, list: page.list.map((order) => withTourist(store, order)) };
   },
 
   /** GET /api/v1/orders/{id} */
@@ -700,168 +731,6 @@ export const UserApi = {
   /** mock 专用：切换游客 / 地陪 / 管理员视角 */
   async switchRole(role) {
     return switchMockRole(role);
-  }
-};
-
-/* =============================================================================
-   四、过渡适配层（旧页面仍可用，feat-006 ~ feat-012 迁移完成后删除）
-   -----------------------------------------------------------------------------
-   旧页面（index / clerk detail / appointment / admin）用的是陪玩时期的数据形状，
-   这里把新模型映射成旧形状，保证重构过程中 H5 随时可跑。
-   注意：状态语义在新旧之间做了「压缩」映射（新 0/1 → 旧 0 待服务），
-       因此旧订单页无法区分「待确认 / 已确认」，迁移到 feat-010 后即消失。
-   ============================================================================= */
-
-const LEGACY_STATUS = {
-  [C.ORDER_STATUS.PENDING_CONFIRM]: 0,
-  [C.ORDER_STATUS.CONFIRMED]: 0,
-  [C.ORDER_STATUS.COMPLETED]: 1,
-  [C.ORDER_STATUS.CANCELLED]: 2
-};
-
-function toLegacyClerk(store, guide) {
-  return {
-    _id: String(guide.id),
-    nickname: guide.nickname,
-    avatar: guide.avatarUrl,
-    sex: guide.id % 2 === 0 ? 2 : 1,
-    city: (guideRegionIds(store, guide.id).map((id) => (byId(store.regionTypes, id) || {}).name) || []).join(' / '),
-    price: guidePriceFrom(store, guide.id),
-    orderCount: guide.orderCount,
-    onlineStatus: guide.status === C.GUIDE_STATUS.APPROVED ? 1 : 0,
-    skills: guideAttractionIds(store, guide.id)
-      .map((id) => (byId(store.attractions, id) || {}).name)
-      .filter(Boolean)
-      .slice(0, 3),
-    introduce: guide.introduce
-  };
-}
-
-function toLegacyOrder(order) {
-  return {
-    _id: String(order.id),
-    clerkId: String(order.guideId),
-    clerkName: order.guideNickname,
-    clerkAvatar: order.guideAvatarUrl,
-    goodsName: order.packageName,
-    appointDate: order.appointDate,
-    timeSlot: order.timeSlot === C.TIME_SLOTS.NONE ? C.TIME_SLOTS.MORNING : order.timeSlot,
-    price: order.amount,
-    remark: order.remark,
-    status: LEGACY_STATUS[order.status],
-    createTime: order.createdAt
-  };
-}
-
-export const CategoryApi = {
-  /** 旧首页的分类标签 → 区域类型 */
-  async getCategoryList() {
-    const list = await RegionApi.getRegionList({ onlyWithAttractions: true });
-    return list.map((region) => ({ _id: region.code, name: region.name, icon: '' }));
-  },
-  async createCategory() {
-    throw invalidRequest('分类由区域字典维护，MVP 不支持新建');
-  }
-};
-
-export const ClerkApi = {
-  async getClerkList(params = {}) {
-    const store = getDb();
-    const page = await GuideApi.getGuideList({
-      pageNo: params.pageNo,
-      pageSize: params.pageSize,
-      regionTypeCode: params.categoryId,
-      priceMin: params.minPrice,
-      priceMax: params.maxPrice,
-      sort: params.sort
-    });
-    let list = page.list.map((guide) => toLegacyClerk(store, byId(store.guides, guide.id)));
-    if (params.keyword) {
-      list = list.filter((clerk) => clerk.nickname.indexOf(params.keyword) >= 0);
-    }
-    if (params.sex !== undefined && params.sex !== '') {
-      list = list.filter((clerk) => clerk.sex === Number(params.sex));
-    }
-    return { list, total: page.total };
-  },
-
-  async getClerkDetail(clerkId) {
-    const store = getDb();
-    const guide = await GuideApi.getGuideDetail(clerkId);
-    const detail = toLegacyClerk(store, byId(store.guides, guide.id));
-    detail.goodsList = guide.packages.map((pkg) => ({
-      _id: String(pkg.packageSkuId),
-      name: pkg.name,
-      description: pkg.durationDesc,
-      price: pkg.price
-    }));
-    return detail;
-  },
-
-  async createClerk() {
-    throw invalidRequest('地陪由后台创建，MVP 不支持前端新建');
-  },
-
-  async updateClerk() {
-    throw invalidRequest('MVP 暂不支持编辑地陪');
-  },
-
-  async getPendingClerks(pageNo, pageSize) {
-    const store = getDb();
-    const page = await GuideApi.getPendingGuides({ pageNo, pageSize });
-    return { list: page.list.map((guide) => toLegacyClerk(store, byId(store.guides, guide.id))), total: page.total };
-  },
-
-  async auditClerk(clerkId, status) {
-    await GuideApi.auditGuide(clerkId, {
-      status: Number(status) === 1 ? C.GUIDE_STATUS.APPROVED : C.GUIDE_STATUS.REJECTED
-    });
-  }
-};
-
-export const AppointmentApi = {
-  async createAppointment(appointInfo = {}) {
-    const store = getDb();
-    const guideId = Number(appointInfo.clerkId);
-    const attractionId = guideAttractionIds(store, guideId)[0];
-    const rows = guidePackageRows(store, guideId);
-    const packageSkuId = appointInfo.goodsId ? Number(appointInfo.goodsId) : (rows[0] || {}).packageSkuId;
-    const order = await OrderApi.createOrder({
-      guideId,
-      attractionId,
-      packageSkuId,
-      appointDate: appointInfo.appointDate || appointInfo.date,
-      timeSlot: appointInfo.timeSlot,
-      peopleCount: appointInfo.peopleCount || 1,
-      remark: appointInfo.remark
-    });
-    return order.id;
-  },
-
-  async getMyAppointments(params = {}) {
-    const page = await OrderApi.getMyOrders({ ...params, status: '' });
-    let list = page.list.map(toLegacyOrder);
-    if (params.status !== undefined && params.status !== '' && params.status !== null) {
-      list = list.filter((order) => order.status === Number(params.status));
-    }
-    return { list, total: list.length };
-  },
-
-  async getAllAppointments(params = {}) {
-    const page = await OrderApi.getAllOrders({ pageNo: params.pageNo, pageSize: params.pageSize, appointDate: params.appointDate });
-    let list = page.list.map(toLegacyOrder);
-    if (params.status !== undefined && params.status !== '' && params.status !== null) {
-      list = list.filter((order) => order.status === Number(params.status));
-    }
-    return { list, total: list.length };
-  },
-
-  async cancelAppointment(appointId) {
-    await OrderApi.cancelOrder(appointId, { reason: '游客取消' });
-  },
-
-  async completeAppointment(appointId) {
-    await OrderApi.completeOrder(appointId);
   }
 };
 

@@ -94,6 +94,59 @@ export function generateMockData({ seedData, now, domain, seed = 'peiwan-chengdu
   const { ROLES, GUIDE_STATUS, ORDER_STATUS, BOOKING_TYPES, TIME_SLOTS, BOOKING_TYPE_UI } = domain;
   const { formatDate, nextOrderNo } = domain;
 
+  /* ---------- 地陪头像（mock 阶段用本地素材 /static/guide） ----------
+     素材文件按「姓氏拼音 + 名字拼音」命名（caoyiming.jpg = 曹一鸣）。
+     为了避免「头像与姓名无关」，有素材的地陪**直接采用文件名反查出来的姓名**，
+     其余地陪再随机取名（照片从素材池按下标循环取）—— 同一份 seed 结果始终一致。
+     接真实后端后 avatarUrl 由后端返回完整 URL，页面代码不用动。 */
+  const avatarDir = config.guideAvatarDir || '';
+  const avatarFiles = Array.isArray(config.guideAvatarFiles) ? config.guideAvatarFiles : [];
+  const surnamePinyin = config.surnamesPinyin || {};
+  const givenPinyin = config.givenNamesPinyin || {};
+
+  /** slug → 姓名（caoyiming → 曹一鸣），用于反查素材文件名 */
+  const nameBySlug = {};
+  Object.keys(surnamePinyin).forEach((surname) => {
+    Object.keys(givenPinyin).forEach((given) => {
+      nameBySlug[surnamePinyin[surname] + givenPinyin[given]] = surname + given;
+    });
+  });
+
+  /** 素材里名字能解析出来的那些（保持文件顺序，姓名去重），index → 素材 */
+  const avatarBySlug = {};
+  const avatarNamedItems = [];
+  const usedAvatarNames = {};
+  avatarFiles.forEach((file) => {
+    const slug = String(file).replace(/\.[a-z0-9]+$/i, '');
+    avatarBySlug[slug] = file;
+    const name = nameBySlug[slug];
+    if (name && !usedAvatarNames[name]) {
+      usedAvatarNames[name] = true;
+      avatarNamedItems.push({ file, name });
+    }
+  });
+
+  /** 昵称形如「青羊 · 曹一鸣」：取「·」后的姓名，首字为姓、其余为名，再转拼音 */
+  function avatarSlugOf(nickname) {
+    const parts = String(nickname).split('·');
+    const name = (parts.length > 1 ? parts[1] : parts[0]).trim();
+    const surname = surnamePinyin[name.charAt(0)];
+    const given = givenPinyin[name.slice(1)];
+    return surname && given ? surname + given : '';
+  }
+
+  function avatarMatchOf(nickname) {
+    return avatarBySlug[avatarSlugOf(nickname)] || '';
+  }
+
+  function guideAvatarUrl(nickname, index) {
+    if (!avatarFiles.length) {
+      // 素材池为空时退回网络占位图，避免出现空头像
+      return `https://i.pravatar.cc/160?img=${(index % config.avatarPoolSize) + 1}`;
+    }
+    return `${avatarDir}${avatarMatchOf(nickname) || avatarFiles[index % avatarFiles.length]}`;
+  }
+
   const regionTypes = seedData.regionTypes;
   const packageSkus = seedData.packageSkus;
   const attractions = seedData.attractions;
@@ -134,17 +187,27 @@ export function generateMockData({ seedData, now, domain, seed = 'peiwan-chengdu
 
   const usedNicknames = new Set();
   let relationId = 0;
+  /** 命中「姓名 = 文件名拼音」的地陪数，用于自检（见 stats.guideAvatarMatched） */
+  let avatarMatchedCount = 0;
 
   for (let index = 0; index < guideCount; index += 1) {
     const guideId = index + 1;
     const userId = 2 + guideId;
 
-    // 昵称：区域前缀 + 姓氏 + 名字，去重避免重名
-    let nickname = '';
-    do {
-      nickname = `${rnd.pick(config.areaPrefixes)} · ${rnd.pick(config.surnames)}${rnd.pick(config.givenNames)}`;
-    } while (usedNicknames.has(nickname));
+    // 昵称：区域前缀 + 姓氏 + 名字，去重避免重名。
+    // 有头像素材的地陪直接用素材里的姓名，让「头像文件名」与「姓名」一致
+    const namedAvatar = avatarNamedItems[index];
+    const pickRandomNickname = () =>
+      `${rnd.pick(config.areaPrefixes)} · ${rnd.pick(config.surnames)}${rnd.pick(config.givenNames)}`;
+    let nickname = namedAvatar
+      ? `${rnd.pick(config.areaPrefixes)} · ${namedAvatar.name}`
+      : pickRandomNickname();
+    while (usedNicknames.has(nickname)) {
+      nickname = pickRandomNickname();
+    }
     usedNicknames.add(nickname);
+
+    if (avatarMatchOf(nickname)) avatarMatchedCount += 1;
 
     // 审核状态：以已通过为主，保留少量待审 / 拒绝给后台审核演示
     let status = GUIDE_STATUS.APPROVED;
@@ -181,10 +244,10 @@ export function generateMockData({ seedData, now, domain, seed = 'peiwan-chengdu
     });
 
     // 可约档期：未来 1-14 天内 3-5 天，按该地陪可售套餐的预约类型铺开
+    // 注意：pickedPackages 是 seed 里的套餐 SKU（没有 enabled 字段），
+    // 这里不能再按 enabled 过滤，否则档期永远生成不出来（详情页可约日期为空 → 游客下不了单）
     const availableDays = rnd.int(3, 5);
-    const bookingTypes = pickedPackages
-      .filter((item) => item.enabled === 1)
-      .map((item) => packageSkus.find((pkg) => pkg.id === item.packageSkuId).bookingType);
+    const bookingTypes = pickedPackages.map((pkg) => pkg.bookingType);
     const uniqueBookingTypes = bookingTypes.filter((item, i) => bookingTypes.indexOf(item) === i);
 
     for (let day = 0; day < availableDays; day += 1) {
@@ -208,7 +271,7 @@ export function generateMockData({ seedData, now, domain, seed = 'peiwan-chengdu
       id: guideId,
       userId,
       nickname,
-      avatarUrl: `https://i.pravatar.cc/160?img=${(index % config.avatarPoolSize) + 1}`,
+      avatarUrl: guideAvatarUrl(nickname, index),
       introduce: introduceTemplate
         .replace('{area}', mainRegion.name)
         .replace('{scene}', mainRegion.scene)
@@ -282,7 +345,11 @@ export function generateMockData({ seedData, now, domain, seed = 'peiwan-chengdu
 
     // 待确认里保留一部分「地陪还没接单」，让地陪端接单页有数据
     const accepted = status === ORDER_STATUS.PENDING_CONFIRM ? index >= 3 : true;
-    const appointDate = formatDate(addDays(baseTime, rnd.int(1, 14)));
+    // 每 5 单里有 1 单约在「今天」：否则「今日订单」（后台）与「今日完成」（地陪端）
+    // 两个统计会结构性恒为 0，演示时看起来像坏了
+    const appointDate = index % 5 === 0
+      ? formatDate(baseTime)
+      : formatDate(addDays(baseTime, rnd.int(1, 14)));
     const amount = bookingType === BOOKING_TYPES.HOURLY
       ? guidePackage.price * hours
       : guidePackage.price;
@@ -321,6 +388,11 @@ export function generateMockData({ seedData, now, domain, seed = 'peiwan-chengdu
   return {
     seed,
     generatedAt: baseTime.toISOString(),
+    /* 字典表原样带出：接口层（区域列表 / 景点列表 / 套餐）要按 id 查它们，
+       缺了这三张表，所有涉及区域与景点的接口都会在运行时抛 undefined */
+    regionTypes,
+    packageSkus,
+    attractions,
     users,
     guides,
     guideRegionTypes,
@@ -344,6 +416,10 @@ export function generateMockData({ seedData, now, domain, seed = 'peiwan-chengdu
       attractions: attractions.length,
       regionTypes: regionTypes.length,
       packageSkus: packageSkus.length,
+      /* 地陪头像素材池 / 素材里可解析出的姓名数 / 姓名命中数：素材缺文件或改名时靠这里暴露 */
+      guideAvatarPool: avatarFiles.length,
+      guideAvatarNamed: avatarNamedItems.length,
+      guideAvatarMatched: avatarMatchedCount,
       orders: orders.length,
       ordersByStatus: orders.reduce((acc, order) => {
         acc[order.status] = (acc[order.status] || 0) + 1;

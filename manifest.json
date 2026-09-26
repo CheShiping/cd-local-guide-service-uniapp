@@ -1,7 +1,7 @@
 {
-    "name" : "陪玩小程序",
+    "name" : "成都地陪",
     "appid" : "__UNI__9B64EDC",
-    "description" : "陪玩达人预约小程序",
+    "description" : "成都景点地陪预约小程序：先选景点，再挑能带这个景点的本地地陪",
     "versionName" : "1.0.0",
     "versionCode" : 100,
     "transformPx" : false,

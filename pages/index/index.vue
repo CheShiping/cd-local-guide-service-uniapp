@@ -1,738 +1,420 @@
 <template>
   <view class="page">
-    <!-- 状态栏占位 -->
-    <view class="status-bar" :style="{ height: statusBarHeight + 'px', background: '#FFFFFF' }"></view>
-    
-    <!-- 搜索栏 -->
-    <view class="search-header">
-      <view class="search-box">
-        <text class="search-icon">🔍</text>
-        <input 
-          v-model="keyword" 
-          placeholder="搜索达人昵称"
-          class="search-input"
-          placeholder-class="placeholder"
-          @confirm="onSearch"
-        />
-      </view>
+    <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+
+    <!-- 页面标题：宋体大标题 + 一句把下一步说清楚的副标题 -->
+    <view class="screen-head">
+      <text class="screen-kicker">成都 · 地陪预约</text>
+      <text class="screen-title">今天去哪儿</text>
+      <text class="screen-sub">{{ total }} 个景点 · 本地地陪带路，先选地方再挑人</text>
     </view>
 
-    <!-- 技能标签 -->
-    <view class="skill-section">
-      <scroll-view scroll-x class="skill-scroll" show-scrollbar="false">
-        <view class="skill-list">
-          <view 
-            :class="['skill-item', skillFilter === '' ? 'active' : '']"
-            @click="skillFilter = ''; loadClerks(true)"
-          >
-            <text class="skill-text">全部</text>
-          </view>
-          <view 
-            v-for="cat in categoryList" 
-            :key="cat._id"
-            :class="['skill-item', skillFilter === cat._id ? 'active' : '']"
-            @click="skillFilter = cat._id; loadClerks(true)"
-          >
-            <text class="skill-text">{{ cat.name }}</text>
-          </view>
-        </view>
-      </scroll-view>
-    </view>
-
-    <!-- 达人列表 -->
-    <scroll-view 
-      scroll-y 
-      class="clerk-scroll"
-      @scrolltolower="loadMore"
-      :style="{ height: listHeight + 'px' }"
+    <!-- 区域文字页签（一级筛选用下划线，不用胶囊）：激活项自动居中，列表可左右滑动切换 -->
+    <scroll-view
+      scroll-x
+      class="tabline"
+      :show-scrollbar="false"
+      :scroll-left="tabScrollLeft"
+      scroll-with-animation
+      @scroll="onTabScroll"
     >
-      <view class="list-container">
-        <view class="list-header">
-          <view class="list-title-wrap">
-            <text class="list-title">推荐达人</text>
-            <text class="list-count">· {{ total }} 位</text>
-          </view>
-          <view class="filter-btn" @click="showDrawer = true">
-            <text class="filter-icon">⚙</text>
-            <text class="filter-text">筛选</text>
-          </view>
+      <view class="tabline__inner">
+        <view
+          :class="['tabline__item', regionTypeId === '' ? 'is-on' : '']"
+          @click="changeRegion('')"
+        >
+          <text class="tabline__text">全部</text>
         </view>
-
-        <view class="clerk-list">
-          <view 
-            v-for="clerk in clerkList" 
-            :key="clerk._id" 
-            class="clerk-card"
-            @click="goDetail(clerk._id)"
-          >
-            <view class="card-avatar-wrap">
-              <image 
-                :src="clerk.avatar || '/static/images/default-avatar.png'" 
-                class="card-avatar" 
-                mode="aspectFill" 
-              />
-            </view>
-            
-            <view class="card-content">
-              <view class="card-header">
-                <text class="card-name">{{ clerk.nickname }}</text>
-                <view :class="['sex-tag', clerk.sex === 2 ? 'female' : 'male']">
-                  <text>{{ clerk.sex === 2 ? '♀' : '♂' }}</text>
-                </view>
-              </view>
-              
-              <view class="card-tags">
-                <text 
-                  v-for="(tag, idx) in (clerk.skills || []).slice(0, 2)" 
-                  :key="idx"
-                  class="card-tag"
-                >
-                  {{ tag }}
-                </text>
-              </view>
-              
-              <view class="card-footer">
-                <view class="card-price">
-                  <text class="price-symbol">¥</text>
-                  <text class="price-value">{{ clerk.price || 0 }}</text>
-                  <text class="price-unit">/局</text>
-                </view>
-                <view class="card-orders">
-                  <text class="orders-value">{{ clerk.orderCount || 0 }}</text>
-                  <text class="orders-label">单</text>
-                </view>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <view class="load-status">
-          <text v-if="loading" class="load-text">加载中...</text>
-          <text v-else-if="!hasMore && clerkList.length > 0" class="load-text">没有更多了</text>
-        </view>
-
-        <view v-if="!loading && clerkList.length === 0" class="empty-box">
-          <text class="empty-icon">🔍</text>
-          <text class="empty-title">暂无达人</text>
-          <text class="empty-tip">换个条件试试吧</text>
+        <view
+          v-for="region in regionList"
+          :key="region.id"
+          :class="['tabline__item', regionTypeId === region.id ? 'is-on' : '']"
+          @click="changeRegion(region.id)"
+        >
+          <text class="tabline__text">{{ region.name }}</text>
         </view>
       </view>
     </scroll-view>
 
-    <!-- 筛选抽屉 -->
-    <view v-if="showDrawer" class="drawer-mask" @click="showDrawer = false"></view>
-    <view v-if="showDrawer" class="drawer">
-      <view class="drawer-header">
-        <text class="drawer-title">筛选</text>
-        <text class="drawer-close" @click="showDrawer = false">✕</text>
-      </view>
-
-      <view class="drawer-section">
-        <text class="drawer-label">性别</text>
-        <view class="drawer-options">
-          <view 
-            :class="['drawer-option', drawerFilter.sex === '' ? 'active' : '']"
-            @click="drawerFilter.sex = ''"
-          >
-            <text>不限</text>
+    <!-- 景点列表 -->
+    <scroll-view
+      scroll-y
+      class="list-scroll"
+      :show-scrollbar="false"
+      @scrolltolower="loadMore"
+      @touchstart="onTabTouchStart"
+      @touchend="onTabTouchEnd"
+    >
+      <view class="list">
+        <view
+          v-for="item in attractionList"
+          :key="item.id"
+          class="card attract"
+          @click="goGuideList(item)"
+        >
+          <view class="thumb">
+            <image :src="item.coverUrl" class="thumb__img" mode="aspectFill" />
           </view>
-          <view 
-            :class="['drawer-option', drawerFilter.sex === 'female' ? 'active' : '']"
-            @click="drawerFilter.sex = 'female'"
-          >
-            <text>女生</text>
-          </view>
-          <view 
-            :class="['drawer-option', drawerFilter.sex === 'male' ? 'active' : '']"
-            @click="drawerFilter.sex = 'male'"
-          >
-            <text>男生</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="drawer-section">
-        <text class="drawer-label">价格区间</text>
-        <view class="drawer-options">
-          <view 
-            :class="['drawer-option', drawerFilter.price === '' ? 'active' : '']"
-            @click="drawerFilter.price = ''"
-          >
-            <text>不限</text>
-          </view>
-          <view 
-            :class="['drawer-option', drawerFilter.price === '0-30' ? 'active' : '']"
-            @click="drawerFilter.price = '0-30'"
-          >
-            <text>30以下</text>
-          </view>
-          <view 
-            :class="['drawer-option', drawerFilter.price === '30-50' ? 'active' : '']"
-            @click="drawerFilter.price = '30-50'"
-          >
-            <text>30-50</text>
-          </view>
-          <view 
-            :class="['drawer-option', drawerFilter.price === '50+' ? 'active' : '']"
-            @click="drawerFilter.price = '50+'"
-          >
-            <text>50以上</text>
+          <view class="attract__body">
+            <text class="attract__name">{{ item.name }}</text>
+            <text class="attract__meta">{{ item.district }} · {{ item.scene }}</text>
+            <view class="attract__foot">
+              <text class="attract__guides">{{ item.guideCount }} 位地陪可约</text>
+              <view class="attract__go">
+                <text class="attract__go-icon">›</text>
+              </view>
+            </view>
           </view>
         </view>
       </view>
 
-      <view class="drawer-footer">
-        <view class="drawer-btn reset" @click="resetFilter">
-          <text>重置</text>
-        </view>
-        <view class="drawer-btn confirm" @click="confirmFilter">
-          <text>确定</text>
-        </view>
+      <view class="load-status">
+        <text v-if="loading" class="load-text">加载中…</text>
+        <text v-else-if="!hasMore && attractionList.length > 0" class="load-text">没有更多了</text>
       </view>
-    </view>
+
+      <view v-if="!loading && attractionList.length === 0" class="empty-box">
+        <text class="empty-icon">◎</text>
+        <text class="empty-title">这个区域还没有景点</text>
+        <text class="empty-tip">换个区域看看，或先选「全部」</text>
+      </view>
+    </scroll-view>
   </view>
 </template>
 
 <script>
-import { ClerkApi, CategoryApi } from '@/api/index.js';
+/**
+ * 游客端 · 景点列表（首页，原型 01 屏）
+ *
+ * 信息架构按 dev-001：先选景点 → 再选能带这个景点的地陪。
+ * 因此首页是景点列表，点卡片进入 /pages/guide/list?attractionId=xxx。
+ *
+ * 数据来源：RegionApi（区域字典，后台可维护）+ AttractionApi（景点，20 条 → 2 页）
+ */
+import { RegionApi, AttractionApi } from '@/api/index.js';
+import { createTabRow } from '@/utils/hscroll.js';
+
+/* 区域页签：激活项自动滚到可视区中间 + 内容左右滑动切换（见 utils/hscroll.js） */
+const regionTabRow = createTabRow({
+  container: '.tabline',
+  row: '.tabline__inner',
+  item: '.tabline__item',
+  index: (vm) => vm.activeTabIndex,
+  onStep: (vm, step) => vm.stepRegion(step)
+});
 
 export default {
   data() {
     return {
-      keyword: '',
-      skillFilter: '',
-      categoryList: [],
-      clerkList: [],
+      ...regionTabRow.data(),
+      regionList: [],
+      regionTypeId: '',
+      attractionList: [],
       pageNo: 1,
       pageSize: 10,
       total: 0,
       loading: false,
       hasMore: true,
-      listHeight: 500,
-      statusBarHeight: 20,
-      showDrawer: false,
-      drawerFilter: {
-        sex: '',
-        price: ''
-      }
+      statusBarHeight: 20
     };
   },
-  
+
+  computed: {
+    /* 页签行 = [全部, ...区域]，下标 0 是「全部」 */
+    activeTabIndex() {
+      const i = this.regionList.findIndex((region) => region.id === this.regionTypeId);
+      return i < 0 ? 0 : i + 1;
+    }
+  },
+
   onLoad() {
     const sys = uni.getSystemInfoSync();
     this.statusBarHeight = sys.statusBarHeight || 20;
-    this.loadCategories();
-    this.loadClerks();
-    this.calcHeight();
+    this.loadRegions();
+    this.loadAttractions(true);
   },
-  
-  methods: {
-    calcHeight() {
-      const sys = uni.getSystemInfoSync();
-      this.listHeight = sys.windowHeight - this.statusBarHeight - 110;
-    },
 
-    async loadCategories() {
+  methods: {
+    ...regionTabRow.methods,
+
+    async loadRegions() {
       try {
-        const list = await CategoryApi.getCategoryList();
-        this.categoryList = list || [];
+        this.regionList = (await RegionApi.getRegionList()) || [];
       } catch (e) {
-        console.error('加载分类失败', e);
+        console.error('加载区域失败', e);
       }
     },
 
-    async loadClerks(refresh = false) {
+    async loadAttractions(refresh = false) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
       this.loading = true;
       if (refresh) {
         this.pageNo = 1;
-        this.clerkList = [];
+        this.attractionList = [];
         this.hasMore = true;
       }
 
       try {
-        const params = {
-          pageNo: this.pageNo,
-          pageSize: this.pageSize,
-          keyword: this.keyword
-        };
-
-        if (this.skillFilter) {
-          params.categoryId = this.skillFilter;
-        }
-        
-        if (this.drawerFilter.sex) {
-          params.sex = this.drawerFilter.sex === 'female' ? 2 : 1;
-        }
-        
-        if (this.drawerFilter.price) {
-          if (this.drawerFilter.price === '50+') {
-            params.minPrice = 50;
-          } else if (this.drawerFilter.price === '0-30') {
-            params.maxPrice = 30;
-          } else {
-            const [min, max] = this.drawerFilter.price.split('-');
-            params.minPrice = parseInt(min);
-            params.maxPrice = parseInt(max);
-          }
+        const params = { pageNo: this.pageNo, pageSize: this.pageSize };
+        if (this.regionTypeId) {
+          params.regionTypeId = this.regionTypeId;
         }
 
-        const { list, total } = await ClerkApi.getClerkList(params);
-        
-        this.clerkList = refresh ? list : [...this.clerkList, ...list];
+        const { list, total, hasMore } = await AttractionApi.getAttractionList(params);
+
+        this.attractionList = refresh ? list : [...this.attractionList, ...list];
         this.total = total || 0;
-        this.hasMore = this.clerkList.length < total;
+        this.hasMore = hasMore;
         this.pageNo++;
       } catch (e) {
-        console.error('加载达人失败', e);
-        uni.showToast({ title: '加载失败', icon: 'none' });
+        console.error('加载景点失败', e);
+        uni.showToast({ title: (e && e.message) || '加载失败', icon: 'none' });
       } finally {
         this.loading = false;
       }
     },
 
-    onSearch() {
-      this.loadClerks(true);
+    changeRegion(regionTypeId) {
+      if (this.regionTypeId === regionTypeId) return;
+      this.regionTypeId = regionTypeId;
+      this.centerActiveTab();
+      this.loadAttractions(true);
+    },
+
+    /* 横滑：上/下一个区域；到两端就停住 */
+    stepRegion(step) {
+      const tabs = ['', ...this.regionList.map((region) => region.id)];
+      const next = this.activeTabIndex + step;
+      if (next < 0 || next >= tabs.length) return;
+      this.changeRegion(tabs[next]);
     },
 
     loadMore() {
-      this.loadClerks();
+      this.loadAttractions();
     },
 
-    goDetail(clerkId) {
-      uni.navigateTo({
-        url: `/pages/clerk/detail?id=${clerkId}`
-      });
-    },
-
-    resetFilter() {
-      this.drawerFilter = { sex: '', price: '' };
-    },
-
-    confirmFilter() {
-      this.showDrawer = false;
-      this.loadClerks(true);
+    goGuideList(item) {
+      const name = encodeURIComponent(item.name);
+      uni.navigateTo({ url: `/pages/guide/list?attractionId=${item.id}&name=${name}` });
     }
   }
 };
 </script>
 
 <style lang="scss" scoped>
-/* 页面背景 */
 .page {
-  background: #F5F5F5;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  background: $ds-surface;
 }
 
-/* 状态栏 */
 .status-bar {
   flex-shrink: 0;
 }
 
-/* 搜索栏 */
-.search-header {
-  background: #FFFFFF;
-  padding: 12px 16px;
+/* ---------- 页面标题 ---------- */
+.screen-head {
   flex-shrink: 0;
+  padding: $ds-space-3 $ds-pad-screen $ds-space-4;
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  background: #F5F5F5;
-  border-radius: 20px;
-  padding: 0 14px;
-  height: 36px;
+.screen-kicker {
+  display: block;
+  font-size: $ds-fs-label-sm;
+  color: $ds-ink-2;
 }
 
-.search-icon {
-  font-size: 14px;
-  color: #999999;
-}
-
-.search-input {
-  flex: 1;
-  font-size: 14px;
-  color: #1A1A1A;
-  margin-left: 8px;
-}
-
-.placeholder {
-  color: #999999;
-}
-
-/* 技能标签 */
-.skill-section {
-  background: #FFFFFF;
-  padding: 0 16px 12px;
-  flex-shrink: 0;
-}
-
-.skill-scroll {
-  white-space: nowrap;
-}
-
-.skill-list {
-  display: inline-flex;
-  gap: 8px;
-}
-
-.skill-item {
-  display: inline-block;
-  padding: 6px 16px;
-  background: #F5F5F5;
-  border-radius: 16px;
-  
-  &.active {
-    background: #FF4D6A;
-  }
-}
-
-.skill-text {
-  font-size: 13px;
-  color: #666666;
-  
-  .active & {
-    color: #FFFFFF;
-  }
-}
-
-/* 达人列表 */
-.clerk-scroll {
-  flex: 1;
-}
-
-.list-container {
-  padding: 0 16px 80px;
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 0 12px;
-}
-
-.list-title-wrap {
-  display: flex;
-  align-items: baseline;
-}
-
-.list-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: #000000;
-}
-
-.list-count {
-  font-size: 13px;
-  color: #999999;
-  margin-left: 4px;
-}
-
-.filter-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: #FFFFFF;
-  border: 1px solid #E5E5E5;
-  border-radius: 8px;
-}
-
-.filter-icon {
-  font-size: 14px;
-}
-
-.filter-text {
-  font-size: 13px;
-  color: #666666;
-}
-
-/* 达人卡片 */
-.clerk-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.clerk-card {
-  display: flex;
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  border: 1px solid #F0F0F0;
-}
-
-.card-avatar-wrap {
-  flex-shrink: 0;
-}
-
-.card-avatar {
-  width: 68px;
-  height: 68px;
-  border-radius: 12px;
-  background: #F5F5F5;
-}
-
-.card-content {
-  flex: 1;
-  margin-left: 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.card-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #000000;
-}
-
-.sex-tag {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  
-  &.female {
-    background: #FFF0F3;
-    color: #FF4D6A;
-  }
-  
-  &.male {
-    background: #E6F2FF;
-    color: #007AFF;
-  }
-}
-
-.card-tags {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.card-tag {
-  font-size: 11px;
-  color: #FF4D6A;
-  background: #FFF0F3;
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-top: 8px;
-}
-
-.card-price {
-  display: flex;
-  align-items: baseline;
-}
-
-.price-symbol {
-  font-size: 12px;
-  font-weight: 600;
-  color: #FF4D6A;
-}
-
-.price-value {
-  font-size: 18px;
+.screen-title {
+  display: block;
+  margin-top: $ds-space-1;
+  font-family: $ds-font-title;
+  font-size: $ds-fs-display;
+  line-height: 1.2;
   font-weight: 700;
-  color: #FF4D6A;
-  margin-left: 1px;
+  letter-spacing: $ds-ls-title;
+  color: $ds-ink;
 }
 
-.price-unit {
-  font-size: 11px;
-  color: #999999;
-  margin-left: 2px;
+.screen-sub {
+  display: block;
+  margin-top: $ds-space-2;
+  font-size: $ds-fs-label-sm;
+  color: $ds-ink-2;
 }
 
-.card-orders {
+/* ---------- 区域文字页签 ---------- */
+.tabline {
+  flex-shrink: 0;
+  white-space: nowrap;
+  border-bottom: 1px solid $ds-outline-variant;
+}
+
+.tabline__inner {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 0 $ds-space-3;
+}
+
+.tabline__item {
+  position: relative;
+  /* 关键：横向滚动容器里的页签是 flex 子项，默认 flex-shrink:1 会被压窄导致文字竖排换行 */
+  flex: none;
+  white-space: nowrap;
+  padding: $ds-space-3 $ds-space-3;
+  min-height: $ds-h-touch;
+
+  &.is-on {
+    .tabline__text {
+      color: $ds-primary;
+      font-weight: 600;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 22px;
+      height: 2px;
+      border-radius: 1px;
+      background: $ds-primary;
+    }
+  }
+}
+
+.tabline__text {
+  white-space: nowrap;
+  font-size: $ds-fs-body-sm;
+  color: $ds-ink-2;
+}
+
+/* ---------- 列表 ---------- */
+.list-scroll {
+  flex: 1;
+  height: 0; /* 让 flex 子项可滚动 */
+}
+
+.list {
   display: flex;
-  align-items: baseline;
-  gap: 2px;
+  flex-direction: column;
+  gap: $ds-space-3;
+  padding: $ds-space-4 $ds-pad-screen 0;
 }
 
-.orders-value {
-  font-size: 13px;
+.card {
+  background: $ds-surface-container;
+  border: $ds-card-border;
+  border-radius: $ds-shape-md;
+}
+
+.attract {
+  display: flex;
+  padding: $ds-space-3;
+}
+
+.thumb {
+  position: relative;
+  flex-shrink: 0;
+  width: 76px;
+  height: 76px;
+  border-radius: $ds-shape-sm;
+  overflow: hidden;
+  /* 字段为空或加载失败时露出这个底色兜底（不裂图、不拉伸） */
+  background: $ds-primary-container;
+}
+
+.thumb__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.attract__body {
+  flex: 1;
+  min-width: 0;
+  margin-left: $ds-space-3;
+  display: flex;
+  flex-direction: column;
+}
+
+.attract__name {
+  font-size: $ds-fs-title;
   font-weight: 600;
-  color: #666666;
+  color: $ds-ink;
 }
 
-.orders-label {
-  font-size: 11px;
-  color: #999999;
+.attract__meta {
+  margin-top: $ds-space-1;
+  font-size: $ds-fs-label-sm;
+  color: $ds-ink-2;
 }
 
-/* 加载状态 */
+.attract__foot {
+  margin-top: auto;
+  padding-top: $ds-space-2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.attract__guides {
+  font-size: $ds-fs-label;
+  font-weight: 600;
+  color: $ds-primary;
+}
+
+.attract__go {
+  width: 24px;
+  height: 24px;
+  border-radius: $ds-shape-full;
+  border: 1px solid $ds-outline;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attract__go-icon {
+  font-size: 14px;
+  line-height: 1;
+  color: $ds-ink-2;
+}
+
+/* ---------- 状态区 ---------- */
 .load-status {
   text-align: center;
-  padding: 20px;
+  padding: $ds-space-5;
 }
 
 .load-text {
-  font-size: 13px;
-  color: #999999;
+  font-size: $ds-fs-label;
+  color: $ds-ink-2;
 }
 
-/* 空状态 */
 .empty-box {
   text-align: center;
-  padding: 60px 0;
+  padding: 64px 0;
 }
 
 .empty-icon {
-  font-size: 48px;
+  font-size: 40px;
+  color: $ds-primary-dim;
 }
 
 .empty-title {
-  font-size: 15px;
-  color: #1A1A1A;
-  margin-top: 12px;
   display: block;
+  margin-top: $ds-space-3;
+  font-size: $ds-fs-body-sm;
+  color: $ds-ink;
 }
 
 .empty-tip {
-  font-size: 13px;
-  color: #999999;
-  margin-top: 6px;
   display: block;
-}
-
-/* 筛选抽屉 */
-.drawer-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 100;
-}
-
-.drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 280px;
-  background: #FFFFFF;
-  z-index: 101;
-  padding: 20px;
-  padding-bottom: 100px;
-  border-radius: 16px 0 0 16px;
-}
-
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.drawer-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #000000;
-}
-
-.drawer-close {
-  font-size: 18px;
-  color: #999999;
-  padding: 4px;
-}
-
-.drawer-section {
-  margin-bottom: 24px;
-}
-
-.drawer-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #666666;
-  margin-bottom: 12px;
-  display: block;
-}
-
-.drawer-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.drawer-option {
-  padding: 10px 16px;
-  background: #F5F5F5;
-  border-radius: 8px;
-  
-  text {
-    font-size: 14px;
-    color: #666666;
-  }
-  
-  &.active {
-    background: #FF4D6A;
-    
-    text {
-      color: #FFFFFF;
-      font-weight: 500;
-    }
-  }
-}
-
-.drawer-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px 20px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-  display: flex;
-  gap: 12px;
-  background: #FFFFFF;
-  border-top: 1px solid #E5E5E5;
-}
-
-.drawer-btn {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  text-align: center;
-  
-  text {
-    font-size: 15px;
-    font-weight: 500;
-  }
-  
-  &.reset {
-    background: #F5F5F5;
-    
-    text {
-      color: #666666;
-    }
-  }
-  
-  &.confirm {
-    background: #FF4D6A;
-    
-    text {
-      color: #FFFFFF;
-    }
-  }
+  margin-top: $ds-space-2;
+  font-size: $ds-fs-label;
+  color: $ds-ink-2;
 }
 </style>

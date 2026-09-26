@@ -1,45 +1,40 @@
 <template>
   <view class="page">
     <view class="content">
-      <!-- Logo 区域 -->
+      <!-- 品牌区：零素材，靠宋体字距与竹青底色撑住气质 -->
       <view class="logo-section">
         <view class="logo-wrap">
-          <text class="logo-icon">🎮</text>
+          <text class="logo-word">蜀</text>
         </view>
-        <text class="app-name">陪玩达人</text>
-        <text class="app-slogan">找到你的专属陪玩伙伴</text>
+        <text class="app-name">成都地陪</text>
+        <text class="app-slogan">本地地陪带路，先选地方再挑人</text>
       </view>
 
-      <!-- 特性介绍 -->
+      <!-- 三条价值说明，替代原陪玩时期的功能卖点 -->
       <view class="features">
         <view class="feature-item">
-          <text class="feature-icon">⚡</text>
-          <text class="feature-text">快速匹配</text>
+          <text class="feature-text">景点讲解</text>
         </view>
         <view class="feature-item">
-          <text class="feature-icon">💎</text>
-          <text class="feature-text">优质达人</text>
+          <text class="feature-text">半天 / 全天</text>
         </view>
         <view class="feature-item">
-          <text class="feature-icon">🛡</text>
-          <text class="feature-text">安全保障</text>
+          <text class="feature-text">平台确认档期</text>
         </view>
       </view>
 
       <!-- 登录按钮 -->
       <view class="login-section">
-        <button 
-          class="login-btn" 
+        <button
+          class="login-btn"
           open-type="getPhoneNumber"
           @getphonenumber="onGetPhoneNumber"
           @click="onPhoneLoginClick"
         >
-          <text class="btn-icon">📱</text>
           <text class="btn-text">微信授权登录</text>
         </button>
-        
+
         <button class="login-btn outline" @click="loginWithUserInfo">
-          <text class="btn-icon">👤</text>
           <text class="btn-text">暂不登录，先看看</text>
         </button>
       </view>
@@ -48,7 +43,7 @@
       <view class="agreement">
         <view class="checkbox-wrap" @click="agreed = !agreed">
           <view :class="['checkbox', agreed ? 'checked' : '']">
-            <text v-if="agreed">✓</text>
+            <text v-if="agreed" class="checkbox__check">✓</text>
           </view>
         </view>
         <text class="agreement-text">登录即代表同意</text>
@@ -62,7 +57,7 @@
     <view v-if="loading" class="loading-mask">
       <view class="loading-box">
         <view class="loading-spinner"></view>
-        <text class="loading-text">登录中...</text>
+        <text class="loading-text">登录中…</text>
       </view>
     </view>
   </view>
@@ -78,17 +73,17 @@ export default {
       loading: false
     };
   },
-  
+
   onLoad() {
-    // 检查是否已登录
     this.checkLogin();
   },
-  
+
   methods: {
     async checkLogin() {
       try {
         const user = await UserApi.getCurrentUser();
-        if (user?._id) {
+        // 新数据层返回的是 id（不再是陪玩时期的 _id）
+        if (user && user.id) {
           this.goHome();
         }
       } catch (e) {
@@ -141,12 +136,10 @@ export default {
       }
 
       this.loading = true;
-      
+
       try {
-        // 先获取登录 code
         const code = await this.getLoginCode();
-        
-        // 调用后端接口换取 openid 和 session_key
+
         const result = await UserApi.wxLogin({
           code,
           encryptedData: detail.encryptedData,
@@ -158,7 +151,7 @@ export default {
         }
 
         uni.showToast({ title: '登录成功', icon: 'success' });
-        
+
         setTimeout(() => {
           this.goHome();
         }, 1000);
@@ -179,19 +172,16 @@ export default {
       this.loading = true;
 
       try {
-        // 获取登录 code
         const code = await this.getLoginCode();
-        
-        const result = await UserApi.wxLogin({
-          code
-        });
+
+        const result = await UserApi.wxLogin({ code });
 
         if (result.token) {
           uni.setStorageSync('token', result.token);
         }
 
         uni.showToast({ title: '登录成功', icon: 'success' });
-        
+
         setTimeout(() => {
           this.goHome();
         }, 1000);
@@ -208,9 +198,7 @@ export default {
     },
 
     goAgreement(type) {
-      uni.navigateTo({
-        url: `/pages/webview/agreement?type=${type}`
-      });
+      uni.navigateTo({ url: `/pages/webview/agreement?type=${type}` });
     }
   }
 };
@@ -218,59 +206,65 @@ export default {
 
 <style lang="scss" scoped>
 .page {
-  background: #FFFFFF;
   min-height: 100vh;
+  background: $ds-surface;
 }
 
 .content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 32px;
-  padding-top: 80px;
+  padding: 0 $ds-space-7;
+  padding-top: 88px;
 }
 
-/* Logo 区域 */
+/* ---------- 品牌区 ---------- */
 .logo-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 48px;
+  margin-bottom: $ds-space-7;
 }
 
 .logo-wrap {
-  width: 88px;
-  height: 88px;
-  background: linear-gradient(135deg, #FF4D6A 0%, #FF8A9B 100%);
-  border-radius: 24px;
+  width: 80px;
+  height: 80px;
+  border-radius: $ds-shape-lg;
+  background: $ds-primary;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(255, 77, 106, 0.3);
+  box-shadow: $ds-el-1;
 }
 
-.logo-icon {
-  font-size: 44px;
+.logo-word {
+  font-family: $ds-font-title;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: $ds-on-primary;
 }
 
 .app-name {
-  font-size: 26px;
+  margin-top: $ds-space-5;
+  font-family: $ds-font-title;
+  font-size: $ds-fs-headline;
   font-weight: 700;
-  color: #000000;
-  margin-top: 20px;
+  letter-spacing: $ds-ls-title;
+  color: $ds-ink;
 }
 
 .app-slogan {
-  font-size: 14px;
-  color: #999999;
-  margin-top: 8px;
+  margin-top: $ds-space-2;
+  font-size: $ds-fs-label;
+  color: $ds-ink-2;
 }
 
-/* 特性介绍 */
+/* ---------- 价值说明 ---------- */
 .features {
   display: flex;
-  gap: 32px;
-  margin-bottom: 60px;
+  gap: $ds-space-6;
+  margin-bottom: $ds-space-8;
 }
 
 .feature-item {
@@ -279,22 +273,17 @@ export default {
   align-items: center;
 }
 
-.feature-icon {
-  font-size: 28px;
-  margin-bottom: 8px;
-}
-
 .feature-text {
-  font-size: 13px;
-  color: #666666;
+  font-size: $ds-fs-label-sm;
+  color: $ds-ink-2;
 }
 
-/* 登录按钮 */
+/* ---------- 登录按钮 ---------- */
 .login-section {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: $ds-space-3;
 }
 
 .login-btn {
@@ -302,83 +291,79 @@ export default {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 50px;
-  background: #FF4D6A;
-  border-radius: 10px;
-  border: none;
-  
+  height: $ds-h-btn;
+  background: $ds-primary;
+  border-radius: $ds-shape-sm;
+
   &.outline {
-    background: #FFFFFF;
-    border: 1px solid #E5E5E5;
-    
+    background: transparent;
+    border: 1px solid $ds-outline;
+
     .btn-text {
-      color: #666666;
+      color: $ds-ink-2;
     }
   }
 }
 
-.btn-icon {
-  font-size: 18px;
-  margin-right: 8px;
-}
-
 .btn-text {
-  font-size: 16px;
+  font-size: $ds-fs-body;
   font-weight: 600;
-  color: #FFFFFF;
+  color: $ds-on-primary;
 }
 
-/* 协议 */
+/* ---------- 协议 ---------- */
 .agreement {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  margin-top: 32px;
+  margin-top: $ds-space-7;
 }
 
 .checkbox-wrap {
-  margin-right: 6px;
+  margin-right: $ds-space-2;
 }
 
 .checkbox {
   width: 16px;
   height: 16px;
   border-radius: 4px;
-  border: 1px solid #CCCCCC;
+  border: 1px solid $ds-outline;
   display: flex;
   align-items: center;
   justify-content: center;
-  
-  text {
-    font-size: 12px;
-    color: #FFFFFF;
-  }
-  
+  background: $ds-surface-container;
+
   &.checked {
-    background: #FF4D6A;
-    border-color: #FF4D6A;
+    background: $ds-primary;
+    border-color: $ds-primary;
   }
+}
+
+.checkbox__check {
+  font-size: 11px;
+  line-height: 1;
+  color: $ds-on-primary;
 }
 
 .agreement-text {
-  font-size: 12px;
-  color: #999999;
+  font-size: $ds-fs-label-sm;
+  color: $ds-ink-2;
 }
 
 .agreement-link {
-  font-size: 12px;
-  color: #FF4D6A;
+  font-size: $ds-fs-label-sm;
+  color: $ds-primary;
 }
 
-/* Loading */
+/* ---------- Loading ---------- */
 .loading-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(31, 29, 26, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -386,9 +371,9 @@ export default {
 }
 
 .loading-box {
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 24px 40px;
+  background: $ds-surface-container;
+  border-radius: $ds-shape-md;
+  padding: $ds-space-6 $ds-space-8;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -397,8 +382,8 @@ export default {
 .loading-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #F0F0F0;
-  border-top-color: #FF4D6A;
+  border: 3px solid $ds-surface-high;
+  border-top-color: $ds-primary;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -408,8 +393,8 @@ export default {
 }
 
 .loading-text {
-  font-size: 14px;
-  color: #666666;
-  margin-top: 12px;
+  margin-top: $ds-space-3;
+  font-size: $ds-fs-body-sm;
+  color: $ds-ink-2;
 }
 </style>

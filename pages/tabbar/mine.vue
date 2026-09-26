@@ -1,283 +1,277 @@
 <template>
   <view class="page">
-    <!-- 顶部 -->
-    <view class="header-section">
-      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
-      <view class="header-content">
-        <text class="header-title">我的</text>
-      </view>
+    <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+
+    <view class="header-content">
+      <text class="header-title">我的</text>
     </view>
-    
+
     <!-- 用户卡片 -->
     <view class="user-card">
-      <view class="user-main" @click="goProfile">
+      <view class="user-main">
         <view class="avatar-wrap">
-          <image 
-            :src="userInfo.avatar || '/static/images/default-avatar.png'" 
-            class="avatar"
-            mode="aspectFill"
-          />
-          <view v-if="isAdmin" class="admin-tag">
-            <text>管理</text>
-          </view>
+          <image :src="userInfo.avatarUrl || userInfo.avatar" class="avatar" mode="aspectFill" />
         </view>
         <view class="user-content">
-          <text class="user-name">{{ userInfo.nickname || '点击登录' }}</text>
-          <text class="user-id" v-if="userInfo._id">ID: {{ userInfo._id.slice(-6) }}</text>
-          <text class="user-tip" v-else>登录后享受更多服务</text>
-        </view>
-        <text class="arrow-icon">›</text>
-      </view>
-      
-      <!-- 统计 -->
-      <view class="stats-row" v-if="userInfo._id">
-        <view class="stat-item" @click="goMyAppointment">
-          <text class="stat-value">{{ appointmentCount }}</text>
-          <text class="stat-label">预约</text>
-        </view>
-        <view class="stat-divider"></view>
-        <view class="stat-item">
-          <text class="stat-value">{{ favoriteCount }}</text>
-          <text class="stat-label">收藏</text>
-        </view>
-        <view class="stat-divider"></view>
-        <view class="stat-item" @click="goWallet">
-          <text class="stat-value">{{ userInfo.balance || '0' }}</text>
-          <text class="stat-label">余额</text>
+          <view class="user-name-row">
+            <text class="user-name">{{ userInfo.nickname || '未登录' }}</text>
+            <text class="role-tag" v-if="userInfo.roleLabel">{{ userInfo.roleLabel }}</text>
+          </view>
+          <text class="user-tip">{{ userTip }}</text>
         </view>
       </view>
     </view>
 
-    <!-- 功能菜单 -->
+    <!-- 按角色分流的入口：游客看订单，地陪看接单，管理员看后台 -->
     <view class="menu-section">
       <view class="menu-group">
-        <view class="menu-item" @click="goMyAppointment">
-          <view class="menu-icon blue">
-            <text>📅</text>
-          </view>
-          <text class="menu-text">我的预约</text>
+        <view class="menu-item" v-if="isGuide" @click="goGuideOrders">
+          <text class="menu-text">接单</text>
           <view class="menu-right">
-            <view class="menu-badge" v-if="appointmentCount">
-              <text>{{ appointmentCount }}</text>
-            </view>
-            <text class="arrow-icon">›</text>
+            <text class="menu-badge" v-if="waitingCount">{{ waitingCount }}</text>
+            <text class="arrow">›</text>
           </view>
         </view>
-        
-        <view class="menu-item" @click="goFavorite">
-          <view class="menu-icon pink">
-            <text>♡</text>
-          </view>
-          <text class="menu-text">我的收藏</text>
-          <text class="arrow-icon">›</text>
-        </view>
-        
-        <view class="menu-item" @click="goWallet">
-          <view class="menu-icon orange">
-            <text>💳</text>
-          </view>
-          <text class="menu-text">钱包充值</text>
-          <text class="arrow-icon">›</text>
-        </view>
-      </view>
-    </view>
 
-    <!-- 管理员菜单 -->
-    <view class="menu-section" v-if="isAdmin">
-      <view class="menu-group-title">
-        <text>管理功能</text>
-      </view>
-      <view class="menu-group">
-        <view class="menu-item" @click="goAdminClerk">
-          <view class="menu-icon purple">
-            <text>👥</text>
-          </view>
-          <text class="menu-text">达人管理</text>
+        <view class="menu-item" v-if="!isGuide" @click="goMyOrders">
+          <text class="menu-text">我的订单</text>
           <view class="menu-right">
-            <view class="menu-badge warn" v-if="pendingClerkCount">
-              <text>{{ pendingClerkCount }} 待审</text>
-            </view>
-            <text class="arrow-icon">›</text>
+            <text class="menu-badge" v-if="pendingCount">{{ pendingCount }}</text>
+            <text class="arrow">›</text>
           </view>
         </view>
-        
-        <view class="menu-item" @click="goAdminAppointment">
-          <view class="menu-icon green">
-            <text>📋</text>
-          </view>
-          <text class="menu-text">预约管理</text>
+
+        <view class="menu-item" v-if="isAdmin" @click="goAdminOrders">
+          <text class="menu-text">订单管理</text>
           <view class="menu-right">
-            <view class="menu-badge" v-if="todayAppointmentCount">
-              <text>{{ todayAppointmentCount }} 今日</text>
-            </view>
-            <text class="arrow-icon">›</text>
+            <text class="menu-badge" v-if="adminPendingCount">{{ adminPendingCount }}</text>
+            <text class="arrow">›</text>
+          </view>
+        </view>
+
+        <view class="menu-item" v-if="isAdmin" @click="goAdminGuides">
+          <text class="menu-text">地陪审核</text>
+          <view class="menu-right">
+            <text class="menu-badge warn" v-if="pendingGuideCount">{{ pendingGuideCount }} 待审</text>
+            <text class="arrow">›</text>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 其他菜单 -->
+    <!-- 协议入口：登录页引用的两个协议文档 -->
     <view class="menu-section">
       <view class="menu-group">
-        <view class="menu-item" @click="goSettings">
-          <view class="menu-icon gray">
-            <text>⚙</text>
-          </view>
-          <text class="menu-text">设置</text>
-          <text class="arrow-icon">›</text>
+        <view class="menu-item" @click="goAgreement('user')">
+          <text class="menu-text">用户协议</text>
+          <text class="arrow">›</text>
         </view>
-        
-        <view class="menu-item" @click="goAbout">
-          <view class="menu-icon gray">
-            <text>ℹ</text>
-          </view>
-          <text class="menu-text">关于我们</text>
-          <text class="arrow-icon">›</text>
+        <view class="menu-item" @click="goAgreement('privacy')">
+          <text class="menu-text">隐私政策</text>
+          <text class="arrow">›</text>
         </view>
       </view>
     </view>
+
+    <!-- 仅 mock 阶段：一键切换身份，方便走通游客 / 地陪 / 管理员三端闭环 -->
+    <view class="menu-section" v-if="useMock">
+      <view class="menu-group">
+        <view class="menu-group-head">
+          <text class="menu-group-title">演示身份切换</text>
+          <text class="menu-group-note">仅 mock 生效，接后端后移除</text>
+        </view>
+        <view class="role-row">
+          <view
+            v-for="role in roleOptions"
+            :key="role.value"
+            :class="['role-chip', currentRole === role.value ? 'is-on' : '']"
+            @click="switchRole(role.value)"
+          >
+            <text class="role-chip__text">{{ role.label }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <text class="footnote">成都景点地陪 · MVP</text>
   </view>
 </template>
 
 <script>
-import { UserApi, AppointmentApi, ClerkApi } from '@/api/index.js';
+/**
+ * 我的（账户与角色分流）
+ *
+ * MVP 的角色分流：游客 → 我的订单；地陪 → 接单；管理员 → 订单管理 + 地陪审核。
+ * 登录后仍统一落首页（pages/login/login.vue 属 keep 档，不改），本页负责按角色给入口。
+ *
+ * 「演示身份切换」只在 USE_MOCK 为真时出现：mock 默认身份是管理员（便于演示后台），
+ * 没有后端切换接口，接真实后端后删除该区块。
+ */
+import {
+  USE_MOCK,
+  UserApi,
+  OrderApi,
+  GuideApi,
+  ROLES,
+  ROLE_LABELS,
+  ORDER_STATUS,
+  switchMockRole
+} from '@/api/index.js';
+
+const roleOptions = [
+  { label: ROLE_LABELS[ROLES.TOURIST], value: ROLES.TOURIST },
+  { label: ROLE_LABELS[ROLES.GUIDE], value: ROLES.GUIDE },
+  { label: ROLE_LABELS[ROLES.ADMIN], value: ROLES.ADMIN }
+];
 
 export default {
   data() {
     return {
       userInfo: {},
-      isAdmin: false,
-      appointmentCount: 0,
-      favoriteCount: 0,
-      pendingClerkCount: 0,
-      todayAppointmentCount: 0,
+      roleOptions,
+      useMock: USE_MOCK,
+      pendingCount: 0,
+      waitingCount: 0,
+      adminPendingCount: 0,
+      pendingGuideCount: 0,
       statusBarHeight: 20
     };
   },
-  
+
+  computed: {
+    currentRole() {
+      return this.userInfo.role || '';
+    },
+    isAdmin() {
+      return this.userInfo.role === ROLES.ADMIN || this.userInfo.isAdmin === true;
+    },
+    isGuide() {
+      return this.userInfo.role === ROLES.GUIDE;
+    },
+    userTip() {
+      if (!this.userInfo.id) return '登录后享受更多服务';
+      return this.isAdmin ? '管理订单与地陪审核' : this.isGuide ? '查看待接订单' : '查看我的预约进度';
+    }
+  },
+
   onLoad() {
     const sys = uni.getSystemInfoSync();
     this.statusBarHeight = sys.statusBarHeight || 20;
   },
-  
+
   onShow() {
-    this.loadUserInfo();
+    this.loadUser();
   },
-  
+
   methods: {
-    async loadUserInfo() {
+    async loadUser() {
       try {
         const user = await UserApi.getCurrentUser();
         this.userInfo = user || {};
-        this.isAdmin = user?.isAdmin === true;
-        
-        if (this.isAdmin) {
-          this.loadAdminStats();
-        } else if (user?._id) {
-          this.loadUserStats();
-        }
+        this.loadStats();
       } catch (e) {
         console.error('加载用户信息失败', e);
       }
     },
 
-    async loadUserStats() {
+    /** 只取一次数据：游客 / 地陪 / 管理员的角标都从各自接口的 total 或 counts 来 */
+    async loadStats() {
+      const tasks = [];
+
+      if (this.isAdmin) {
+        tasks.push(
+          OrderApi.getAllOrders({ pageNo: 1, pageSize: 1 }).then((res) => {
+            this.adminPendingCount = (res.counts && res.counts.pendingConfirm) || 0;
+          }),
+          GuideApi.getPendingGuides({ pageNo: 1, pageSize: 1 }).then((res) => {
+            this.pendingGuideCount = res.total || 0;
+          })
+        );
+      }
+
+      if (this.isGuide) {
+        tasks.push(
+          OrderApi.getGuideOrders({ scope: 'waiting', pageNo: 1, pageSize: 1 }).then((res) => {
+            this.waitingCount = (res.counts && res.counts.waiting) || 0;
+          })
+        );
+      }
+
+      if (!this.isGuide) {
+        tasks.push(
+          OrderApi.getMyOrders({ status: ORDER_STATUS.PENDING_CONFIRM, pageNo: 1, pageSize: 1 }).then((res) => {
+            this.pendingCount = res.total || 0;
+          })
+        );
+      }
+
+      // 角标是锦上添花：任一失败都不该影响页面可用（不用 allSettled，兼容低版本基础库）
+      await Promise.all(tasks.map((task) => task.catch((e) => console.error('加载角标失败', e))));
+    },
+
+    async switchRole(role) {
+      if (this.currentRole === role) return;
       try {
-        const { total } = await AppointmentApi.getMyAppointments({ 
-          status: 'pending',
-          pageSize: 1 
-        });
-        this.appointmentCount = total || 0;
+        await switchMockRole(role);
+        await this.loadUser();
+        uni.showToast({ title: `已切换为${ROLE_LABELS[role]}`, icon: 'none' });
       } catch (e) {
-        console.error('加载统计失败', e);
+        uni.showToast({ title: (e && e.message) || '切换失败', icon: 'none' });
       }
     },
 
-    async loadAdminStats() {
-      try {
-        const [pendingRes, todayRes] = await Promise.all([
-          ClerkApi.getPendingClerks(1, 1),
-          AppointmentApi.getAllAppointments({ pageSize: 1 })
-        ]);
-        
-        this.pendingClerkCount = pendingRes.total || 0;
-        this.todayAppointmentCount = todayRes.total || 0;
-      } catch (e) {
-        console.error('加载管理统计失败', e);
-      }
-    },
-
-    goProfile() {
-      if (!this.userInfo._id) {
-        uni.showToast({ title: '请先登录', icon: 'none' });
-      }
-    },
-
-    goMyAppointment() {
+    goMyOrders() {
       uni.navigateTo({ url: '/pages/appointment/my' });
     },
 
-    goFavorite() {
-      uni.showToast({ title: '开发中', icon: 'none' });
+    goGuideOrders() {
+      uni.navigateTo({ url: '/pages/guide/orders' });
     },
 
-    goWallet() {
-      uni.showToast({ title: '开发中', icon: 'none' });
-    },
-
-    goAdminClerk() {
-      uni.navigateTo({ url: '/pages/admin/clerk' });
-    },
-
-    goAdminAppointment() {
+    goAdminOrders() {
       uni.navigateTo({ url: '/pages/admin/appointment' });
     },
 
-    goSettings() {
-      uni.showToast({ title: '开发中', icon: 'none' });
+    goAdminGuides() {
+      uni.navigateTo({ url: '/pages/admin/clerk' });
     },
 
-    goAbout() {
-      uni.showToast({ title: '开发中', icon: 'none' });
+    goAgreement(type) {
+      uni.navigateTo({ url: `/pages/webview/agreement?type=${type}` });
     }
   }
 };
 </script>
 
 <style lang="scss" scoped>
-/* 页面 */
 .page {
-  background: #F5F5F5;
   min-height: 100vh;
-}
-
-/* 顶部 */
-.header-section {
-  background: #FFFFFF;
+  background: $ds-surface;
 }
 
 .status-bar {
-  background: #FFFFFF;
+  background: $ds-surface;
 }
 
 .header-content {
-  padding: 12px 16px 16px;
+  padding: $ds-space-3 $ds-pad-screen 0;
 }
 
 .header-title {
-  font-size: 24px;
+  font-family: $ds-font-title;
+  font-size: $ds-fs-display;
   font-weight: 700;
-  color: #000000;
+  letter-spacing: $ds-ls-title;
+  color: $ds-ink;
 }
 
-/* 用户卡片 */
+/* ---------- 用户卡片 ---------- */
 .user-card {
-  margin: -8px 16px 16px;
-  background: #FFFFFF;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  border: 1px solid #F0F0F0;
+  margin: $ds-space-4 $ds-pad-screen;
+  padding: $ds-space-4;
+  background: $ds-surface-container;
+  border: $ds-card-border;
+  border-radius: $ds-shape-md;
 }
 
 .user-main {
@@ -286,167 +280,161 @@ export default {
 }
 
 .avatar-wrap {
-  position: relative;
+  flex-shrink: 0;
 }
 
 .avatar {
   width: 56px;
   height: 56px;
-  border-radius: 12px;
-  background: #F5F5F5;
-}
-
-.admin-tag {
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #FF4D6A;
-  padding: 2px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-  
-  text {
-    font-size: 10px;
-    color: #FFFFFF;
-    font-weight: 500;
-  }
+  border-radius: $ds-shape-sm;
+  /* 头像来自接口字段；为空或加载失败时露底色兜底 */
+  background: $ds-primary-container;
 }
 
 .user-content {
   flex: 1;
-  margin-left: 12px;
+  min-width: 0;
+  margin-left: $ds-space-3;
+}
+
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: $ds-space-2;
 }
 
 .user-name {
-  font-size: 17px;
+  font-size: $ds-fs-title;
   font-weight: 600;
-  color: #000000;
+  color: $ds-ink;
+}
+
+.role-tag {
+  padding: 1px $ds-space-2;
+  background: $ds-primary-container;
+  border-radius: $ds-shape-xs;
+  font-size: $ds-fs-caption;
+  color: $ds-on-primary-container;
+}
+
+.user-tip {
   display: block;
+  margin-top: $ds-space-1;
+  font-size: $ds-fs-label-sm;
+  color: $ds-ink-2;
 }
 
-.user-id, .user-tip {
-  font-size: 12px;
-  color: #999999;
-  margin-top: 4px;
-  display: block;
-}
-
-.arrow-icon {
-  font-size: 18px;
-  color: #CCCCCC;
-}
-
-/* 统计 */
-.stats-row {
-  display: flex;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #F0F0F0;
-}
-
-.stat-item {
-  flex: 1;
-  text-align: center;
-}
-
-.stat-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: #000000;
-  display: block;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #999999;
-  margin-top: 4px;
-  display: block;
-}
-
-.stat-divider {
-  width: 1px;
-  background: #F0F0F0;
-}
-
-/* 菜单区域 */
+/* ---------- 菜单 ---------- */
 .menu-section {
-  padding: 0 16px;
-  margin-bottom: 12px;
-}
-
-.menu-group-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: #999999;
-  padding: 12px 0 8px;
+  padding: 0 $ds-pad-screen;
+  margin-bottom: $ds-space-3;
 }
 
 .menu-group {
-  background: #FFFFFF;
-  border-radius: 12px;
+  background: $ds-surface-container;
+  border: $ds-card-border;
+  border-radius: $ds-shape-md;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  border: 1px solid #F0F0F0;
+}
+
+.menu-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: $ds-space-3 $ds-space-4 0;
+}
+
+.menu-group-title {
+  font-size: $ds-fs-label;
+  font-weight: 600;
+  color: $ds-ink;
+}
+
+.menu-group-note {
+  font-size: $ds-fs-caption;
+  color: $ds-ink-2;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  border-bottom: 1px solid #F8F8F8;
-  
+  min-height: $ds-h-row;
+  padding: 0 $ds-space-4;
+  border-bottom: 1px solid $ds-outline-variant;
+
   &:last-child {
     border-bottom: none;
   }
 }
 
-.menu-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  
-  text {
-    font-size: 16px;
-  }
-  
-  &.blue { background: #E6F2FF; }
-  &.pink { background: #FFF0F3; }
-  &.orange { background: #FFF4E5; }
-  &.purple { background: #F3E8FF; }
-  &.green { background: #E6FFF2; }
-  &.gray { background: #F5F5F5; }
-}
-
 .menu-text {
   flex: 1;
-  font-size: 15px;
-  color: #1A1A1A;
+  font-size: $ds-fs-body-sm;
+  color: $ds-ink;
 }
 
 .menu-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $ds-space-2;
 }
 
 .menu-badge {
-  background: #FF4D6A;
-  padding: 4px 8px;
-  border-radius: 4px;
-  
-  text {
-    font-size: 11px;
-    color: #FFFFFF;
-    font-weight: 500;
-  }
-  
+  min-width: 20px;
+  padding: 1px $ds-space-2;
+  border-radius: $ds-shape-full;
+  background: $ds-tertiary;
+  text-align: center;
+  font-size: $ds-fs-caption;
+  color: $ds-on-primary;
+
   &.warn {
-    background: #FF9500;
+    background: $ds-warning;
   }
+}
+
+.arrow {
+  font-size: 18px;
+  color: $ds-outline;
+}
+
+/* ---------- 演示身份切换 ---------- */
+.role-row {
+  display: flex;
+  gap: $ds-space-2;
+  padding: $ds-space-3 $ds-space-4 $ds-space-4;
+}
+
+.role-chip {
+  flex: 1;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $ds-outline;
+  border-radius: $ds-shape-full;
+
+  &.is-on {
+    background: $ds-secondary-container;
+    border-color: $ds-secondary-container;
+
+    .role-chip__text {
+      color: $ds-on-secondary-container;
+      font-weight: 600;
+    }
+  }
+}
+
+.role-chip__text {
+  font-size: $ds-fs-label;
+  color: $ds-ink-2;
+}
+
+.footnote {
+  display: block;
+  padding: $ds-space-5 0 $ds-space-7;
+  text-align: center;
+  font-size: $ds-fs-caption;
+  color: $ds-ink-2;
 }
 </style>
