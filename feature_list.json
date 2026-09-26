@@ -33,8 +33,8 @@
       "name": "MVP 数据层（mock 优先）",
       "description": "在 api/index.js，按 .codebuddy/skills/api-design/SKILL.md（RESTful + /api/v1 + camelCase 字段 + 统一错误体）设计接口，并严格对齐 docx/database/schema.sql 与 seed.sql 落地 MVP 模型：regionTypes(7，字典)、attractions(20)、packageSkus(3)、bookingTypes(half-day/full-day/hourly)、guides、orders(4 态)、roles(tourist/guide/admin)。mock 规模见 docs/mvp-scope.json 的 mockScale：50 个地陪（确定性生成，覆盖 7 类区域、1-4 个擅长景点、1-3 个套餐报价、少量待审/拒绝）、20 个景点、52 个用户，用于验证分页（地陪 5 页 / 景点 2 页）与筛选。全部走 mock（useMock = true），但每个 Api 方法签名须与未来的 HTTP 实现一一对应，页面不直连数据源；评价相关字段不得出现；订单号按 docx/database/数据库设计.md 的规则生成（CD+YYMMDD+A/B/C+4 位序号）。同步整体重写 docx/接口文档.md（它是所有设计文档的接口对照基准）",
       "dependencies": ["feat-002", "feat-014"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "done",
+      "evidence": "api/ 分层落地（constants.js 领域常量 / errors.js 统一错误 / mock/seed.json+generate.js+index.js / http.js 路由表骨架）；mock 实测：52 用户 / 50 地陪 / 20 景点 / 7 区域 / 3 套餐 / 16 订单（四态齐全），44/44 已通过地陪可被下单，订单号 16 个唯一且符合 CD+YYMMDD+A/B/C+4 位规则，同 seed 两次生成完全一致；node scripts/check-mock.mjs 通过且 --self-test 检出三类问题；docx/接口文档.md 已整体重写；产出 docx/codeimpl-sum/设计文档-feat-004-MVP数据层.md；修复实施中的订单生成崩溃并归档 docx/bugfix/BUG修复-20260926-订单生成取值崩溃.md；./init.ps1 扩为 6 步全绿"
     },
     {
       "id": "feat-005",

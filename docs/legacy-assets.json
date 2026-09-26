@@ -90,10 +90,10 @@
     {
       "path": "api/index.js",
       "category": "数据层",
-      "purpose": "云数据库封装 + useMock 模拟数据机制；UserApi/ClerkApi/CategoryApi/AppointmentApi 四大模块",
+      "purpose": "数据层统一出口：数据源可切换（USE_MOCK）+ 分层结构（constants / errors / mock / http）",
       "reuse": "adapt",
-      "note": "MVP 模型：guides（含 regions/serviceTypes/packages/availableDates/rating/reviewCount）、attractions(10)、regionTypes(3)、packages(3 SKU)、预约类型 half-day/full-day/hourly、角色 tourist/guide/admin。保留点：useMock 开关、条件编译（#ifdef MP-WEIXIN）双通道、分页/状态查询写法",
-      "sha256": "d41660bce11749de87b84f3a961aaf033caf56b09de4d1b30ee827700ce6a8c0"
+      "note": "2026-09-26 feat-004 重写：原「云开发 + useMock」单文件改为 mock 优先的分层结构；导出 RegionApi/AttractionApi/GuideApi/PackageApi/OrderApi/UserApi，并保留 ClerkApi/CategoryApi/AppointmentApi 过渡适配层（feat-006~012 迁移完成后删除）。云开发分支已移除（后续走 HTTP，路由表见 api/http.js）；页面禁止直连 api/mock/，由 scripts/check-mock.mjs 把关",
+      "sha256": "20d25cd0626ca349351a85a5cf7078dbd66b91e4d55f551a14922826331f77e9"
     },
     {
       "path": "utils/index.js",

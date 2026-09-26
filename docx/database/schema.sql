@@ -217,6 +217,7 @@ CREATE TABLE orders (
   package_name VARCHAR(50) NOT NULL DEFAULT '' COMMENT '冗余：套餐名称（下单时快照）',
   guide_nickname VARCHAR(50) NOT NULL DEFAULT '' COMMENT '冗余：地陪昵称（下单时快照）',
   guide_avatar_url VARCHAR(500) NOT NULL DEFAULT '' COMMENT '冗余：地陪头像URL（下单时快照）',
+  guide_accepted_at DATETIME DEFAULT NULL COMMENT '地陪接单时间：为空=待地陪接单，有值=待平台确认（四态不足以表达，用它细分）',
   confirmed_by BIGINT UNSIGNED DEFAULT NULL COMMENT '平台确认人用户ID（人工确认档期）',
   confirmed_at DATETIME DEFAULT NULL COMMENT '平台确认时间',
   finished_at DATETIME DEFAULT NULL COMMENT '完成时间',

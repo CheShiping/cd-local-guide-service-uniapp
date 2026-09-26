@@ -1,336 +1,66 @@
 /**
- * 云数据库操作封装
- * 陪玩小程序核心API
+ * 数据层统一出口
+ *
+ * 页面只允许这样引用：
+ *   import { AttractionApi, GuideApi, OrderApi } from '@/api/index.js'
+ *
+ * 数据源切换：改下面的 USE_MOCK 即可（mock ↔ HTTP），页面代码不动。
+ * 当前 MVP 固定走 mock，见 docs/mvp-scope.json 的 dev-004。
+ *
+ * 分层：
+ *   api/constants.js    领域常量（订单四态 / 预约类型 / 订单号规则 / 状态流转白名单）
+ *   api/errors.js       统一错误契约（与 HTTP 错误体一致）
+ *   api/mock/           确定性 mock 数据 + 接口实现
+ *   api/http.js         HTTP 适配层骨架 + 路由表（对接后端时逐个补实现）
  */
 
-// 获取数据库引用（兼容不同平台）
-let db, _;
-// #ifdef MP-WEIXIN
-db = wx.cloud.database();
-_ = db.command;
-// #endif
+import * as mockAdapter from './mock/index.js';
+import { createHttpAdapter, ROUTES, createRequester } from './http.js';
+import { notImplemented } from './errors.js';
 
-// 模拟数据（开发环境使用）
-const mockData = {
-  users: [],
-  clerks: [
-    { _id: '1', nickname: '小美', avatar: '/static/images/default-avatar.png', sex: 2, city: '北京', price: 30, orderCount: 128, onlineStatus: 1, skills: ['王者荣耀', '和平精英'], introduce: '资深玩家，带你上分无忧~' },
-    { _id: '2', nickname: '阿杰', avatar: '/static/images/default-avatar.png', sex: 1, city: '上海', price: 25, orderCount: 86, onlineStatus: 0, skills: ['英雄联盟', 'CSGO'], introduce: '职业选手水平，欢迎来战~' },
-    { _id: '3', nickname: '小雪', avatar: '/static/images/default-avatar.png', sex: 2, city: '广州', price: 35, orderCount: 256, onlineStatus: 1, skills: ['原神', '崩坏星穹铁道'], introduce: '原神满级大佬，带你探索提瓦特~' },
-    { _id: '4', nickname: '小琳', avatar: '/static/images/default-avatar.png', sex: 2, city: '深圳', price: 28, orderCount: 168, onlineStatus: 1, skills: ['王者荣耀', '原神'], introduce: '多游戏达人，欢迎咨询~' },
-    { _id: '5', nickname: '大伟', avatar: '/static/images/default-avatar.png', sex: 1, city: '成都', price: 22, orderCount: 52, onlineStatus: 0, skills: ['和平精英', '永劫无间'], introduce: 'FPS高手，带你吃鸡~' },
-  ],
-  categories: [
-    { _id: 'c1', name: '王者荣耀', icon: '🎮' },
-    { _id: 'c2', name: '和平精英', icon: '🔫' },
-    { _id: 'c3', name: '原神', icon: '⚔️' },
-    { _id: 'c4', name: '英雄联盟', icon: '🏆' },
-    { _id: 'c5', name: 'CSGO', icon: '🎯' },
-    { _id: 'c6', name: '永劫无间', icon: '🗡️' },
-  ],
-  appointments: []
-};
+/** MVP 阶段：数据源 = mock。对接真实后端时改为 false 并按 api/http.js 的说明补实现 */
+export const USE_MOCK = true;
 
-// 是否使用模拟数据
-const useMock = true;
+const adapter = USE_MOCK ? mockAdapter : createHttpAdapter();
 
-/**
- * 用户相关API
- */
-export const UserApi = {
-  async getCurrentUser() {
-    if (useMock) {
-      const token = uni.getStorageSync('token');
-      if (token) {
-        return { _id: 'u1', nickname: '测试用户', avatar: '/static/images/default-avatar.png', isAdmin: true };
-      }
-      return null;
-    }
-    // #ifdef MP-WEIXIN
-    const { data } = await db.collection('user').where({ openid: '{openid}' }).get();
-    return data[0] || null;
-    // #endif
-    return null;
-  },
+/* ---------- 业务模块（新页面用这些） ---------- */
+export const RegionApi = adapter.RegionApi;
+export const AttractionApi = adapter.AttractionApi;
+export const PackageApi = adapter.PackageApi;
+export const GuideApi = adapter.GuideApi;
+export const OrderApi = adapter.OrderApi;
+export const UserApi = adapter.UserApi;
 
-  async getUserInfo() {
-    return this.getCurrentUser();
-  },
+/* ---------- 过渡适配层（陪玩时期的模块名，feat-006 ~ feat-012 迁移完成后删除） ---------- */
+const LEGACY_METHODS = [
+  'getCategoryList', 'createCategory',
+  'getClerkList', 'getClerkDetail', 'createClerk', 'updateClerk', 'getPendingClerks', 'auditClerk',
+  'createAppointment', 'getMyAppointments', 'getAllAppointments', 'cancelAppointment', 'completeAppointment'
+];
 
-  async saveUserInfo(userInfo) {
-    if (useMock) return 'u1';
-    // #ifdef MP-WEIXIN
-    const user = await this.getUserInfo();
-    if (user) {
-      await db.collection('user').doc(user._id).update({ data: userInfo });
-      return user._id;
-    } else {
-      const { _id } = await db.collection('user').add({
-        data: { ...userInfo, isAdmin: 0, createTime: db.serverDate() }
-      });
-      return _id;
-    }
-    // #endif
-    return null;
-  },
+function legacyUnavailable(moduleName) {
+  const module = {};
+  const fail = async () => {
+    throw notImplemented(`${moduleName} 是 mock 阶段的过渡适配层，接入 HTTP 后请改用新模块（RegionApi / AttractionApi / GuideApi / PackageApi / OrderApi）`);
+  };
+  LEGACY_METHODS.forEach((method) => {
+    module[method] = fail;
+  });
+  return module;
+}
 
-  async isAdmin() {
-    const user = await this.getCurrentUser();
-    return user && user.isAdmin === true;
-  },
+export const CategoryApi = adapter.CategoryApi || legacyUnavailable('CategoryApi');
+export const ClerkApi = adapter.ClerkApi || legacyUnavailable('ClerkApi');
+export const AppointmentApi = adapter.AppointmentApi || legacyUnavailable('AppointmentApi');
 
-  /**
-   * 微信登录
-   */
-  async wxLogin(params = {}) {
-    if (useMock) {
-      // 模拟登录成功
-      return { 
-        token: 'mock_token_' + Date.now(),
-        openid: 'mock_openid',
-        userInfo: {
-          _id: 'u1',
-          nickname: '测试用户',
-          avatar: '/static/images/default-avatar.png'
-        }
-      };
-    }
-    
-    // #ifdef MP-WEIXIN
-    const { code, encryptedData, iv } = params;
-    
-    // 调用云函数进行登录
-    const { result } = await wx.cloud.callFunction({
-      name: 'login',
-      data: { code, encryptedData, iv }
-    });
-    
-    return result;
-    // #endif
-    
-    return { token: '', openid: '' };
-  },
+/* ---------- 常量与错误（页面从这里取，避免到处复制映射表） ---------- */
+export * from './constants.js';
+export { ApiError, ERROR_CODES } from './errors.js';
 
-  /**
-   * 退出登录
-   */
-  async logout() {
-    uni.removeStorageSync('token');
-    return true;
-  }
-};
+/* ---------- mock 专用工具（调试用；HTTP 数据源下不可用） ---------- */
+export const resetMockDb = mockAdapter.resetMockDb;
+export const getMockStats = mockAdapter.getMockStats;
+export const switchMockRole = mockAdapter.switchMockRole;
 
-/**
- * 达人相关API
- */
-export const ClerkApi = {
-  async getClerkList(params = {}) {
-    const { pageNo = 1, pageSize = 10, sex, city, categoryId, keyword } = params;
-    
-    if (useMock) {
-      let list = [...mockData.clerks];
-      if (sex !== undefined && sex !== '') {
-        list = list.filter(item => item.sex === Number(sex));
-      }
-      if (keyword) {
-        list = list.filter(item => item.nickname.includes(keyword));
-      }
-      const total = list.length;
-      const start = (pageNo - 1) * pageSize;
-      list = list.slice(start, start + pageSize);
-      return { list, total };
-    }
-    
-    // #ifdef MP-WEIXIN
-    let query = db.collection('clerk').where({ status: 1 });
-    if (sex !== undefined && sex !== '') {
-      query = query.where({ sex: Number(sex) });
-    }
-    if (city) {
-      query = query.where({ city });
-    }
-    if (categoryId) {
-      query = query.where({ categoryIds: _.all([categoryId]) });
-    }
-    const { total } = await query.count();
-    const { data } = await query
-      .orderBy('onlineStatus', 'desc')
-      .orderBy('orderCount', 'desc')
-      .orderBy('createTime', 'desc')
-      .skip((pageNo - 1) * pageSize)
-      .limit(pageSize)
-      .get();
-    return { list: data, total };
-    // #endif
-    
-    return { list: [], total: 0 };
-  },
-
-  async getClerkDetail(clerkId) {
-    if (useMock) {
-      return mockData.clerks.find(c => c._id === clerkId) || null;
-    }
-    // #ifdef MP-WEIXIN
-    const { data } = await db.collection('clerk').doc(clerkId).get();
-    return data;
-    // #endif
-    return null;
-  },
-
-  async createClerk(clerkInfo) {
-    if (useMock) return 'new_clerk';
-    // #ifdef MP-WEIXIN
-    const { _id } = await db.collection('clerk').add({
-      data: { ...clerkInfo, orderCount: 0, createTime: db.serverDate() }
-    });
-    return _id;
-    // #endif
-    return null;
-  },
-
-  async updateClerk(clerkId, clerkInfo) {
-    if (useMock) return;
-    // #ifdef MP-WEIXIN
-    await db.collection('clerk').doc(clerkId).update({ data: clerkInfo });
-    // #endif
-  },
-
-  async getPendingClerks(pageNo = 1, pageSize = 10) {
-    if (useMock) return { list: [], total: 0 };
-    // #ifdef MP-WEIXIN
-    const query = db.collection('clerk').where({ status: 0 });
-    const { total } = await query.count();
-    const { data } = await query
-      .orderBy('createTime', 'desc')
-      .skip((pageNo - 1) * pageSize)
-      .limit(pageSize)
-      .get();
-    return { list: data, total };
-    // #endif
-    return { list: [], total: 0 };
-  },
-
-  async auditClerk(clerkId, status) {
-    if (useMock) return;
-    // #ifdef MP-WEIXIN
-    await db.collection('clerk').doc(clerkId).update({ data: { status } });
-    // #endif
-  }
-};
-
-/**
- * 分类相关API
- */
-export const CategoryApi = {
-  async getCategoryList() {
-    if (useMock) return mockData.categories;
-    // #ifdef MP-WEIXIN
-    const { data } = await db.collection('category').where({ status: 1 })
-      .orderBy('sort', 'asc')
-      .orderBy('createTime', 'desc')
-      .get();
-    return data;
-    // #endif
-    return [];
-  },
-
-  async createCategory(categoryInfo) {
-    if (useMock) return 'new_cat';
-    // #ifdef MP-WEIXIN
-    const { _id } = await db.collection('category').add({
-      data: { ...categoryInfo, status: 1, createTime: db.serverDate() }
-    });
-    return _id;
-    // #endif
-    return null;
-  }
-};
-
-/**
- * 预约相关API
- */
-export const AppointmentApi = {
-  async createAppointment(appointInfo) {
-    if (useMock) return 'new_appoint';
-    // #ifdef MP-WEIXIN
-    const { _id } = await db.collection('appointment').add({
-      data: { ...appointInfo, status: 0, createTime: db.serverDate() }
-    });
-    return _id;
-    // #endif
-    return null;
-  },
-
-  async getMyAppointments(params = {}) {
-    const { pageNo = 1, pageSize = 10, status } = params;
-    
-    if (useMock) {
-      let list = [...mockData.appointments];
-      if (status !== undefined) {
-        list = list.filter(item => item.status === Number(status));
-      }
-      const total = list.length;
-      const start = (pageNo - 1) * pageSize;
-      list = list.slice(start, start + pageSize);
-      return { list, total };
-    }
-    
-    // #ifdef MP-WEIXIN
-    let query = db.collection('appointment').where({ userId: '{openid}' });
-    if (status !== undefined) {
-      query = query.where({ status: Number(status) });
-    }
-    const { total } = await query.count();
-    const { data } = await query
-      .orderBy('createTime', 'desc')
-      .skip((pageNo - 1) * pageSize)
-      .limit(pageSize)
-      .get();
-    return { list: data, total };
-    // #endif
-    
-    return { list: [], total: 0 };
-  },
-
-  async getAllAppointments(params = {}) {
-    const { pageNo = 1, pageSize = 10, status, clerkId, appointDate } = params;
-    
-    if (useMock) return { list: [], total: 0 };
-    
-    // #ifdef MP-WEIXIN
-    let query = db.collection('appointment');
-    if (status !== undefined) {
-      query = query.where({ status: Number(status) });
-    }
-    if (clerkId) {
-      query = query.where({ clerkId });
-    }
-    if (appointDate) {
-      query = query.where({ appointDate });
-    }
-    const { total } = await query.count();
-    const { data } = await query
-      .orderBy('createTime', 'desc')
-      .skip((pageNo - 1) * pageSize)
-      .limit(pageSize)
-      .get();
-    return { list: data, total };
-    // #endif
-    
-    return { list: [], total: 0 };
-  },
-
-  async cancelAppointment(appointId) {
-    if (useMock) return;
-    // #ifdef MP-WEIXIN
-    await db.collection('appointment').doc(appointId).update({ data: { status: 2 } });
-    // #endif
-  },
-
-  async completeAppointment(appointId) {
-    if (useMock) return;
-    // #ifdef MP-WEIXIN
-    await db.collection('appointment').doc(appointId).update({ data: { status: 1 } });
-    // #endif
-  }
-};
+/* ---------- 路由表（对接后端时的对照清单） ---------- */
+export { ROUTES, createRequester };

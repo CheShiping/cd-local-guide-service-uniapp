@@ -3,7 +3,7 @@
 ## 当前状态
 
 **最后更新：** 2026-09-26
-**当前功能：** 无进行中（feat-001 / feat-002 已完成，feat-003 待开始）
+**当前功能：** 无进行中（feat-001 / feat-002 / feat-014 / **feat-004** 已完成；下一步 feat-003 或 feat-005）
 **当前阶段：** 阶段 0「保留原有资产」= 完成；阶段 1「成都景点地陪小程序」= 范围已锁定、视觉已定稿，尚未写业务代码
 
 ## 阶段 1 范围（已锁定）
@@ -76,6 +76,7 @@
 - [x] 视觉定稿落地：`DESIGN.md` 重写（原 Linear 版删除）、`uni.scss` 重写为 `$ds-*` 令牌
 - [x] 归档结构：`docx/codeimpl-sum/`、`docx/bugfix/`、`docx/接口文档.md`（骨架）
 - [x] 数据库表结构定稿：`docx/database/schema.sql` + `docx/database/数据库设计.md`（feat-014），并新增 `scripts/check-schema.mjs` 门禁
+- [x] **feat-004 MVP 数据层**：`api/` 分层落地（constants / errors / mock / http），mock 实测 52 用户 / 50 地陪 / 20 景点 / 7 区域 / 3 套餐 / 16 订单（四态齐全），订单号 16 个唯一；`docx/接口文档.md` 整体重写；新增 `scripts/check-mock.mjs` 门禁；产出设计文档与 bugfix 文档各一份
 - [x] `AGENTS.md` 增补「文档归档（docx/）」规则，并写入完成定义
 
 ### 进行中
@@ -166,6 +167,20 @@
 - `docs/legacy-assets.md` - 同步移除记录、资产总览、可复用骨架的设计规范段、改造清单与缺口表
 - `feature_list.json` - 按一致性审计结论重写：修正 12 处与原型/MVP/现有代码的不一致，新增 `prototypeSource` / `designSource` / `docPolicy`
 - `docs/mvp-scope.json` - 审计同步：新增 `bookingTypeUi`，修正 `pageMappingNote` 计数矛盾，`outOfScope` 增补投诉与景点搜索筛选
+- `api/constants.js` - 新建：领域常量单一来源（订单四态、流转白名单、预约类型、时段、角色、审核状态、订单号规则与生成函数）
+- `api/errors.js` - 新建：统一错误契约（`ApiError` + 错误码 + HTTP 状态映射），与 api-design 的错误体一致
+- `api/mock/seed.json` - 新建：7 区域 / 3 套餐 / 20 景点（与 `docx/database/seed.sql` 对齐）+ 生成素材池
+- `api/mock/generate.js` - 新建：确定性生成器（52 用户 / 50 地陪 / 关系 / 16 订单），无 import 以便静态校验
+- `api/mock/index.js` - 新建：内存仓库 + 业务规则（查询、分页、下单校验、状态流转、订单号）+ 旧模块过渡适配层
+- `api/http.js` - 新建：HTTP 适配层骨架（完整 `ROUTES` 路由表 + request 封装，方法抛 NOT_IMPLEMENTED）
+- `api/index.js` - **重写（已登记 + 刷新哈希）**：数据层出口，`USE_MOCK` 开关 + 新模块导出 + 旧模块兼容
+- `scripts/check-mock.mjs` - 新建：mock 数据层校验（与 seed.sql 一致 / 规模 / 确定性 / 自洽性 / MVP 边界）+ `--self-test`
+- `docx/接口文档.md` - **重写**：6 个模块 × 25 个方法 × HTTP 路由 × 错误约定 × 应用层完整性职责 × 过渡适配层说明
+- `docx/codeimpl-sum/设计文档-feat-004-MVP数据层.md` - 新建：六章节齐全（目标范围 / 接口 / 文件结构与实现 / 状态与数据流 / 验证证据 / 遗留问题）
+- `docx/bugfix/BUG修复-20260926-订单生成取值崩溃.md` - 新建：崩溃 + 校验器脆弱性的修复归档
+- `docx/database/schema.sql` - 补 `orders.guide_accepted_at`（四态不足以表达「待地陪接单 / 待平台确认」）
+- `docx/database/数据库设计.md` - 补 3.5 节说明该字段与调用语义；章节编号顺延；变更记录追加
+- `init.ps1` / `init.sh` - 验证入口由 5 步扩为 6 步，插入「mock 数据层校验」
 - `docs/legacy-assets.json` / `docs/legacy-assets.md` - 审计同步：gap-001 补「不新增本地占位图」的 resolution，gap-002 补协议页注册说明
 - `progress.md` - 本文件
 - `session-handoff.md` - 按定稿与归档规则重写交接内容
@@ -185,6 +200,8 @@
 - [x] 表结构校验自检：`node scripts/check-schema.mjs --self-test` → 通过（21 类违规均能检出，含拦截 `FOREIGN KEY`）
 - [x] 规格自检：`regionTypes=7`、`mockScale.guides=50`、`mockScale.attractions=20`、`deviations=8`；`schema.sql` 注释外 `FOREIGN KEY` 出现 0 次；`seed.sql` 含区域 7 条 + 套餐 3 条 + 景点 20 条；7 类区域均有景点
 - [x] 技能自带脚本交叉确认：`bash .codebuddy/skills/database-design/check-db.sh` 能识别 SQL 文件与建表语句；它报「未发现索引定义」是误报（只匹配 `CREATE INDEX`），原因记在 `数据库设计.md`
+- [x] mock 数据层校验：`node scripts/check-mock.mjs` → 通过（一致性 7/3/20、确定性一致、规模 52/50/20/7/3/16、可下单 44/44、订单号 16 唯一、待接单 3、无评价字段、页面未直连 mock）
+- [x] mock 校验自检：`node scripts/check-mock.mjs --self-test` → 通过（一致性 / 数据自洽 / MVP 边界三类问题均能检出）
 - [x] harness 审计：`validate-harness.mjs` 100/100
 - [ ] 小程序构建：未执行（缺依赖）
 

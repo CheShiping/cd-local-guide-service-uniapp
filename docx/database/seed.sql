@@ -59,14 +59,14 @@ INSERT INTO attractions (id, code, name, district, region_type_id, scene, cover_
   (10, 'att-anren',        '安仁古镇',           '大邑县',   4, '周边古镇',   'https://picsum.photos/seed/chengdu-anren/600/400',      '民国风情古镇，周边一日游',             0, 1, 100),
   (11, 'att-qingcheng',    '青城山',             '都江堰市', 5, '避暑/登山',  'https://picsum.photos/seed/chengdu-qingcheng/600/400',  '道教名山，避暑与徒步，需全天行程',     0, 1, 110),
   (12, 'att-xiling',       '西岭雪山',           '大邑县',   5, '滑雪/赏雪',  'https://picsum.photos/seed/chengdu-xiling/600/400',     '冬季滑雪与云海，周边两日游优选',       0, 1, 120),
-  (13, 'att-longquan-hill','龙泉山城市森林公园', '龙泉驿区', 5, '观景/落日',  'https://picsum.photos/seed/chengdu-longquan-hill/600/400', '城市观景平台，看落日与夜景',        0, 1, 130),
+  (13, 'att-longquan-hill', '龙泉山城市森林公园', '龙泉驿区', 5, '观景/落日', 'https://picsum.photos/seed/chengdu-longquan-hill/600/400', '城市观景平台，看落日与夜景', 0, 1, 130),
   (14, 'att-huanglongxi',  '黄龙溪古镇',         '双流区',   4, '古镇玩水',   'https://picsum.photos/seed/chengdu-huanglongxi/600/400','千年古镇，夏季玩水与小吃',             0, 1, 140),
   (15, 'att-jiezi',        '街子古镇',           '崇州市',   4, '古镇清幽',   'https://picsum.photos/seed/chengdu-jiezi/600/400',      '街子古镇，清幽好逛，可与青城山连游',   0, 1, 150),
   (16, 'att-luodai',       '洛带古镇',           '龙泉驿区', 4, '客家文化',   'https://picsum.photos/seed/chengdu-luodai/600/400',     '客家文化古镇，适合半日游',             0, 1, 160),
   (17, 'att-museum',       '成都博物馆',         '青羊区',   7, '历史研学',   'https://picsum.photos/seed/chengdu-museum/600/400',     '天府广场旁，系统了解成都历史',         0, 1, 170),
   (18, 'att-jinsha',       '金沙遗址博物馆',     '青羊区',   7, '考古研学',   'https://picsum.photos/seed/chengdu-jinsha/600/400',     '太阳神鸟出土地，考古主题研学',         0, 1, 180),
   (19, 'att-science',      '四川科技馆',         '青羊区',   7, '亲子互动',   'https://picsum.photos/seed/chengdu-science/600/400',    '亲子互动体验，适合带小孩',             0, 1, 190),
-  (20, 'att-night-river',  '夜游锦江（东门码头）','锦江区',  6, '夜游/船游',  'https://picsum.photos/seed/chengdu-night-river/600/400','乘船夜游锦江，看两岸灯光',             0, 1, 200)
+  (20, 'att-night-river', '夜游锦江（东门码头）', '锦江区', 6, '夜游/船游', 'https://picsum.photos/seed/chengdu-night-river/600/400', '乘船夜游锦江，看两岸灯光', 0, 1, 200)
 ON DUPLICATE KEY UPDATE
   name = VALUES(name), district = VALUES(district), region_type_id = VALUES(region_type_id),
   scene = VALUES(scene), cover_url = VALUES(cover_url), summary = VALUES(summary),

@@ -1,0 +1,62 @@
+{
+  "source": "docx/database/seed.sql",
+  "syncRule": "区域 / 套餐 / 景点三组数据必须与 docx/database/seed.sql 完全一致，由 scripts/check-mock.mjs 校验；改一处必须改另一处",
+  "regionTypes": [
+    { "id": 1, "code": "city-classic", "name": "市区经典线", "coverage": "青羊、锦江、武侯、成华", "scene": "1-2 天市区游", "status": 1, "sortOrder": 10 },
+    { "id": 2, "code": "panda-creative", "name": "熊猫·文创线", "coverage": "熊猫基地、东郊记忆、建设路", "scene": "年轻人 / 亲子", "status": 1, "sortOrder": 20 },
+    { "id": 3, "code": "suburb-daytrip", "name": "周边一日游", "coverage": "都江堰、青城山、安仁、黄龙溪", "scene": "全天行程", "status": 1, "sortOrder": 30 },
+    { "id": 4, "code": "ancient-town", "name": "川西古镇线", "coverage": "黄龙溪、街子古镇、洛带、安仁", "scene": "古镇慢游 / 拍照", "status": 1, "sortOrder": 40 },
+    { "id": 5, "code": "mountain-resort", "name": "山野度假线", "coverage": "青城山、西岭雪山、龙泉山", "scene": "避暑 / 徒步 / 滑雪", "status": 1, "sortOrder": 50 },
+    { "id": 6, "code": "night-city", "name": "都市夜游线", "coverage": "锦里、太古里、九眼桥、夜游锦江", "scene": "夜拍 / 夜宵", "status": 1, "sortOrder": 60 },
+    { "id": 7, "code": "family-study", "name": "亲子研学线", "coverage": "成都博物馆、金沙遗址、四川科技馆", "scene": "带娃 / 研学", "status": 1, "sortOrder": 70 }
+  ],
+  "packageSkus": [
+    { "id": 1, "code": "pkg-halfday-city", "name": "市区半日陪游", "bookingType": "half-day", "durationDesc": "4-5 小时", "priceMin": 200, "priceMax": 400, "description": "适合单区域，市区打卡", "includesNote": "门票、餐饮、交通不含", "status": 1, "sortOrder": 10 },
+    { "id": 2, "code": "pkg-fullday-city", "name": "市区全天陪游", "bookingType": "full-day", "durationDesc": "8-10 小时", "priceMin": 500, "priceMax": 800, "description": "市区 + 周边，一天走透", "includesNote": "门票、餐饮、交通不含", "status": 1, "sortOrder": 20 },
+    { "id": 3, "code": "pkg-special", "name": "熊猫基地 / 都江堰专项陪游", "bookingType": "hourly", "durationDesc": "按小时", "priceMin": 150, "priceMax": 300, "description": "按小时计，含讲解与带吃", "includesNote": "门票、餐饮、交通不含", "status": 1, "sortOrder": 30 }
+  ],
+  "attractions": [
+    { "id": 1, "code": "att-kuanzhai", "name": "宽窄巷子", "district": "青羊区", "regionTypeId": 1, "scene": "经典打卡", "coverUrl": "https://picsum.photos/seed/chengdu-kuanzhai/600/400", "summary": "成都市区最经典的巷子，适合慢逛与拍照", "status": 1, "sortOrder": 10 },
+    { "id": 2, "code": "att-dufu", "name": "杜甫草堂", "district": "青羊区", "regionTypeId": 7, "scene": "文化研学", "coverUrl": "https://picsum.photos/seed/chengdu-dufu/600/400", "summary": "诗圣故居，适合带孩子做文化研学", "status": 1, "sortOrder": 20 },
+    { "id": 3, "code": "att-wuhou", "name": "武侯祠", "district": "武侯区", "regionTypeId": 1, "scene": "三国文化", "coverUrl": "https://picsum.photos/seed/chengdu-wuhou/600/400", "summary": "三国文化地标，讲解型地陪需求高", "status": 1, "sortOrder": 30 },
+    { "id": 4, "code": "att-jinli", "name": "锦里", "district": "武侯区", "regionTypeId": 6, "scene": "夜游/拍照", "coverUrl": "https://picsum.photos/seed/chengdu-jinli/600/400", "summary": "夜景与小吃街，夜游拍照首选", "status": 1, "sortOrder": 40 },
+    { "id": 5, "code": "att-panda", "name": "大熊猫基地", "district": "成华区", "regionTypeId": 2, "scene": "亲子热门", "coverUrl": "https://picsum.photos/seed/chengdu-panda/600/400", "summary": "高需求热门景点，建议早场入园", "status": 1, "sortOrder": 50 },
+    { "id": 6, "code": "att-taikooli", "name": "春熙路/太古里", "district": "锦江区", "regionTypeId": 6, "scene": "城市逛街", "coverUrl": "https://picsum.photos/seed/chengdu-taikooli/600/400", "summary": "城市中心商圈，白天逛街夜晚出片", "status": 1, "sortOrder": 60 },
+    { "id": 7, "code": "att-peoples-park", "name": "人民公园/鹤鸣茶社", "district": "锦江区", "regionTypeId": 1, "scene": "成都慢生活", "coverUrl": "https://picsum.photos/seed/chengdu-peoples-park/600/400", "summary": "体验盖碗茶与本地慢生活", "status": 1, "sortOrder": 70 },
+    { "id": 8, "code": "att-dongjiao", "name": "东郊记忆", "district": "成华区", "regionTypeId": 2, "scene": "年轻游客", "coverUrl": "https://picsum.photos/seed/chengdu-dongjiao/600/400", "summary": "工业风文创园区，年轻游客与拍照", "status": 1, "sortOrder": 80 },
+    { "id": 9, "code": "att-dujiangyan", "name": "都江堰", "district": "都江堰市", "regionTypeId": 3, "scene": "一日游", "coverUrl": "https://picsum.photos/seed/chengdu-dujiangyan/600/400", "summary": "世界文化遗产，适合安排全天行程", "status": 1, "sortOrder": 90 },
+    { "id": 10, "code": "att-anren", "name": "安仁古镇", "district": "大邑县", "regionTypeId": 4, "scene": "周边古镇", "coverUrl": "https://picsum.photos/seed/chengdu-anren/600/400", "summary": "民国风情古镇，周边一日游", "status": 1, "sortOrder": 100 },
+    { "id": 11, "code": "att-qingcheng", "name": "青城山", "district": "都江堰市", "regionTypeId": 5, "scene": "避暑/登山", "coverUrl": "https://picsum.photos/seed/chengdu-qingcheng/600/400", "summary": "道教名山，避暑与徒步，需全天行程", "status": 1, "sortOrder": 110 },
+    { "id": 12, "code": "att-xiling", "name": "西岭雪山", "district": "大邑县", "regionTypeId": 5, "scene": "滑雪/赏雪", "coverUrl": "https://picsum.photos/seed/chengdu-xiling/600/400", "summary": "冬季滑雪与云海，周边两日游优选", "status": 1, "sortOrder": 120 },
+    { "id": 13, "code": "att-longquan-hill", "name": "龙泉山城市森林公园", "district": "龙泉驿区", "regionTypeId": 5, "scene": "观景/落日", "coverUrl": "https://picsum.photos/seed/chengdu-longquan-hill/600/400", "summary": "城市观景平台，看落日与夜景", "status": 1, "sortOrder": 130 },
+    { "id": 14, "code": "att-huanglongxi", "name": "黄龙溪古镇", "district": "双流区", "regionTypeId": 4, "scene": "古镇玩水", "coverUrl": "https://picsum.photos/seed/chengdu-huanglongxi/600/400", "summary": "千年古镇，夏季玩水与小吃", "status": 1, "sortOrder": 140 },
+    { "id": 15, "code": "att-jiezi", "name": "街子古镇", "district": "崇州市", "regionTypeId": 4, "scene": "古镇清幽", "coverUrl": "https://picsum.photos/seed/chengdu-jiezi/600/400", "summary": "街子古镇，清幽好逛，可与青城山连游", "status": 1, "sortOrder": 150 },
+    { "id": 16, "code": "att-luodai", "name": "洛带古镇", "district": "龙泉驿区", "regionTypeId": 4, "scene": "客家文化", "coverUrl": "https://picsum.photos/seed/chengdu-luodai/600/400", "summary": "客家文化古镇，适合半日游", "status": 1, "sortOrder": 160 },
+    { "id": 17, "code": "att-museum", "name": "成都博物馆", "district": "青羊区", "regionTypeId": 7, "scene": "历史研学", "coverUrl": "https://picsum.photos/seed/chengdu-museum/600/400", "summary": "天府广场旁，系统了解成都历史", "status": 1, "sortOrder": 170 },
+    { "id": 18, "code": "att-jinsha", "name": "金沙遗址博物馆", "district": "青羊区", "regionTypeId": 7, "scene": "考古研学", "coverUrl": "https://picsum.photos/seed/chengdu-jinsha/600/400", "summary": "太阳神鸟出土地，考古主题研学", "status": 1, "sortOrder": 180 },
+    { "id": 19, "code": "att-science", "name": "四川科技馆", "district": "青羊区", "regionTypeId": 7, "scene": "亲子互动", "coverUrl": "https://picsum.photos/seed/chengdu-science/600/400", "summary": "亲子互动体验，适合带小孩", "status": 1, "sortOrder": 190 },
+    { "id": 20, "code": "att-night-river", "name": "夜游锦江（东门码头）", "district": "锦江区", "regionTypeId": 6, "scene": "夜游/船游", "coverUrl": "https://picsum.photos/seed/chengdu-night-river/600/400", "summary": "乘船夜游锦江，看两岸灯光", "status": 1, "sortOrder": 200 }
+  ],
+  "generators": {
+    "note": "mock 生成用的素材池与规模，见 docs/mvp-scope.json 的 mockScale（50 地陪 / 52 用户 / 20 景点）",
+    "guideCount": 50,
+    "touristNickname": "小舟",
+    "adminNickname": "平台管理员",
+    "avatarPoolSize": 70,
+    "areaPrefixes": ["青羊", "锦江", "武侯", "成华", "金牛", "高新", "都江堰", "大邑", "双流", "崇州", "龙泉驿"],
+    "surnames": ["林", "苏", "陈", "何", "周", "邓", "罗", "蒋", "谢", "韩", "唐", "曹", "袁", "雷", "钟", "汪", "田", "熊", "白", "秦"],
+    "givenNames": ["小林", "阿杰", "苏姐", "陈默", "小雨", "阿哲", "小满", "语彤", "一鸣", "思远", "拙言", "明明", "阿禾", "石头", "南山", "小鹿", "阿宁", "庭玉", "归舟", "清和"],
+    "introduceTemplates": [
+      "在{area}长大，做地陪第 {years} 年，喜欢带人从人少的巷子绕进去。",
+      "擅长{scene}线路，路线熟悉，能帮忙避开排队高峰。",
+      "本地土著，{area}一带的小馆子都熟，可以顺手带吃。",
+      "拍照有经验，能帮拍也会推荐机位，节奏偏慢，不赶行程。",
+      "带娃经验多，行程会留出休息时间，适合亲子出游。"
+    ],
+    "guideRegionCount": [1, 3],
+    "guideAttractionCount": [1, 4],
+    "guidePackageCount": [1, 3],
+    "orderCount": 16,
+    "orderStatusPlan": { "0": 6, "1": 4, "2": 3, "3": 3 }
+  }
+}
