@@ -84,10 +84,10 @@
 		}
 	],
 	"tabBar": {
-		"color": "#6b6862",
-		"selectedColor": "#2f6b5e",
+		"color": "#9a95ae",
+		"selectedColor": "#6f61bd",
 		"borderStyle": "white",
-		"backgroundColor": "#fbfaf5",
+		"backgroundColor": "#fdfcfa",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
@@ -106,11 +106,11 @@
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "成都地陪",
-		"navigationBarBackgroundColor": "#f7f4ed",
-		"backgroundColor": "#f7f4ed",
+		"navigationBarBackgroundColor": "#fdfcfa",
+		"backgroundColor": "#fdfcfa",
 		"app-plus": {
 			"animationType": "slide-in-right",
-			"animationDuration": 320
+			"animationDuration": 200
 		}
 	}
 }

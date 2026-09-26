@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>成都景点地陪小程序 · 视觉改版定稿（气泡漫游）</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 图标库抽到 sprite.js，与 design-system.html 共用一份 -->
+<script src="sprite.js"></script>
+
+<header class="page-head">
+  <p class="page-head__kick">✦ 视觉改版 · 定稿方向：气泡漫游</p>
+  <h1 class="page-head__title">成都景点地陪小程序</h1>
+  <p class="page-head__sub">
+    七个界面、一套内容。这版按达咩App规范优化稿改齐：<b>按钮全部去渐变改纯色</b>——主按钮纯黑胶囊、次按钮雾紫浅底、切换栏与日期选中态纯黑胶囊；
+    <b>背景光斑按屏分配方向与浓淡</b>——首页右上→左下最浓、列表换成左上→右下、详情用顶光聚在人物上、表单与后台最克制、接单端偏冷；<b>首页快捷图标与卡片布局保留</b>；景点封面先用 picsum 随机图占位，后端接通后换成 coverUrl。
+  </p>
+  <div class="page-head__rules">
+    <span><i style="background:#17141f"></i>主按钮 · 开启相遇</span>
+    <span><i style="background:#8f7fe0"></i>次按钮 · GO</span>
+    <span><i style="background:#e58fa6"></i>待确认 / 提醒</span>
+    <span><i style="background:#7fc4ae"></i>已确认 / 完成</span>
+    <span>中文 · 造字工房元黑体（原型用系统黑体替代）</span>
+  </div>
+</header>
+
+<div class="scr-bar">
+  <div class="scr-seg" id="mode">
+    <button type="button" class="is-on" data-mode="flow">流程演示</button>
+    <button type="button" data-mode="grid">全部界面</button>
+  </div>
+  <div class="scr-tabs" id="scr-tabs"></div>
+  <span style="font-size:11.5px;color:var(--ink-3)">键盘 1–7 直达 · ←/→ 前后翻页</span>
+</div>
+
+<main id="stage" class="stage"></main>
+
+<script src="app.js"></script>
+</body>
+</html>

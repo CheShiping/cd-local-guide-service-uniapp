@@ -2,7 +2,7 @@
  * uni.scss —— 成都景点地陪小程序 · 设计令牌
  *
  * 本文件由 uni-app 自动注入所有页面的 <style lang="scss">，无需 @import。
- * 令牌与 DESIGN.md 一一对应（定稿主题：宣纸 · 疏），改这里必须同步改 DESIGN.md。
+ * 令牌与 DESIGN.md 一一对应（定稿主题：气泡漫游），改这里必须同步改 DESIGN.md。
  *
  * 顺序要求：$ds-* 是事实来源，必须先定义；$uni-* 是给 uni-app 内置组件用的映射，引用 $ds-*。
  * 因此下面先写第 1 节令牌，再写第 2 节映射，不要调换。
@@ -12,69 +12,124 @@
    1. 项目设计令牌（$ds-*，DESIGN.md 的 SCSS 侧唯一来源）
    ========================================================================== */
 
-/* ---------- 1.1 色彩角色（M3） ---------- */
+/* ---------- 1.1 色彩 · 品牌三色（低饱和） ---------- */
 
-/* Primary —— 竹青：只用于可点、选中、强调 */
-$ds-primary: #2f6b5e;
+/* Primary —— 雾紫：可点、选中、链接、次按钮 */
+$ds-primary: #8f7fe0;
 $ds-on-primary: #ffffff;
-$ds-primary-container: #dce8e2;
-$ds-on-primary-container: #12332d;
-$ds-primary-dim: #8fb3a6;
+$ds-primary-container: rgba(143, 127, 224, 0.13);   // 雾紫浅底（次按钮、选中底）
+$ds-on-primary-container: #6f61bd;                  // 浅底上的文字（深紫）
+$ds-primary-dim: #b9aef0;
 
-/* Secondary —— 竹灰：次级标签、chip 选中底 */
-$ds-secondary: #4c635c;
-$ds-secondary-container: #e6ebe8;
-$ds-on-secondary-container: #2c3a35;
+/* Secondary —— 深紫：浅底上的强调文字、图标 */
+$ds-secondary: #6f61bd;
+$ds-secondary-container: rgba(143, 127, 224, 0.13);
+$ds-on-secondary-container: #6f61bd;
 
-/* Tertiary —— 朱砂：全站只给价格与关键数字 */
-$ds-tertiary: #b4462f;
-$ds-tertiary-container: #f6e4df;
-$ds-on-tertiary-container: #5e1f13;
+/* 藕粉：待确认、提醒、次级强调（统计条警示数） */
+$ds-brand-2: #e58fa6;
+$ds-brand-2-tint: rgba(229, 143, 166, 0.16);
 
-/* Neutral —— 宣纸 */
-$ds-surface: #f7f4ed;
-$ds-surface-container: #fbfaf5;
-$ds-surface-high: #eceae2;
-$ds-ink: #1f1d1a;
-$ds-ink-2: #6b6862;
-$ds-outline: #d8d2c6;
-$ds-outline-variant: #e7e2d7;
+/* 薄荷：已确认、完成、成功 */
+$ds-brand-3: #7fc4ae;
 
-/* 状态色：不套系统绿橙红，全部落进竹青调性 */
-$ds-success: #3d7a5f;
-$ds-success-container: #dfece4;
-$ds-warning: #9a7124;
-$ds-warning-container: #f4e9d4;
-$ds-error: #a83a2a;
-$ds-error-container: #f6e2de;
+/* 主按钮黑：主操作、切换栏 / chip / 日期的选中态（一律纯色胶囊，不用渐变） */
+$ds-ink-btn: #17141f;
+$ds-btn-shadow: 0 14px 26px -20px rgba(23, 20, 31, 0.75);
 
-/* ---------- 1.2 字体 ---------- */
-/* 不加载网络字体：中文标题靠系统宋体回退 + 字距营造文化感 */
-$ds-font-title: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+/* Tertiary —— 深紫数字：全站只给价格与关键数字 */
+$ds-tertiary: #7b6bd0;
+$ds-tertiary-container: rgba(143, 127, 224, 0.07);
+
+/* ---------- 1.2 色彩 · 墨阶与表面 ---------- */
+
+$ds-surface: #fdfcfa;                        // 屏幕底色（奶油白）
+$ds-surface-container: rgba(255, 255, 255, 0.74);   // 玻璃卡片
+$ds-surface-high: rgba(255, 255, 255, 0.62);        // 次级表面 / 指标块 / 日期块
+$ds-ink: #2a2740;                            // 主文字 / 标题
+$ds-ink-2: #6a6584;                          // 次要文字 / 说明
+$ds-ink-3: #9a95ae;                          // 辅助文字 / 占位 / 角标
+$ds-outline: rgba(42, 39, 64, 0.13);         // 描边 / 分隔
+$ds-outline-variant: rgba(42, 39, 64, 0.07); // 发丝线
+
+/* 状态色：不套系统绿橙红，全部落进同一调性 */
+$ds-success: #4f8f7c;
+$ds-success-container: rgba(127, 196, 174, 0.2);
+$ds-warning: #96702a;
+$ds-warning-container: rgba(233, 195, 122, 0.2);
+$ds-error: #b0452f;
+$ds-error-container: rgba(229, 143, 166, 0.18);
+
+/* ---------- 1.3 屏幕背景光斑（按屏分配方向与浓淡，DESIGN.md §3） ---------- */
+
+$ds-bg-tr:
+  radial-gradient(540px 500px at 101% -6%, rgba(163, 150, 236, 0.2), rgba(163, 150, 236, 0) 68%),
+  radial-gradient(500px 460px at 70% 4%, rgba(239, 182, 198, 0.3), rgba(239, 182, 198, 0) 70%),
+  radial-gradient(480px 440px at 38% -10%, rgba(239, 182, 198, 0.24), rgba(239, 182, 198, 0) 72%),
+  radial-gradient(460px 420px at -8% 8%, rgba(160, 216, 200, 0.24), rgba(160, 216, 200, 0) 70%),
+  linear-gradient(212deg, #fef4f8 0%, #f9fdfb 46%, #fdfcfa 82%);   // 首页 / 登录：右上 → 左下，三色最全
+
+$ds-bg-tl:
+  radial-gradient(540px 500px at -1% -6%, rgba(239, 182, 198, 0.3), rgba(239, 182, 198, 0) 68%),
+  radial-gradient(480px 440px at 30% 4%, rgba(239, 182, 198, 0.22), rgba(239, 182, 198, 0) 70%),
+  radial-gradient(460px 420px at 106% 4%, rgba(239, 182, 198, 0.2), rgba(239, 182, 198, 0) 70%),
+  radial-gradient(420px 390px at 108% -10%, rgba(160, 216, 200, 0.22), rgba(160, 216, 200, 0) 70%),
+  radial-gradient(440px 400px at 62% -12%, rgba(163, 150, 236, 0.14), rgba(163, 150, 236, 0) 72%),
+  linear-gradient(148deg, #fef4f8 0%, #fcfdff 46%, #fdfcfa 82%);   // 地陪列表：左上 → 右下，粉为主
+
+$ds-bg-top:
+  radial-gradient(860px 540px at 54% -8%, rgba(163, 150, 236, 0.44), rgba(163, 150, 236, 0) 68%),
+  radial-gradient(600px 440px at 88% -4%, rgba(239, 182, 198, 0.24), rgba(239, 182, 198, 0) 70%),
+  radial-gradient(520px 400px at 16% -4%, rgba(160, 216, 200, 0.18), rgba(160, 216, 200, 0) 70%),
+  linear-gradient(180deg, #f6f3ff 0%, #fdfcfa 40%, #fdfcfa 80%);   // 地陪详情：顶光打在头像上，紫为主
+
+$ds-bg-calm:
+  radial-gradient(580px 540px at 104% -6%, rgba(163, 150, 236, 0.28), rgba(163, 150, 236, 0) 64%),
+  radial-gradient(460px 420px at 80% -2%, rgba(239, 182, 198, 0.15), rgba(239, 182, 198, 0) 66%),
+  linear-gradient(212deg, #faf8ff 0%, #fdfcfa 48%, #fdfcfa 84%);   // 下单页：表单要克制
+
+$ds-bg-tl-soft:
+  radial-gradient(600px 560px at -6% -6%, rgba(239, 182, 198, 0.32), rgba(239, 182, 198, 0) 66%),
+  radial-gradient(500px 480px at 20% 2%, rgba(163, 150, 236, 0.2), rgba(163, 150, 236, 0) 70%),
+  linear-gradient(152deg, #fdf5f9 0%, #fdfcfa 46%, #fdfcfa 84%);   // 订单页：中弱，粉为主紫作衬
+
+$ds-bg-top-cool:
+  radial-gradient(840px 520px at 52% -8%, rgba(160, 216, 200, 0.34), rgba(160, 216, 200, 0) 68%),
+  radial-gradient(580px 420px at 86% -4%, rgba(163, 150, 236, 0.22), rgba(163, 150, 236, 0) 70%),
+  linear-gradient(180deg, #f3faf7 0%, #fdfcfa 42%, #fdfcfa 80%);   // 接单页（地陪端）：薄荷偏冷，是工作台不是逛街
+
+$ds-bg-calm-ink:
+  radial-gradient(520px 480px at 104% -6%, rgba(163, 150, 236, 0.24), rgba(163, 150, 236, 0) 62%),
+  radial-gradient(500px 460px at -8% -4%, rgba(160, 216, 200, 0.34), rgba(160, 216, 200, 0) 68%),
+  linear-gradient(212deg, #faf9ff 0%, #fdfcfa 50%, #fdfcfa 86%);   // 后台 / 我的：信息密度最高，最安静
+
+/* ---------- 1.4 字体 ---------- */
+/* 不加载网络字体：品牌字体为「造字工房元黑体」，落地用系统黑体 + 800 字重替代 */
+$ds-font-title: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 $ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 
-/* 字阶（M3 Type Scale 的移动端子集） */
-$ds-fs-display: 27px;   // Display Small，行高 1.2
-$ds-fs-headline: 22px;  // Headline Small，行高 1.25
-$ds-fs-title-lg: 20px;  // Title Large，行高 1.3
-$ds-fs-title: 16px;     // Title Medium，行高 1.4
-$ds-fs-body: 15px;      // Body Large，行高 1.55
-$ds-fs-body-sm: 14px;   // Body Medium，行高 1.55
-$ds-fs-label: 13px;     // Label Large，行高 1.35
-$ds-fs-label-sm: 12px;  // Label Medium，行高 1.3
-$ds-fs-caption: 11px;   // Caption
+/* 字阶 */
+$ds-fs-display: 26px;   // 页面主标题，800 / 1.28
+$ds-fs-headline: 22px;  // 大区块标题
+$ds-fs-title-lg: 20px;  // 金额、统计数字
+$ds-fs-title: 17px;     // 卡片标题，750 / 1.30
+$ds-fs-body: 15px;      // 正文
+$ds-fs-body-sm: 13.5px; // 次要正文
+$ds-fs-label: 13px;     // 按钮、标签
+$ds-fs-label-sm: 12.5px;// 说明、辅助
+$ds-fs-caption: 11px;   // 角标、单位
 
-/* 中文标题字距 */
-$ds-ls-title: 0.04em;
+/* 标题字距：黑体标题基本不加字距，仅极微量 */
+$ds-ls-title: 0.002em;
 
-/* ---------- 1.3 形状（M3 corner radius，只保留 4 档） ---------- */
-$ds-shape-xs: 6px;
-$ds-shape-sm: 10px;
-$ds-shape-md: 12px;
-$ds-shape-lg: 20px;
-$ds-shape-full: 999px;
+/* ---------- 1.5 形状（大圆角语言） ---------- */
+$ds-shape-xs: 12px;
+$ds-shape-sm: 20px;     // 输入框 / 日期块 / 指标块
+$ds-shape-md: 24px;     // 封面图 / 头像块
+$ds-shape-lg: 28px;     // 卡片 / 面板
+$ds-shape-full: 999px;  // 按钮与标签一律胶囊
 
-/* ---------- 1.4 间距（8px 基数） ---------- */
+/* ---------- 1.6 间距（4 的倍数） ---------- */
 $ds-space-1: 4px;
 $ds-space-2: 8px;
 $ds-space-3: 12px;
@@ -83,49 +138,47 @@ $ds-space-5: 20px;
 $ds-space-6: 24px;
 $ds-space-7: 32px;
 $ds-space-8: 40px;
-$ds-pad-screen: 20px;   // 页面左右安全边距
+$ds-pad-screen: 22px;   // 页面左右安全边距
 
-/* ---------- 1.5 层级（只保留 3 级） ---------- */
-$ds-el-0: none;                                                                        // 默认：发丝线
-$ds-el-1: 0 1px 2px rgba(31, 29, 26, 0.04), 0 10px 24px -18px rgba(31, 29, 26, 0.22);  // 浮起卡片
-$ds-el-3: 0 -12px 28px -22px rgba(31, 29, 26, 0.3);                                    // 底部操作栏 / tabBar
-$ds-card-border: 1px solid $ds-outline-variant;
+/* ---------- 1.7 层级（只靠光，不靠边框） ---------- */
+$ds-el-0: none;
+$ds-el-1: 0 18px 40px -32px rgba(80, 70, 140, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.75) inset;  // 玻璃卡片
+$ds-el-3: 0 -10px 30px -26px rgba(80, 70, 140, 0.7);                                             // 底部操作栏 / tabBar
+$ds-card-border: none;   // 玻璃卡片不再描边，靠阴影与浅色内环分层
 
-/* ---------- 1.6 系统区尺寸 ---------- */
+/* ---------- 1.8 系统区尺寸 ---------- */
 $ds-h-statusbar-min: 20px;  // 实际用 uni.getSystemInfoSync().statusBarHeight
 $ds-h-navbar: 52px;
-$ds-h-tabbar: 74px;         // 含底部安全区
+$ds-h-tabbar: 78px;         // 含底部安全区
 $ds-h-touch: 44px;          // 最小触摸目标
 $ds-h-row: 56px;            // 表单单行
 $ds-h-btn: 48px;
-$ds-h-btn-sm: 40px;
+$ds-h-btn-sm: 36px;
 
-/* ---------- 1.7 纹理（纯 CSS，零图片） ---------- */
-$ds-grain-size: 4px;    // 宣纸颗粒间距（radial-gradient 点阵）
-$ds-grain-alpha: 0.07;  // 颗粒透明度（必须极淡）
-$ds-bamboo-alpha: 0;    // 竹影竖纹：定稿「宣纸 · 疏」为关闭
+/* ---------- 1.9 纹理（纯 CSS，零图片） ---------- */
+$ds-dot-size: 26px;     // 星点蒙版间距
+$ds-dot-alpha: 0.11;    // 星点透明度（必须极淡，只出现在光斑方向上）
 
-/* ---------- 1.8 动效（与 DESIGN.md §13 一一对应） ---------- */
-/* 规则：只动 transform / opacity（外加颜色类）；入场一律 ease-out；UI 动效不超过 400ms。
-   超出预算的只有 $ds-dur-spin（加载指示器是常量运动，本就该用 linear 且可长）。
-   注意：下面这批时长与 utils/motion.js 的 MOTION 常量必须成对修改，
-   两边不一致时 scripts/check-motion.mjs 会直接报错。 */
-$ds-dur-press: 140ms;       // 按压反馈（要跟手，不能慢）
-$ds-dur-fast: 160ms;        // 颜色 / 背景 / 边框等状态切换
-$ds-dur-slide: 280ms;       // 指示器 / 分段滑块在屏上移动
-$ds-dur-base: 360ms;        // 内容切换：整批内容被替换，要慢到看得清是从哪边换过来的
-$ds-dur-page: 320ms;        // 页面进入（H5 用 CSS 模拟；小程序是原生转场）
-$ds-dur-page-leave: 320ms;  // 页面退出（返回前先播，H5 用）—— 与 $ds-dur-page 保持一致：进出对称，同幅同时长
+/* ---------- 1.10 动效（与 DESIGN.md §9 一一对应，shadcn/ui 对齐） ---------- */
+/* 规则：只动 transform / opacity（外加颜色类）；进场 150-200ms，退场一律更快；
+   禁止弹性超调、禁止列表逐项 stagger、禁止循环装饰动画；动效只服务状态变化。 */
+$ds-dur-press: 150ms;       // 按压反馈（要跟手，不能慢）
+$ds-dur-fast: 150ms;        // 颜色 / 背景 / 边框等状态切换
+$ds-dur-slide: 200ms;       // 指示器 / 分段滑块在屏上移动
+$ds-dur-base: 200ms;        // 卡片、面板等较大表面的过渡
+$ds-dur-page: 200ms;        // 页面进入（H5 用 CSS 模拟；小程序是原生转场）
+$ds-dur-page-leave: 100ms;  // 页面退出：退场一律比进场快，播完再真正 navigateBack
 $ds-dur-spin: 900ms;        // 加载指示器一圈（linear，infinite）
-$ds-ease-out: cubic-bezier(0.23, 1, 0.32, 1);      // 入场 / 出场
-$ds-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  // 屏上移动（指示器滑动）
-$ds-stagger-step: 60ms;     // 列表入场逐项延迟
-$ds-stagger-max: 300ms;     // 延迟上限：长列表越往下越慢反而像卡
+$ds-ease-out: cubic-bezier(0.4, 0, 0.2, 1);     // Tailwind 默认，所有过渡
+$ds-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);  // Radix content-show，进场
+$ds-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);  // 屏上移动（指示器滑动）
+$ds-stagger-step: 0ms;      // 列表不做逐项 stagger（新规范禁止），同一批同时进场
+$ds-stagger-max: 0ms;
+$ds-press-scale: 0.98;      // 按压反馈：只缩放，不位移
+$ds-press-scale-sm: 0.96;
 
 /* ==========================================================================
    2. uni-app 内置变量映射（这些名字被 uni-app 内部组件引用，不要改名）
-   原陪玩小程序的默认值已按新设计规范重新赋值：
-   主色不再是 #ff6b81，改为竹青绿 #2f6b5e（解决 gap-004 的配色不一致）。
    ========================================================================== */
 
 /* 功能色 */
@@ -138,22 +191,22 @@ $uni-color-error: $ds-error;
 $uni-text-color: $ds-ink;
 $uni-text-color-inverse: #ffffff;
 $uni-text-color-grey: $ds-ink-2;
-$uni-text-color-placeholder: #9c9890;
-$uni-text-color-disable: #c6c1b6;
+$uni-text-color-placeholder: $ds-ink-3;
+$uni-text-color-disable: #c5c1d4;
 
 /* 背景颜色 */
 $uni-bg-color: $ds-surface;
-$uni-bg-color-grey: #f2efe7;
-$uni-bg-color-hover: #ebe7dd;
-$uni-bg-color-mask: rgba(31, 29, 26, 0.4);
+$uni-bg-color-grey: #f4f2f8;
+$uni-bg-color-hover: #ece9f4;
+$uni-bg-color-mask: rgba(42, 39, 64, 0.4);
 
 /* 边框颜色 */
 $uni-border-color: $ds-outline-variant;
 
 /* 文字尺寸 */
-$uni-font-size-sm: $ds-fs-label-sm;   // 12px
-$uni-font-size-base: $ds-fs-body-sm;  // 14px
-$uni-font-size-lg: $ds-fs-title;      // 16px
+$uni-font-size-sm: $ds-fs-label-sm;   // 12.5px
+$uni-font-size-base: $ds-fs-body-sm;  // 13.5px
+$uni-font-size-lg: $ds-fs-title;      // 17px
 
 /* 图片尺寸 */
 $uni-img-size-sm: 20px;

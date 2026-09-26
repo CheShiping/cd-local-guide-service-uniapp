@@ -1,0 +1,147 @@
+/* ==========================================================================
+   设计规范文档页的排版外壳（全部 ds- 前缀，不与组件类冲突）
+   组件的真实样式来自 style.css，这里只负责「把规范排好看」。
+   ========================================================================== */
+
+.ds-wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px 120px; }
+
+/* ---------- 头部 ---------- */
+.ds-hero { padding: 56px 0 10px; }
+.ds-hero__kick {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 12px; font-weight: 750; letter-spacing: .06em; color: #6f61bd;
+  background: rgba(255, 255, 255, .8);
+  box-shadow: 0 6px 18px -12px rgba(80, 70, 140, .6);
+}
+.ds-hero h1 { margin: 16px 0 0; font-size: 42px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; color: #16132a; }
+.ds-hero__sub { margin: 14px 0 0; max-width: 72ch; font-size: 14px; line-height: 1.8; color: #5b5470; }
+.ds-hero__sub b { color: #2a2740; }
+.ds-hero__meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.ds-hero__meta span {
+  font-size: 11.5px; font-weight: 650; padding: 5px 12px; border-radius: 999px;
+  color: #4a4462; background: rgba(255, 255, 255, .72);
+}
+
+/* ---------- 吸顶导航 ---------- */
+.ds-nav {
+  position: sticky; top: 0; z-index: 60;
+  margin: 26px 0 0; padding: 10px 0;
+  display: flex; gap: 6px; flex-wrap: wrap;
+  background: rgba(253, 252, 250, .82);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(42, 39, 64, .07);
+}
+.ds-nav a {
+  padding: 7px 14px; border-radius: 999px; text-decoration: none;
+  font-size: 12.5px; font-weight: 650; color: var(--ink-2);
+  transition: background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);
+}
+.ds-nav a:hover { background: var(--brand-tint); color: #6f61bd; }
+
+/* ---------- 分区 ---------- */
+.ds-sec { padding: 60px 0 0; scroll-margin-top: 70px; }
+.ds-sec__kick {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 750; letter-spacing: .14em; color: var(--brand-1);
+}
+.ds-sec h2 { margin: 10px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+.ds-sec__desc { margin: 10px 0 0; max-width: 74ch; font-size: 13.5px; line-height: 1.78; color: var(--ink-2); }
+.ds-sec__desc b { color: var(--ink); }
+.ds-sec__body { margin-top: 24px; }
+.ds-sub { margin: 34px 0 0; font-size: 15px; font-weight: 750; color: var(--ink); }
+.ds-sub:first-child { margin-top: 0; }
+
+/* ---------- 通用网格 / 卡片 ---------- */
+.ds-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); }
+.ds-grid--wide { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.ds-tile {
+  border-radius: 20px; background: rgba(255, 255, 255, .72);
+  box-shadow: var(--sh-card); overflow: hidden;
+}
+.ds-tile__swatch { display: block; height: 78px; }
+.ds-tile__b { padding: 12px 15px 15px; }
+.ds-tile__n { font-size: 13px; font-weight: 750; color: var(--ink); }
+.ds-tile__v { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+.ds-tile__u { font-size: 11.5px; line-height: 1.55; color: var(--ink-2); margin-top: 6px; }
+
+/* ---------- 令牌表 ---------- */
+.ds-tokens { display: grid; gap: 8px; }
+.ds-token {
+  display: grid; grid-template-columns: 230px 1fr; gap: 16px; align-items: baseline;
+  padding: 12px 16px; border-radius: 14px;
+  background: rgba(255, 255, 255, .7);
+}
+.ds-token code {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 12px; color: #6f61bd; word-break: break-all;
+}
+.ds-token span { font-size: 12.5px; line-height: 1.6; color: var(--ink-2); }
+.ds-token span b { color: var(--ink); font-weight: 700; }
+
+/* ---------- 演示框 ---------- */
+.ds-demo {
+  display: grid; place-items: center; gap: 12px; min-height: 132px;
+  padding: 22px; border-radius: 20px;
+  border: 1.5px dashed var(--line-strong); background: rgba(255, 255, 255, .5);
+}
+.ds-demo--row { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+.ds-demo__label { font-size: 11.5px; font-weight: 700; color: var(--ink-2); letter-spacing: .02em; }
+.ds-demo__btn {
+  margin-top: 2px; padding: 5px 12px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; color: #6f61bd;
+  background: var(--brand-tint);
+  transition: background var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std);
+}
+.ds-demo__btn:active { transform: scale(var(--press-scale)); }
+
+/* ---------- 组件演示行 ---------- */
+.ds-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+/* style.css 里 .metric 有 flex:1（那是在手机屏的 .metrics 里用），
+   进了规范页的演示行必须收回自然宽度，否则会把整行撑满 */
+.ds-row > * { flex: 0 0 auto; }
+
+/* ---------- 字阶 / 间距 ---------- */
+.ds-type { display: grid; }
+.ds-type__row {
+  display: flex; align-items: baseline; gap: 20px;
+  padding: 14px 0; border-bottom: 1px solid var(--line);
+}
+.ds-type__meta { flex: none; width: 210px; }
+.ds-type__meta code { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: #6f61bd; }
+.ds-type__meta small { display: block; font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+.ds-space { display: grid; gap: 10px; }
+.ds-space__row { display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: center; }
+.ds-space__bar { height: 14px; border-radius: 4px; background: var(--brand-1); opacity: .55; }
+.ds-space__row code { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: #6f61bd; }
+.ds-space__row span { font-size: 11.5px; color: var(--ink-3); margin-left: 8px; }
+
+/* ---------- 图标库 ---------- */
+.ds-icons { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); }
+.ds-icon {
+  display: grid; place-items: center; gap: 7px;
+  padding: 15px 4px 12px; border-radius: 14px;
+  background: rgba(255, 255, 255, .7); color: var(--ink-2);
+  font-size: 10px; font-family: ui-monospace, Consolas, monospace;
+  transition: background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);
+}
+.ds-icon:hover { background: var(--brand-tint); color: #6f61bd; }
+
+/* ---------- 背景光斑档位 ---------- */
+.ds-bggrid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+.ds-bgtile { border-radius: 18px; overflow: hidden; box-shadow: var(--sh-card); background: #fff; }
+.ds-bgtile__screen { position: relative; aspect-ratio: 375 / 210; }
+.ds-bgtile__b { padding: 11px 14px 13px; background: #fff; }
+.ds-bgtile__b strong { display: block; font-size: 12.5px; color: var(--ink); }
+.ds-bgtile__b span { display: block; font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+
+/* ---------- 页脚 ---------- */
+.ds-foot { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-3); line-height: 1.7; }
+
+@media (max-width: 720px) {
+  .ds-wrap { padding: 0 20px 90px; }
+  .ds-hero h1 { font-size: 30px; }
+  .ds-token { grid-template-columns: 1fr; gap: 5px; }
+  .ds-type__row { flex-direction: column; gap: 6px; }
+  .ds-type__meta { width: auto; }
+}

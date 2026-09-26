@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
@@ -45,7 +45,6 @@
  *
  * 入参：type = 'user'（默认，用户协议）| 'privacy'（隐私政策）
  */
-import { createPageMotion } from '@/utils/motion.js';
 const DOCS = {
   user: {
     title: '用户协议',
@@ -99,13 +98,9 @@ const DOCS = {
   }
 };
 
-/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
-
 export default {
   data() {
     return {
-      ...pageMotion.data(),
       type: 'user',
       statusBarHeight: 20
     };
@@ -130,10 +125,8 @@ export default {
   },
 
   methods: {
-    ...pageMotion.methods,
-
     goBack() {
-      this.goBackWithMotion();
+      uni.navigateBack();
     }
   }
 };
@@ -142,11 +135,12 @@ export default {
 <style lang="scss" scoped>
 .page {
   background: $ds-surface;
+  background-image: $ds-bg-calm-ink;
   min-height: 100vh;
 }
 
 .status-bar {
-  background: $ds-surface;
+  background: transparent;
 }
 
 .navbar {
@@ -154,7 +148,6 @@ export default {
   align-items: center;
   height: $ds-h-navbar;
   padding: 0 8px;
-  background: $ds-surface;
   border-bottom: 1px solid $ds-outline-variant;
 }
 
@@ -174,10 +167,8 @@ export default {
 .nav-title {
   flex: 1;
   text-align: center;
-  font-family: $ds-font-title;
   font-size: $ds-fs-title;
-  font-weight: 700;
-  letter-spacing: $ds-ls-title;
+  font-weight: 750;
   color: $ds-ink;
 }
 
@@ -207,7 +198,7 @@ export default {
 .section-title {
   display: block;
   font-size: $ds-fs-title;
-  font-weight: 600;
+  font-weight: 750;
   color: $ds-ink;
   margin-bottom: $ds-space-2;
 }
@@ -215,7 +206,7 @@ export default {
 .section-text {
   display: block;
   font-size: $ds-fs-body-sm;
-  line-height: 1.7;
+  line-height: 1.72;
   color: $ds-ink-2;
 }
 
@@ -229,6 +220,6 @@ export default {
   display: block;
   font-size: $ds-fs-label;
   line-height: 1.6;
-  color: $ds-on-primary-container;
+  color: $ds-on-secondary-container;
 }
 </style>

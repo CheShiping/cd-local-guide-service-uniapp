@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
@@ -63,10 +63,9 @@
     >
       <view class="list">
         <view
-          v-for="(item, index) in guideList"
-          :key="enterSeq + '-' + item.id"
-          :class="['card', 'guide', 'ds-pressable', enterAnim]"
-          :style="enterStyle(index)"
+          v-for="item in guideList"
+          :key="item.id"
+          class="card guide ds-pressable"
           hover-class="is-pressed"
           hover-stay-time="70"
           @click="goDetail(item)"
@@ -141,7 +140,6 @@
  */
 import { GuideApi, BOOKING_TYPES, bookingTypeLabel, bookingTypeUnit } from '@/api/index.js';
 import { createTabRow } from '@/utils/hscroll.js';
-import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 /* 预约类型 chip：激活 chip 自动滚到中间 + 列表左右滑动切换（排序 chip 不参与） */
 const bookingTabRow = createTabRow({
@@ -151,12 +149,6 @@ const bookingTabRow = createTabRow({
   index: (vm) => vm.activeChipIndex,
   onStep: (vm, step) => vm.stepBookingType(step)
 });
-
-/* 列表入场：切预约类型带方向，加载更多只让新追加的那几项上浮 */
-const listEnter = createListEnter();
-
-/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
 
 const bookingTypeChips = [
   { label: '全部', value: '' },
@@ -169,8 +161,6 @@ export default {
   data() {
     return {
       ...bookingTabRow.data(),
-      ...listEnter.data(),
-      ...pageMotion.data(),
       attractionId: '',
       attractionName: '',
       bookingTypeChips,
@@ -214,10 +204,8 @@ export default {
 
   methods: {
     ...bookingTabRow.methods,
-    ...listEnter.methods,
-    ...pageMotion.methods,
 
-    async loadGuides(refresh = false, dir = ENTER_UP) {
+    async loadGuides(refresh = false) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -236,8 +224,6 @@ export default {
 
         const { list, total, hasMore } = await GuideApi.getGuideList(params);
 
-        /* 切类型：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
-        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.guideList.length);
         this.guideList = refresh ? list : [...this.guideList, ...list];
         this.total = total || 0;
         this.hasMore = hasMore;
@@ -250,13 +236,11 @@ export default {
       }
     },
 
-    changeBookingType(value, dir = 0) {
+    changeBookingType(value) {
       if (this.bookingType === value) return;
-      /* 点选时方向由下标差推出；横滑时直接用滑动方向（step） */
-      const from = this.activeChipIndex;
       this.bookingType = value;
       this.centerActiveTab();
-      this.loadGuides(true, dir || stepDirection(from, this.activeChipIndex));
+      this.loadGuides(true);
     },
 
     /* 横滑：上/下一个预约类型；「全部」的左边就是边界 */
@@ -264,13 +248,11 @@ export default {
       const current = Math.max(bookingTypeChips.findIndex((chip) => chip.value === this.bookingType), 0);
       const next = current + step;
       if (next < 0 || next >= bookingTypeChips.length) return;
-      this.changeBookingType(bookingTypeChips[next].value, step);
+      this.changeBookingType(bookingTypeChips[next].value);
     },
 
-    /* 排序没有方向，但要换批次让卡片重播上浮入场（否则同一批 key 不会重播） */
     toggleSort() {
       this.sort = this.sort === 'priceAsc' ? '' : 'priceAsc';
-      this.renewEnter();
       this.loadGuides(true);
     },
 
@@ -294,7 +276,7 @@ export default {
     },
 
     goBack() {
-      this.goBackWithMotion();
+      uni.navigateBack();
     },
 
     goDetail(item) {
@@ -311,6 +293,8 @@ export default {
   flex-direction: column;
   height: 100vh;
   background: $ds-surface;
+  /* 光斑：左上 → 右下，粉为主（气泡漫游 · bg-tl 档） */
+  background-image: $ds-bg-tl;
 }
 
 .status-bar {
@@ -384,32 +368,40 @@ export default {
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  height: 32px;
-  padding: 0 $ds-space-3;
+  height: 34px;
+  padding: 0 14px;
   border-radius: $ds-shape-full;
-  border: 1px solid $ds-outline;
-  background: transparent;
+  border: 1px solid $ds-outline-variant;
+  background: rgba(255, 255, 255, 0.68);
   /* chip 是实底选中态：底色与边框一起过渡，切换才不是硬跳 */
   transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
-    background: $ds-secondary-container;
-    border-color: $ds-secondary-container;
-  }
-
-  /* 排序 chip 与筛选项不同类，用文字色区分而不是再加一种底色 */
-  &--lead {
-    border-style: dashed;
+    background: $ds-ink-btn;
+    border-color: transparent;
+    box-shadow: $ds-btn-shadow;
 
     .chip__text {
-      color: $ds-primary;
+      color: #ffffff;
+      font-weight: 700;
+    }
+  }
+
+  /* 排序 chip 与筛选项不同类，用深一圈的描边区分而不是再加一种底色 */
+  &--lead {
+    border-color: rgba(42, 39, 64, 0.4);
+
+    .chip__text {
+      color: $ds-ink;
+      font-weight: 650;
     }
   }
 }
 
 .chip__text {
   white-space: nowrap;
-  font-size: $ds-fs-label;
+  font-size: 12.5px;
+  font-weight: 600;
   color: $ds-ink-2;
 }
 
@@ -429,23 +421,26 @@ export default {
 .card {
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
 }
 
 .guide {
   display: flex;
-  padding: $ds-space-3;
+  padding: 18px;
 }
 
 .avatar {
   position: relative;
   flex-shrink: 0;
-  width: 60px;
-  height: 60px;
-  border-radius: $ds-shape-sm;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
   overflow: hidden;
+  /* 圆头像 + 细双环：照片不「飘」在玻璃底上 */
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9), 0 0 0 3.5px rgba(143, 127, 224, 0.22);
   /* 字段为空或加载失败时露底色兜底 */
-  background: $ds-primary-container;
+  background: $ds-surface-high;
 }
 
 .avatar__img {
@@ -467,8 +462,8 @@ export default {
 }
 
 .guide__name {
-  font-size: $ds-fs-title;
-  font-weight: 600;
+  font-size: 16.5px;
+  font-weight: 750;
   color: $ds-ink;
 }
 
@@ -485,11 +480,15 @@ export default {
 }
 
 .tag {
-  padding: 2px $ds-space-2;
-  border: 1px solid $ds-outline;
-  border-radius: $ds-shape-xs;
+  display: inline-flex;
+  align-items: center;
+  height: 23px;
+  padding: 0 10px;
+  border-radius: $ds-shape-full;
+  background: rgba(143, 127, 224, 0.1);
   font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  font-weight: 600;
+  color: $ds-on-secondary-container;
 }
 
 .guide__service {
@@ -513,8 +512,8 @@ export default {
 }
 
 .price {
-  font-size: $ds-fs-title-lg;
-  font-weight: 700;
+  font-size: 19px;
+  font-weight: 750;
   color: $ds-tertiary;
 }
 
@@ -523,13 +522,13 @@ export default {
   font-weight: 600;
 }
 
-/* ---------- 按钮（DESIGN.md 的第 2 种变体：Tonal） ---------- */
+/* ---------- 按钮（次级操作：雾紫浅底胶囊） ---------- */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-sm;
-  font-weight: 600;
+  border-radius: $ds-shape-full;
+  font-weight: 700;
 
   &--tonal {
     background: $ds-primary-container;
@@ -541,7 +540,7 @@ export default {
 
   &--sm {
     height: $ds-h-btn-sm;
-    padding: 0 $ds-space-4;
+    padding: 0 16px;
   }
 }
 

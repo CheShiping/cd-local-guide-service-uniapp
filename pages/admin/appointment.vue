@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
@@ -73,12 +73,7 @@
       @touchend="onTabTouchEnd"
     >
       <view class="list">
-        <view
-          v-for="(item, index) in orderList"
-          :key="enterSeq + '-' + item.id"
-          :class="['card', 'order', enterAnim]"
-          :style="enterStyle(index)"
-        >
+        <view v-for="item in orderList" :key="item.id" class="card order">
           <view class="order__top">
             <view class="avatar">
               <image :src="item.touristAvatarUrl" class="avatar__img" mode="aspectFill" />
@@ -180,7 +175,6 @@ import {
   canTransit
 } from '@/api/index.js';
 import { createTabRow } from '@/utils/hscroll.js';
-import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 /* 筛选行：激活 chip 自动滚到中间 + 列表左右滑动切换状态（见 utils/hscroll.js） */
 const filterTabRow = createTabRow({
@@ -190,12 +184,6 @@ const filterTabRow = createTabRow({
   index: (vm) => vm.activeChipIndex,
   onStep: (vm, step) => vm.stepStatus(step)
 });
-
-/* 列表入场：切状态带方向，加载更多只让新追加的那几项上浮 */
-const listEnter = createListEnter();
-
-/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
 
 const statusOptions = [
   { label: '全部状态', value: '' },
@@ -211,8 +199,6 @@ export default {
   data() {
     return {
       ...filterTabRow.data(),
-      ...listEnter.data(),
-      ...pageMotion.data(),
       statusOptions,
       currentStatus: '',
       filterDate: '',
@@ -247,10 +233,8 @@ export default {
 
   methods: {
     ...filterTabRow.methods,
-    ...listEnter.methods,
-    ...pageMotion.methods,
 
-    async loadList(refresh = false, dir = ENTER_UP) {
+    async loadList(refresh = false) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -268,8 +252,6 @@ export default {
 
         const { list, hasMore, counts } = await OrderApi.getAllOrders(params);
 
-        /* 切状态：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
-        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.orderList.length);
         this.orderList = refresh ? list : [...this.orderList, ...list];
         this.hasMore = hasMore;
         if (counts) this.counts = counts;
@@ -282,13 +264,11 @@ export default {
       }
     },
 
-    changeStatus(status, dir = 0) {
+    changeStatus(status) {
       if (this.currentStatus === status) return;
-      /* 点选时方向由下标差推出；横滑时直接用滑动方向（step） */
-      const from = this.activeChipIndex;
       this.currentStatus = status;
       this.centerActiveTab();
-      this.loadList(true, dir || stepDirection(from, this.activeChipIndex));
+      this.loadList(true);
     },
 
     /* 横滑：上/下一个状态；「全部状态」的左边就是边界 */
@@ -296,15 +276,13 @@ export default {
       const current = statusOptions.findIndex((option) => option.value === this.currentStatus);
       const next = Math.max(current, 0) + step;
       if (next < 0 || next >= statusOptions.length) return;
-      this.changeStatus(statusOptions[next].value, step);
+      this.changeStatus(statusOptions[next].value);
     },
 
     onDateChange(e) {
       this.filterDate = e.detail.value;
       /* 日期 chip 在行首：选完把行滚回最左，保证它完整可见 */
       this.tabScrollLeft = 0;
-      /* 改日期没有方向，但要换批次让卡片重播上浮入场 */
-      this.renewEnter();
       this.loadList(true);
     },
 
@@ -373,7 +351,7 @@ export default {
     },
 
     goBack() {
-      this.goBackWithMotion();
+      uni.navigateBack();
     }
   }
 };
@@ -385,6 +363,8 @@ export default {
   flex-direction: column;
   height: 100vh;
   background: $ds-surface;
+  /* 光斑：后台最安静，右上一点紫、左上一小块薄荷（气泡漫游 · bg-calm-ink 档） */
+  background-image: $ds-bg-calm-ink;
 }
 
 .status-bar {
@@ -428,15 +408,17 @@ export default {
   color: $ds-ink;
 }
 
-/* ---------- 统计条 ---------- */
+/* ---------- 统计条（玻璃三格，数字用深紫、警示用藕粉） ---------- */
 .stat-strip {
   flex-shrink: 0;
   display: flex;
   margin: 0 $ds-pad-screen $ds-space-3;
-  padding: $ds-space-3 0;
+  padding: 15px 0;
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
+  overflow: hidden;
 }
 
 .stat {
@@ -444,22 +426,24 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .stat__value {
-  font-size: $ds-fs-title-lg;
-  font-weight: 700;
-  color: $ds-ink;
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1;
+  color: $ds-tertiary;
 
   &--alert {
-    color: $ds-tertiary;
+    color: $ds-brand-2;
   }
 }
 
 .stat__label {
-  margin-top: $ds-space-1;
-  font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  font-size: 10.5px;
+  color: $ds-ink-3;
 }
 
 /* ---------- 筛选 chip ---------- */
@@ -486,35 +470,39 @@ export default {
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  height: 32px;
-  padding: 0 $ds-space-3;
+  height: 34px;
+  padding: 0 14px;
   border-radius: $ds-shape-full;
-  border: 1px solid $ds-outline;
+  border: 1px solid $ds-outline-variant;
+  background: rgba(255, 255, 255, 0.68);
   /* chip 是实底选中态：底色与边框一起过渡，切换才不是硬跳 */
   transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
-    background: $ds-secondary-container;
-    border-color: $ds-secondary-container;
+    background: $ds-ink-btn;
+    border-color: transparent;
+    box-shadow: $ds-btn-shadow;
 
     .chip__text {
-      color: $ds-on-secondary-container;
-      font-weight: 600;
+      color: #ffffff;
+      font-weight: 700;
     }
   }
 
   &--lead {
-    border-style: dashed;
+    border-color: rgba(42, 39, 64, 0.4);
 
     .chip__text {
-      color: $ds-primary;
+      color: $ds-ink;
+      font-weight: 650;
     }
   }
 }
 
 .chip__text {
   white-space: nowrap;
-  font-size: $ds-fs-label;
+  font-size: 12.5px;
+  font-weight: 600;
   color: $ds-ink-2;
   transition: color $ds-dur-fast $ds-ease-out;
 }
@@ -535,7 +523,8 @@ export default {
 .card {
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
 }
 
 /* 后台密度比游客端高一档 */
@@ -553,9 +542,9 @@ export default {
   flex-shrink: 0;
   width: 40px;
   height: 40px;
-  border-radius: $ds-shape-xs;
+  border-radius: 50%;
   overflow: hidden;
-  background: $ds-primary-container;
+  background: $ds-surface-high;
 }
 
 .avatar__img {
@@ -585,9 +574,10 @@ export default {
 
 .tag {
   flex-shrink: 0;
-  padding: 2px $ds-space-2;
-  border-radius: $ds-shape-xs;
+  padding: 3px 10px;
+  border-radius: $ds-shape-full;
   font-size: $ds-fs-caption;
+  font-weight: 700;
 
   &--0 {
     background: $ds-warning-container;
@@ -600,8 +590,8 @@ export default {
   }
 
   &--2 {
-    background: $ds-surface-high;
-    color: $ds-ink-2;
+    background: rgba(42, 39, 64, 0.06);
+    color: $ds-ink-3;
   }
 
   &--3 {
@@ -648,8 +638,8 @@ export default {
 }
 
 .price {
-  font-size: $ds-fs-title;
-  font-weight: 700;
+  font-size: 19px;
+  font-weight: 750;
   color: $ds-tertiary;
 }
 
@@ -664,23 +654,24 @@ export default {
   gap: $ds-space-2;
 }
 
-/* ---------- 按钮 ---------- */
+/* ---------- 按钮：一律胶囊；确认档期黑实心、完成服务雾紫浅底、处理取消藕粉描边 ---------- */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-sm;
+  border-radius: $ds-shape-full;
 
   &--sm {
     height: 36px;
-    padding: 0 $ds-space-3;
+    padding: 0 14px;
   }
 
   &--filled {
-    background: $ds-primary;
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
 
     .btn__text {
-      color: $ds-on-primary;
+      color: #ffffff;
     }
   }
 
@@ -693,7 +684,8 @@ export default {
   }
 
   &--danger {
-    border: 1px solid $ds-error;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(176, 69, 47, 0.4);
 
     .btn__text {
       color: $ds-error;

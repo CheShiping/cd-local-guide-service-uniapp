@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
@@ -146,17 +146,12 @@
  *   3. 主操作从「提交」变成「立即预约」，把填写留到下一页，降低首次决策成本
  */
 import { GuideApi, bookingTypeUnit } from '@/api/index.js';
-import { createPageMotion } from '@/utils/motion.js';
 
 const DOW = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-
-/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
 
 export default {
   data() {
     return {
-      ...pageMotion.data(),
       guideId: '',
       attractionId: '',
       guide: {},
@@ -203,8 +198,6 @@ export default {
   },
 
   methods: {
-    ...pageMotion.methods,
-
     async loadDetail() {
       try {
         const data = await GuideApi.getGuideDetail(this.guideId);
@@ -269,7 +262,7 @@ export default {
     },
 
     goBack() {
-      this.goBackWithMotion();
+      uni.navigateBack();
     },
 
     goCreateOrder() {
@@ -302,6 +295,8 @@ export default {
   flex-direction: column;
   height: 100vh;
   background: $ds-surface;
+  /* 光斑：顶光打在头像和身份区，紫为主（气泡漫游 · bg-top 档） */
+  background-image: $ds-bg-top;
 }
 
 .status-bar {
@@ -353,25 +348,27 @@ export default {
 
 .panel {
   margin: 0 $ds-pad-screen $ds-space-3;
-  padding: $ds-space-4;
+  padding: 18px;
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
 
   &--flush {
     padding: $ds-space-4 0;
+    overflow: hidden;
   }
 }
 
 .panel__title {
   display: block;
-  font-size: $ds-fs-title;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 750;
   color: $ds-ink;
   margin-bottom: $ds-space-3;
 
   &--inset {
-    padding: 0 $ds-space-4;
+    padding: 0 18px;
   }
 }
 
@@ -384,11 +381,12 @@ export default {
 .avatar {
   position: relative;
   flex-shrink: 0;
-  width: 60px;
-  height: 60px;
-  border-radius: $ds-shape-sm;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
   overflow: hidden;
-  background: $ds-primary-container;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9), 0 0 0 3.5px rgba(143, 127, 224, 0.22);
+  background: $ds-surface-high;
 }
 
 .avatar__img {
@@ -400,28 +398,30 @@ export default {
 .identity__main {
   flex: 1;
   min-width: 0;
-  margin-left: $ds-space-3;
+  margin-left: 15px;
 }
 
 .identity__name {
-  font-size: $ds-fs-title;
-  font-weight: 600;
+  font-size: 18.5px;
+  font-weight: 800;
   color: $ds-ink;
 }
 
 .identity__intro {
   display: block;
-  margin-top: $ds-space-3;
-  font-size: $ds-fs-body-sm;
-  line-height: 1.6;
+  margin-top: 15px;
+  padding-top: 14px;
+  border-top: 1px dashed $ds-outline;
+  font-size: 13px;
+  line-height: 1.72;
   color: $ds-ink-2;
 }
 
+/* 三项指标：三格浅底小方块，数字用深紫 */
 .metrics {
   display: flex;
-  margin-top: $ds-space-4;
-  padding-top: $ds-space-4;
-  border-top: 1px solid $ds-outline-variant;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .metric {
@@ -429,18 +429,21 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 3px;
+  padding: 11px 6px;
+  border-radius: $ds-shape-sm;
+  background: $ds-surface-high;
 }
 
 .metric__value {
-  font-size: $ds-fs-title-lg;
-  font-weight: 700;
-  color: $ds-ink;
+  font-size: 17px;
+  font-weight: 750;
+  color: $ds-tertiary;
 }
 
 .metric__label {
-  margin-top: $ds-space-1;
-  font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  font-size: 10.5px;
+  color: $ds-ink-3;
 }
 
 /* ---------- 标签 ---------- */
@@ -452,38 +455,38 @@ export default {
 }
 
 .tag {
-  padding: 2px $ds-space-2;
-  border: 1px solid $ds-outline;
-  border-radius: $ds-shape-xs;
+  display: inline-flex;
+  align-items: center;
+  height: 23px;
+  padding: 0 10px;
+  border-radius: $ds-shape-full;
   font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  font-weight: 600;
+  color: $ds-on-secondary-container;
+  background: rgba(143, 127, 224, 0.1);
 
   &--solid {
-    background: $ds-primary-container;
-    border-color: $ds-primary-container;
-    color: $ds-on-primary-container;
+    background: $ds-primary;
+    color: $ds-on-primary;
   }
 
   &--quiet {
-    background: $ds-surface-high;
-    border-color: $ds-surface-high;
+    background: transparent;
+    color: $ds-ink-3;
+    box-shadow: inset 0 0 0 1px $ds-outline;
   }
 }
 
-/* ---------- 套餐单选 ---------- */
+/* ---------- 套餐单选（选中 = 黑胶囊圆点 + 雾紫浅底） ---------- */
 .option {
   display: flex;
   align-items: center;
-  padding: $ds-space-3 $ds-space-4;
+  padding: 15px 18px;
   border-top: 1px solid $ds-outline-variant;
   transition: background-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
-    background: rgba(47, 107, 94, 0.06);
-
-    .option__name {
-      color: $ds-primary;
-    }
+    background: $ds-tertiary-container;
   }
 
   &:first-of-type {
@@ -497,18 +500,18 @@ export default {
 
 .radio {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 21px;
+  height: 21px;
   border-radius: $ds-shape-full;
-  border: 1.5px solid $ds-outline;
+  box-shadow: inset 0 0 0 1.6px $ds-outline;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
+  transition: background-color $ds-dur-fast $ds-ease-out, box-shadow $ds-dur-fast $ds-ease-out;
 
   .is-on & {
-    background: $ds-primary;
-    border-color: $ds-primary;
+    background: $ds-ink-btn;
+    box-shadow: none;
   }
 }
 
@@ -526,16 +529,16 @@ export default {
 
 .option__name {
   display: block;
-  font-size: $ds-fs-body-sm;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 700;
   color: $ds-ink;
 }
 
 .option__desc {
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
   font-size: $ds-fs-label-sm;
-  color: $ds-ink-2;
+  color: $ds-ink-3;
 }
 
 .option__price {
@@ -545,18 +548,18 @@ export default {
 
 .option__unit {
   margin-left: 2px;
-  font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  font-size: 10.5px;
+  color: $ds-ink-3;
 }
 
 /* ---------- 价格 ---------- */
 .price {
   font-size: $ds-fs-title-lg;
-  font-weight: 700;
+  font-weight: 750;
   color: $ds-tertiary;
 
   &--lg {
-    font-size: $ds-fs-title-lg;
+    font-size: 25px;
   }
 }
 
@@ -565,10 +568,11 @@ export default {
   font-weight: 600;
 }
 
-/* ---------- 日期横条 ---------- */
+/* ---------- 日期横条（选中 = 黑胶囊） ---------- */
 .date-row {
   display: inline-flex;
-  gap: $ds-space-2;
+  gap: 9px;
+  padding: 2px;
 }
 
 .date {
@@ -576,32 +580,37 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  gap: 4px;
+  min-width: 68px;
+  padding: 12px 9px;
   border-radius: $ds-shape-sm;
   background: $ds-surface-high;
-  transition: background-color $ds-dur-fast $ds-ease-out;
+  transition: background-color $ds-dur-fast $ds-ease-out, transform $ds-dur-fast $ds-ease-out;
 
   &.is-on {
-    background: $ds-primary;
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
 
     .date__dow,
     .date__day {
-      color: $ds-on-primary;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .date__day {
+      color: #ffffff;
     }
   }
 }
 
 .date__dow {
-  font-size: $ds-fs-caption;
+  font-size: 10.5px;
   color: $ds-ink-2;
   transition: color $ds-dur-fast $ds-ease-out;
 }
 
 .date__day {
-  margin-top: 2px;
-  font-size: $ds-fs-label;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 750;
   color: $ds-ink;
   transition: color $ds-dur-fast $ds-ease-out;
 }
@@ -621,32 +630,35 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $ds-space-3 $ds-pad-screen;
-  padding-bottom: max(#{$ds-space-3}, env(safe-area-inset-bottom));
-  background: $ds-surface-container;
-  border-top: 1px solid $ds-outline-variant;
+  gap: 14px;
+  padding: 13px $ds-pad-screen;
+  padding-bottom: max(13px, env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.78);
+  border-top: 1px solid rgba(42, 39, 64, 0.06);
   box-shadow: $ds-el-3;
 }
 
 .price-block__label {
   display: block;
   font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  color: $ds-ink-3;
 }
 
+/* 主按钮：纯黑胶囊（不用渐变），一屏一个主操作 */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-sm;
+  border-radius: $ds-shape-full;
 
   &--filled {
     height: $ds-h-btn;
-    padding: 0 $ds-space-7;
-    background: $ds-primary;
+    padding: 0 $ds-space-6;
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
 
     .btn__text {
-      color: $ds-on-primary;
+      color: #ffffff;
     }
   }
 }

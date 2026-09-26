@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
@@ -42,12 +42,7 @@
       @touchend="onTabTouchEnd"
     >
       <view class="list">
-        <view
-          v-for="(item, index) in orderList"
-          :key="enterSeq + '-' + item.id"
-          :class="['card', 'order', enterAnim]"
-          :style="enterStyle(index)"
-        >
+        <view v-for="item in orderList" :key="item.id" class="card order">
           <view class="order__top">
             <view class="avatar avatar--sm">
               <image :src="item.guideAvatarUrl" class="avatar__img" mode="aspectFill" />
@@ -116,19 +111,12 @@
  */
 import { OrderApi, ORDER_STATUS, ORDER_STATUS_LABELS, BOOKING_TYPES, canTransit, bookingTypeLabel } from '@/api/index.js';
 import { createTabRow } from '@/utils/hscroll.js';
-import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 /* 四态页签是等宽的（不溢出，所以不需要居中），只接「内容左右滑动切换」 */
 const statusTabRow = createTabRow({
   index: (vm) => vm.activeTabIndex,
   onStep: (vm, step) => vm.stepStatus(step)
 });
-
-/* 列表入场：切状态带方向，加载更多只让新追加的那几项上浮 */
-const listEnter = createListEnter();
-
-/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
 
 const statusTabs = [
   { label: ORDER_STATUS_LABELS[ORDER_STATUS.PENDING_CONFIRM], value: ORDER_STATUS.PENDING_CONFIRM },
@@ -141,8 +129,6 @@ export default {
   data() {
     return {
       ...statusTabRow.data(),
-      ...listEnter.data(),
-      ...pageMotion.data(),
       statusTabs,
       currentStatus: ORDER_STATUS.PENDING_CONFIRM,
       orderList: [],
@@ -181,17 +167,15 @@ export default {
 
   methods: {
     ...statusTabRow.methods,
-    ...listEnter.methods,
-    ...pageMotion.methods,
 
     /* 横滑：上/下一个状态；顺序与文案取自 api/constants.js */
     stepStatus(step) {
       const next = this.activeTabIndex + step;
       if (next < 0 || next >= statusTabs.length) return;
-      this.changeStatus(statusTabs[next].value, step);
+      this.changeStatus(statusTabs[next].value);
     },
 
-    async loadList(refresh = false, dir = ENTER_UP) {
+    async loadList(refresh = false) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -209,8 +193,6 @@ export default {
           status: this.currentStatus
         });
 
-        /* 切状态：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
-        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.orderList.length);
         this.orderList = refresh ? list : [...this.orderList, ...list];
         this.total = total || 0;
         this.hasMore = hasMore;
@@ -224,12 +206,10 @@ export default {
       }
     },
 
-    changeStatus(status, dir = 0) {
+    changeStatus(status) {
       if (this.currentStatus === status) return;
-      /* 点选时方向由下标差推出；横滑时直接用滑动方向（step） */
-      const from = this.activeTabIndex;
       this.currentStatus = status;
-      this.loadList(true, dir || stepDirection(from, this.activeTabIndex));
+      this.loadList(true);
     },
 
     loadMore() {
@@ -269,7 +249,7 @@ export default {
     },
 
     goBack() {
-      this.goBackWithMotion();
+      uni.navigateBack();
     }
   }
 };
@@ -281,6 +261,8 @@ export default {
   flex-direction: column;
   height: 100vh;
   background: $ds-surface;
+  /* 光斑：左上 → 右下、中弱，粉为主紫作衬（气泡漫游 · bg-tl-soft 档） */
+  background-image: $ds-bg-tl-soft;
 }
 
 .status-bar {
@@ -324,52 +306,49 @@ export default {
   color: $ds-ink;
 }
 
-/* ---------- 四态页签 ---------- */
+/* ---------- 四态页签（新规范：选中态 = 黑胶囊，不再用下划线指示器） ---------- */
 .tabline {
   position: relative;
   flex-shrink: 0;
   display: flex;
-  border-bottom: 1px solid $ds-outline-variant;
+  gap: $ds-space-2;
+  padding: 0 $ds-pad-screen 14px;
 }
 
 .tabline__item {
   position: relative;
   flex: 1;
-  min-height: $ds-h-touch;
+  min-height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: $ds-shape-full;
+  background: rgba(255, 255, 255, 0.6);
+  transition: background-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
+
     .tabline__text {
-      color: $ds-primary;
-      font-weight: 600;
+      color: #ffffff;
+      font-weight: 700;
     }
   }
 }
 
-/* 等宽页签用一根会滑的线：宽度由下标算，位移只用 translateX 的百分比 */
 .tabline__indicator {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 2px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  transition: transform $ds-dur-base $ds-ease-in-out;
+  display: none;   /* 胶囊选中态替代了下划线 */
 }
 
 .tabline__bar {
-  width: 22px;
-  height: 2px;
-  border-radius: 1px;
-  background: $ds-primary;
+  display: none;
 }
 
 .tabline__text {
-  font-size: $ds-fs-body-sm;
-  color: $ds-ink-2;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ds-ink-3;
   transition: color $ds-dur-fast $ds-ease-out;
 }
 
@@ -389,7 +368,8 @@ export default {
 .card {
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
 }
 
 .order {
@@ -405,12 +385,12 @@ export default {
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
-  background: $ds-primary-container;
+  background: $ds-surface-high;
 
   &--sm {
-    width: 44px;
-    height: 44px;
-    border-radius: $ds-shape-xs;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
   }
 }
 
@@ -427,24 +407,27 @@ export default {
 }
 
 .order__title {
-  font-size: $ds-fs-body-sm;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.42;
   color: $ds-ink;
 }
 
 .order__no {
   display: block;
-  margin-top: $ds-space-1;
-  font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  margin-top: 4px;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  color: $ds-ink-3;
 }
 
-/* 状态标签：四态固定配色 */
+/* 状态标签：四态固定配色，一律胶囊 */
 .tag {
   flex-shrink: 0;
-  padding: 2px $ds-space-2;
-  border-radius: $ds-shape-xs;
+  padding: 3px 10px;
+  border-radius: $ds-shape-full;
   font-size: $ds-fs-caption;
+  font-weight: 700;
 
   &--0 {
     background: $ds-warning-container;
@@ -457,8 +440,8 @@ export default {
   }
 
   &--2 {
-    background: $ds-surface-high;
-    color: $ds-ink-2;
+    background: rgba(42, 39, 64, 0.06);
+    color: $ds-ink-3;
   }
 
   &--3 {
@@ -505,8 +488,8 @@ export default {
 }
 
 .price {
-  font-size: $ds-fs-title-lg;
-  font-weight: 700;
+  font-size: 19px;
+  font-weight: 750;
   color: $ds-tertiary;
 }
 
@@ -515,20 +498,21 @@ export default {
   font-weight: 600;
 }
 
-/* ---------- 按钮：一屏一个主操作，取消类用朱砂 ---------- */
+/* ---------- 按钮：一律胶囊；中性描边、破坏性藕粉描边 ---------- */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-sm;
+  border-radius: $ds-shape-full;
 
   &--sm {
     height: $ds-h-btn-sm;
-    padding: 0 $ds-space-4;
+    padding: 0 16px;
   }
 
   &--outlined {
-    border: 1px solid $ds-outline;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px $ds-outline;
 
     .btn__text {
       color: $ds-ink-2;
@@ -536,7 +520,8 @@ export default {
   }
 
   &--danger {
-    border: 1px solid $ds-error;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(176, 69, 47, 0.4);
 
     .btn__text {
       color: $ds-error;
