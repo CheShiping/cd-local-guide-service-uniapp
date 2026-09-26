@@ -100,7 +100,7 @@
       "category": "数据层",
       "purpose": "云数据库封装 + useMock 模拟数据机制；UserApi/ClerkApi/CategoryApi/AppointmentApi 四大模块",
       "reuse": "adapt",
-      "note": "保留点：useMock 开关、条件编译（#ifdef MP-WEIXIN）双通道、分页/状态查询写法；替换点：clerks->guides、categories->attractions（成都景点）",
+      "note": "MVP 模型：guides（含 regions/serviceTypes/packages/availableDates/rating/reviewCount）、attractions(10)、regionTypes(3)、packages(3 SKU)、预约类型 half-day/full-day/hourly、角色 tourist/guide/admin。保留点：useMock 开关、条件编译（#ifdef MP-WEIXIN）双通道、分页/状态查询写法",
       "sha256": "d41660bce11749de87b84f3a961aaf033caf56b09de4d1b30ee827700ce6a8c0"
     },
     {
@@ -108,7 +108,7 @@
       "category": "数据层",
       "purpose": "formatDate / formatPrice / debounce / throttle 通用工具",
       "reuse": "keep",
-      "note": "",
+      "note": "注意 formatPrice 把入参当「分」处理（/100），而 MVP 套餐价格是整数「元」；该方法当前无任何页面调用，MVP 直接用元，不改动本文件",
       "sha256": "f6845956e2a37408cdc24b23aa94b13d77f686bec05eee79895f98cbe4e8456d"
     },
     {
@@ -124,7 +124,7 @@
       "category": "页面",
       "purpose": "首页：状态栏占位、搜索框、横向分类标签、卡片列表、分页加载、空状态、右滑筛选抽屉（性别/价格区间）",
       "reuse": "adapt",
-      "note": "保留点：列表骨架、分页 loading/hasMore、抽屉交互、卡片样式；替换点：分类=成都景点主题、卡片字段=景点名称/封面/票价、筛选项=区域/主题/时长",
+      "note": "MVP 景点列表页（首页，dev-001）：卡片字段换成景点（封面/名称/所属区域/区域类型标签/场景短描述），顶部标签换成 3 类区域。同一范式在第二级地陪列表页复用（卡片：头像/昵称/擅长区域/服务类型/价格，不含评分与评价，dev-002）。保留点：列表骨架、分页三态、抽屉交互",
       "sha256": "d29de4c6330b7f447f1d453aeba52e61ba744dff8db0c8bcb582fb57ca73df66"
     },
     {
@@ -132,15 +132,15 @@
       "category": "页面",
       "purpose": "详情页：达人信息卡、服务项目单选、日期 picker、时段（上午/下午/晚上）、备注、合计价格、提交预约",
       "reuse": "adapt",
-      "note": "保留点：详情 + 下单表单 + 底部合计栏的完整骨架；替换点：达人->景点/地陪向导，服务项->讲解场次/套餐",
+      "note": "MVP 地陪详情页：保留个人介绍、擅长景点、服务套餐、可约日期；按 dev-002 移除评价区块；预约表单与底部合计栏整体剥离到新增的下单页 /pages/order/create",
       "sha256": "dd2e37086e030186c2a61ed7266f78e104aaa1432890dd41f542ecdf69f65d5d"
     },
     {
       "path": "pages/appointment/my.vue",
       "category": "页面",
       "purpose": "我的预约：状态 Tab（全部/待服务/已完成/已取消）、卡片列表、取消预约、下拉刷新",
-      "reuse": "keep",
-      "note": "状态语义 0=待服务 / 1=已完成 / 2=已取消 可直接沿用（AppointmentApi 依赖该约定）",
+      "reuse": "adapt",
+      "note": "MVP 订单页：状态由 3 态升级为 4 态（待确认/已确认/已完成/已取消），保留分页、下拉刷新、取消预约；补充套餐/人数/备注展示",
       "sha256": "3b674060bfbc450ea8bd22bf02aa7382207bf03828e3c3b7767e25dd37f483c5"
     },
     {
@@ -148,7 +148,7 @@
       "category": "页面",
       "purpose": "个人中心：用户卡、统计（预约/收藏/余额）、菜单组、管理员入口（达人管理/预约管理）、设置/关于占位",
       "reuse": "adapt",
-      "note": "保留点：用户卡 + 菜单组 + 管理员分区的布局；替换点：菜单文案与图标",
+      "note": "保留用户卡 + 菜单组 + 管理员分区的布局；MVP 仅做角色分流（游客/地陪/管理员入口），该页不属于 MVP 7 个页面",
       "sha256": "db5d9df6b8e74b33199c33d8f74aab3cd7351f4ae8bc6642345838e92226735a"
     },
     {
@@ -156,15 +156,15 @@
       "category": "页面",
       "purpose": "达人管理：已通过/待审核 Tab、待审数量徽标、列表、（审核通过/拒绝、编辑、添加，其中编辑/添加页尚未创建）",
       "reuse": "adapt",
-      "note": "审核流转骨架保留；作为「地陪向导审核」页改造",
+      "note": "MVP 后台的地陪审核：保留通过/拒绝与待审徽标。按 MVP 砍掉范围——移除指向未创建的 /pages/admin/clerk/edit 的「添加/编辑达人」入口，不新建该页面（见 gap-003）",
       "sha256": "b639a7eb8aa39ac874cefe01ed4c0a280fbfdd5c6e6cc0a0125cb748ce84eb79"
     },
     {
       "path": "pages/admin/appointment.vue",
       "category": "页面",
       "purpose": "预约管理：按日期 + 状态筛选、预约列表、标记完成",
-      "reuse": "keep",
-      "note": "筛选与状态流转可直接复用",
+      "reuse": "adapt",
+      "note": "MVP 后台订单管理：筛选与流转骨架复用；新增「人工确认档期」与「处理取消」，状态对齐 4 态",
       "sha256": "c96168c1d74d894d3d9271e948bcc5ddd0a1ed7ef043446a0f5adcf2b666dc38"
     },
     {
@@ -205,31 +205,32 @@
       "id": "gap-001",
       "issue": "/static/images/default-avatar.png 被 6 处页面引用，但 static/images/ 目录不存在",
       "impact": "头像全部加载失败，界面出现空白/裂图",
-      "plannedFeature": "feat-008"
+      "plannedFeature": "feat-003"
     },
     {
       "id": "gap-002",
       "issue": "pages/login/login.vue 跳转 /pages/webview/agreement，该页面未在 pages.json 注册",
       "impact": "点击《用户协议》/《隐私政策》报错",
-      "plannedFeature": "feat-008"
+      "plannedFeature": "feat-003"
     },
     {
       "id": "gap-003",
       "issue": "pages/admin/clerk.vue 跳转 /pages/admin/clerk/edit（添加/编辑达人），该页面不存在",
       "impact": "管理端添加/编辑达人不可用",
-      "plannedFeature": "feat-007"
+      "plannedFeature": "feat-012",
+      "resolution": "按 MVP 砍范围处理：移除该入口，不新建页面（地陪审核只需通过/拒绝）"
     },
     {
       "id": "gap-004",
       "issue": "uni.scss 与 pages.json tabBar 使用 #ff6b81，页面与 DESIGN.md 使用 #FF4D6A，主色不一致",
       "impact": "视觉不统一（tabBar 与页面主色略有差异）",
-      "plannedFeature": "feat-009"
+      "plannedFeature": "feat-013"
     },
     {
       "id": "gap-005",
       "issue": "package.json 声明了 Pinia 相关技术栈描述（README），但项目内未安装也未使用 Pinia",
       "impact": "README 与实际实现不符",
-      "plannedFeature": "feat-009"
+      "plannedFeature": "feat-013"
     }
   ]
 }

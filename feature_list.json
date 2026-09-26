@@ -1,4 +1,5 @@
 {
+  "scopeSource": "docs/mvp-scope.json（人读版：MVP 范围：只做 3 件事.md；已含 4 处经用户拍板的修订）",
   "features": [
     {
       "id": "feat-001",
@@ -18,57 +19,89 @@
     },
     {
       "id": "feat-003",
-      "name": "景点与地陪数据层改造",
-      "description": "在 api/index.js 中把 clerks/categories 维度替换为成都景点（attractions）与地陪向导（guides），保留 useMock 开关与条件编译双通道；同步整理 mock 数据（景点名称、区域、票价、讲解时长）",
-      "dependencies": ["feat-001"],
+      "name": "修复悬空资产引用（gap-001/002）",
+      "description": "补齐 /static/images/default-avatar.png（6 处页面引用）并新建协议页注册到 pages.json，消除 verify-assets 的两条告警。无依赖，可最先做",
+      "dependencies": ["feat-002"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-004",
-      "name": "首页景点发现页",
-      "description": "改造 pages/index/index.vue：景点卡片列表（封面/名称/区域/票价/热度）、顶部分类改为景点主题或区域、筛选抽屉改为区域+主题+时长",
-      "dependencies": ["feat-003"],
+      "name": "MVP 数据层（mock 优先）",
+      "description": "在 api/index.js 落地 MVP 模型：attractions(10)、regionTypes(3)、packages(3 SKU)、bookingTypes(half-day/full-day/hourly)、guides、orders(4 态)、roles(tourist/guide/admin)。全部走 mock（useMock = true），但每个 Api 方法签名须与未来的 HTTP 实现一一对应，页面不直连数据源。评价相关字段不得出现",
+      "dependencies": ["feat-002"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-005",
-      "name": "景点详情与地陪预约",
-      "description": "改造 pages/clerk/detail.vue：景点信息与介绍、地陪向导选择、讲解场次/套餐、日期与时段、备注、合计价格与提交预约",
-      "dependencies": ["feat-003"],
+      "name": "订单四态状态机",
+      "description": "把现有 3 态（0 待服务/1 已完成/2 已取消）升级为 MVP 4 态（待确认/已确认/已完成/已取消），并把 statusLabels 与时段映射表从各页面收口到统一常量，避免多页面各写一套",
+      "dependencies": ["feat-004"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-006",
-      "name": "我的预约与个人中心适配",
-      "description": "复用 pages/appointment/my.vue 的状态机（0 待服务 / 1 已完成 / 2 已取消），改造 pages/tabbar/mine.vue 的菜单与文案为地陪场景",
-      "dependencies": ["feat-005"],
+      "name": "游客端-景点列表页（首页）",
+      "description": "改造 pages/index/index.vue 为景点列表：景点卡片（封面/名称/所属区域/区域类型标签/场景短描述），顶部标签为 3 类区域，点击进入该景点的地陪列表。原达人的性别+价格筛选抽屉改为区域类型+价格区间",
+      "dependencies": ["feat-004"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-007",
-      "name": "管理端：地陪审核与预约管理",
-      "description": "将 pages/admin/clerk.vue 改造为地陪向导审核（通过/拒绝），并补齐缺失的添加/编辑页 /pages/admin/clerk/edit（gap-003）",
-      "dependencies": ["feat-003"],
+      "name": "游客端-地陪列表页（按景点筛选）",
+      "description": "新增 pages/guide/list?attractionId=xxx 并注册到 pages.json：展示能带该景点的地陪（头像/昵称/擅长区域/服务类型/价格），复用现有列表页的分页三态、空状态与筛选抽屉范式",
+      "dependencies": ["feat-004", "feat-006"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-008",
-      "name": "修复已知资产缺口",
-      "description": "补齐 /static/images/default-avatar.png（6 处引用，gap-001）与 /pages/webview/agreement 协议页（gap-002），消除悬空引用",
-      "dependencies": [],
+      "name": "游客端-地陪详情页",
+      "description": "改造 pages/clerk/detail.vue：保留个人介绍、擅长景点、服务套餐、可约日期；按 dev-002 移除评价区块；把预约表单与底部合计栏整体剥离到下单页",
+      "dependencies": ["feat-004", "feat-007"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-009",
-      "name": "设计规范与文档更新",
-      "description": "统一主色（uni.scss #ff6b81 vs 页面 #FF4D6A，gap-004），把 DESIGN.md 调整为成都文旅气质色板，更新 README 与实际实现一致（gap-005），并刷新 manifest.json 名称/描述",
-      "dependencies": ["feat-004"],
+      "name": "游客端-下单页",
+      "description": "新增 pages/order/create 并注册到 pages.json：景点预填（可在地陪擅长景点内更换）、选择日期、半天/全天/小时加购、填写人数、填写备注、提交预约。复用现有详情页表单的交互与样式骨架",
+      "dependencies": ["feat-005", "feat-008"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-010",
+      "name": "游客端-订单页",
+      "description": "改造 pages/appointment/my.vue：Tab 与状态标签对齐 4 态，保留分页、下拉刷新、取消预约，补充订单详情展示（景点/套餐/人数/备注）",
+      "dependencies": ["feat-005", "feat-009"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-011",
+      "name": "地陪端-接单页",
+      "description": "新增 pages/guide/orders 并注册到 pages.json：查看新订单、接单/拒单、查看订单详情、更新订单状态。地陪身份由 mock 预置，mine.vue 按角色分流入口；申请开通流程不在本 MVP",
+      "dependencies": ["feat-005"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-012",
+      "name": "管理端-后台订单管理与地陪审核",
+      "description": "改造 pages/admin/appointment.vue（查看订单、人工确认档期、处理取消）与 pages/admin/clerk.vue（审核地陪、查看可接档期）。按 MVP 砍范围：移除指向不存在的 /pages/admin/clerk/edit 的「添加/编辑达人」入口，不新建该页面",
+      "dependencies": ["feat-005", "feat-011"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-013",
+      "name": "设计换肤与文档同步",
+      "description": "统一主色（uni.scss / tabBar 的 #ff6b81 与页面的 #FF4D6A，gap-004），DESIGN.md 换为成都文旅气质色板，README 去掉未使用的 Pinia 描述（gap-005）并同步 MVP 范围，manifest.json 更新名称与描述为地陪小程序",
+      "dependencies": ["feat-006"],
       "status": "not-started",
       "evidence": ""
     }

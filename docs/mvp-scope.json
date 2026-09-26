@@ -1,0 +1,137 @@
+{
+  "name": "成都景点地陪小程序 MVP 范围",
+  "source": "MVP 范围：只做 3 件事.md",
+  "sourceNote": "本文件是该文档的机读副本，但已按用户 2026-09-26 的口头决策修订（见 deviations）。若源文档变更，必须同步本文件，并更新 feature_list.json。",
+  "decisionsAt": "2026-09-26",
+  "deviations": [
+    {
+      "id": "dev-001",
+      "original": "MVP 功能清单把「地陪列表页」作为游客端第一个页面，并在「MVP 不建议做」中要求不做景点列表",
+      "decision": "游客流程改为「先选景点，再选地陪」，因此需要景点选择入口：首页（pages/index/index.vue）改造为景点列表页，地陪列表降为第二级（按景点筛选）",
+      "impact": "MVP 页面由 6 个变为 7 个（新增景点列表页）",
+      "reason": "用户 2026-09-26 拍板：先选景点再选地陪"
+    },
+    {
+      "id": "dev-002",
+      "original": "总结句含「完成评价」，地陪列表页/详情页含评分与评价字段",
+      "decision": "评价整体不做（不展示、不提交）",
+      "impact": "地陪卡片去掉评分/评价数；详情页去掉用户评价区块；闭环去掉评价环节",
+      "reason": "用户 2026-09-26 拍板：评价不要了"
+    },
+    {
+      "id": "dev-003",
+      "original": "未提及地陪如何产生",
+      "decision": "地陪身份走「申请开通」，但 MVP 不实现申请流程，作为后续升级；MVP 的地陪数据由 mock 预置，角色字段保留 tourist / guide / admin",
+      "impact": "MVP 不新建申请页；地陪端入口按角色分流，地陪账号来自 mock 数据",
+      "reason": "用户 2026-09-26 拍板：申请开通，但先不做，作为后续升级"
+    },
+    {
+      "id": "dev-004",
+      "original": "未明确数据来源",
+      "decision": "MVP 先实现 mock 数据，后续对接真实后端 HTTP 请求",
+      "impact": "页面只调 Api 层；api/index.js 的 useMock 保持 true；Api 方法签名与未来的 HTTP 实现保持一一对应，后续把 useMock 置 false 并接入请求封装即可切换",
+      "reason": "用户 2026-09-26 拍板：先实现 mock 数据，后续对接真实后端请求"
+    }
+  ],
+  "closedLoop": "游客选景点 → 选能带该景点的地陪 → 选半天/全天 → 提交预约 → 地陪接单 → 平台确认 → 完成",
+  "threeThings": [
+    "游客能下单",
+    "地陪能接单",
+    "平台能确认订单"
+  ],
+  "dataStrategy": {
+    "mvp": "全部走 mock（api/index.js 的 useMock = true）",
+    "later": "对接真实后端 HTTP 请求（替换通过 useMock 开关 + 统一请求封装，页面代码不改）",
+    "constraint": "页面里禁止直连数据库或写死 mock 数据；所有数据必须经过 Api 层，且 Api 方法签名在 mock / HTTP 两种实现下保持一致"
+  },
+  "outOfScope": [
+    "IM 聊天",
+    "实时定位",
+    "分销/代理",
+    "团购套餐",
+    "广场发单",
+    "达人等级体系",
+    "自动结算",
+    "多城市切换",
+    "复杂优惠券",
+    "动态定价",
+    "行程日志",
+    "轨迹回放",
+    "商家门店管理",
+    "复杂排班",
+    "车型/油费/精修张数/旺季浮动等加价规则",
+    "评价（展示与提交都不做）",
+    "地陪申请开通流程（后续升级）"
+  ],
+  "futureUpgrades": [
+    "地陪自助申请开通 + 平台审核流程",
+    "评价与评分体系（含用户提交评价）",
+    "真实后端 HTTP 对接",
+    "景点池扩展：龙泉驿、黄龙溪、青城山、西岭雪山、街子古镇",
+    "IM 聊天、多城市、动态定价、自动结算"
+  ],
+  "attractions": [
+    { "id": "att-kuanzhai", "name": "宽窄巷子", "district": "青羊区", "regionType": "city-classic", "scene": "市区经典打卡" },
+    { "id": "att-dufu", "name": "杜甫草堂", "district": "青羊区", "regionType": "city-classic", "scene": "文化讲解" },
+    { "id": "att-wuhou", "name": "武侯祠", "district": "武侯区", "regionType": "city-classic", "scene": "三国文化" },
+    { "id": "att-jinli", "name": "锦里", "district": "武侯区", "regionType": "city-classic", "scene": "夜游/拍照" },
+    { "id": "att-panda", "name": "大熊猫基地", "district": "成华区", "regionType": "panda-creative", "scene": "高需求热门" },
+    { "id": "att-taikooli", "name": "春熙路/太古里", "district": "锦江区", "regionType": "city-classic", "scene": "城市逛街" },
+    { "id": "att-peoples-park", "name": "人民公园/鹤鸣茶社", "district": "锦江区", "regionType": "city-classic", "scene": "成都慢生活" },
+    { "id": "att-dongjiao", "name": "东郊记忆", "district": "成华区", "regionType": "panda-creative", "scene": "年轻游客/拍照" },
+    { "id": "att-dujiangyan", "name": "都江堰", "district": "都江堰市", "regionType": "suburb-daytrip", "scene": "周边一日游" },
+    { "id": "att-anren", "name": "安仁古镇", "district": "大邑县", "regionType": "suburb-daytrip", "scene": "周边古镇" }
+  ],
+  "attractionsNote": "MVP 只做 10 个景点。每个景点需要封面图与简介；封面图属于静态资源缺口，实现时统一补。",
+  "regionTypes": [
+    { "id": "city-classic", "name": "市区经典线", "coverage": "青羊、锦江、武侯、成华", "scene": "1-2 天市区游" },
+    { "id": "panda-creative", "name": "熊猫/文创线", "coverage": "熊猫基地、东郊记忆、建设路", "scene": "年轻人/亲子" },
+    { "id": "suburb-daytrip", "name": "周边一日游", "coverage": "都江堰、青城山、安仁、黄龙溪", "scene": "全天行程" }
+  ],
+  "regionTypesNote": "3 类区域既是地陪的区域标签，也是景点列表页的顶部筛选标签；coverage 是区域能力描述，不等于 MVP 景点池（青城山/黄龙溪不在本阶段）。",
+  "packages": [
+    { "id": "pkg-halfday-city", "name": "市区半日陪游", "priceMin": 200, "priceMax": 400, "duration": "4-5 小时", "note": "适合单区域" },
+    { "id": "pkg-fullday-city", "name": "市区全天陪游", "priceMin": 500, "priceMax": 800, "duration": "8-10 小时", "note": "市区+周边" },
+    { "id": "pkg-special", "name": "熊猫基地/都江堰专项陪游", "priceMin": 150, "priceMax": 300, "duration": "按小时", "note": "美食带吃、景点讲解" }
+  ],
+  "packagesNote": "门票、餐饮、交通默认不含。MVP 用整数元为单位，不做加价规则。价格是区间，具体报价由地陪自身的套餐价格字段给出。",
+  "bookingTypes": [
+    { "id": "half-day", "name": "半天", "granularity": "上午 / 下午", "scene": "市区打卡、喝茶、逛街" },
+    { "id": "full-day", "name": "全天", "granularity": "1 天", "scene": "熊猫基地、都江堰、古镇" },
+    { "id": "hourly", "name": "小时加购", "granularity": "1 小时为单位", "scene": "超时续时、临时加项目" }
+  ],
+  "bookingFlow": [
+    "游客：先选景点（首页景点列表）",
+    "游客：在该景点下选地陪（按区域/服务类型/价格筛选）",
+    "游客：选择日期 + 半天/全天",
+    "地陪设置：可接日期 + 可接类型",
+    "平台/管理员：人工确认档期",
+    "超时/续时：MVP 不做自动计费，线下协商或后台备注"
+  ],
+  "pages": [
+    { "id": "tourist-attraction-list", "role": "游客端", "name": "景点列表页（首页）", "order": 1, "fields": ["景点封面", "景点名称", "所属区域", "区域类型标签", "场景短描述"], "legacyBase": "pages/index/index.vue" },
+    { "id": "tourist-guide-list", "role": "游客端", "name": "地陪列表页", "order": 2, "fields": ["头像", "昵称", "擅长区域", "服务类型", "价格"], "legacyBase": "pages/index/index.vue 的卡片与筛选范式", "route": "pages/guide/list?attractionId=xxx" },
+    { "id": "tourist-guide-detail", "role": "游客端", "name": "地陪详情页", "order": 3, "fields": ["个人介绍", "擅长景点", "服务套餐", "可约日期"], "legacyBase": "pages/clerk/detail.vue", "note": "评价区块已按 dev-002 移除" },
+    { "id": "tourist-order-create", "role": "游客端", "name": "下单页", "order": 4, "fields": ["景点（预填，可在地陪擅长景点内更换）", "选择日期", "选择半天/全天/小时", "填写人数", "填写备注", "提交预约"], "legacyBase": "pages/clerk/detail.vue 的表单部分", "route": "pages/order/create" },
+    { "id": "tourist-order-list", "role": "游客端", "name": "订单页", "order": 5, "fields": ["待确认", "已确认", "已完成", "已取消"], "legacyBase": "pages/appointment/my.vue" },
+    { "id": "guide-orders", "role": "地陪端", "name": "接单页", "order": 6, "fields": ["查看新订单", "接单/拒单", "查看订单详情", "更新订单状态"], "legacyBase": "无（新增页面）", "route": "pages/guide/orders" },
+    { "id": "admin-orders", "role": "管理端", "name": "后台订单管理", "order": 7, "fields": ["查看订单", "审核地陪", "人工确认档期", "处理取消/投诉"], "legacyBase": "pages/admin/appointment.vue + pages/admin/clerk.vue" }
+  ],
+  "pageMappingNote": "MVP 共 7 个页面（原文档 6 个 + 景点列表页，见 dev-001）。其中 4 个由现有页面改造（景点列表 / 地陪详情 / 订单 / 后台），2 个为新增（地陪列表、下单页、接单页共 3 个新增）。现有 pages/clerk/detail.vue 是「详情+下单」合体，MVP 要求拆分。pages/tabbar/mine.vue 不在 MVP 页面清单内，仅做角色分流入口（游客 / 地陪 / 管理员）。",
+  "orderStatusMVP": [
+    { "value": 0, "key": "pending-confirm", "label": "待确认" },
+    { "value": 1, "key": "confirmed", "label": "已确认" },
+    { "value": 2, "key": "completed", "label": "已完成" },
+    { "value": 3, "key": "cancelled", "label": "已取消" }
+  ],
+  "orderStatusNote": "与现有 3 态（0 待服务 / 1 已完成 / 2 已取消）不兼容，需整体升级并在全链路对齐；数值编码可在实现时调整，但语义必须是这 4 态。",
+  "roles": [
+    { "id": "tourist", "name": "游客", "note": "默认角色，下单与查看自己的订单" },
+    { "id": "guide", "name": "地陪", "note": "MVP 由 mock 预置，接单与更新订单状态；申请开通流程属后续升级" },
+    { "id": "admin", "name": "管理员", "note": "人工确认档期、审核地陪、处理取消" }
+  ],
+  "openQuestions": [
+    "地陪列表页是独立页面还是并入景点详情？当前按独立页面（pages/guide/list）设计，已是 7 页版本的取舍结果。",
+    "景点封面图与地陪头像用占位图还是需要真实图片素材？MVP 先用统一占位图，等用户提供素材再替换。"
+  ]
+}
