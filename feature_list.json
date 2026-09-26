@@ -1,26 +1,29 @@
 {
-  "scopeSource": "docs/mvp-scope.json（人读版：MVP 范围：只做 3 件事.md；已含 4 处经用户拍板的修订）",
+  "scopeSource": "docs/mvp-scope.json（人读版：docs/MVP 范围：只做 3 件事.md；已含 6 处经用户拍板的修订）",
+  "prototypeSource": "design/html/prototype.html（7 屏，定稿主题 宣纸 · 疏；每个 feat 的界面细节以对应屏为准）",
+  "designSource": "DESIGN.md（规范）+ uni.scss（$ds-* 令牌），两者必须同步修改，由 scripts/check-tokens.mjs 校验",
+  "docPolicy": "任何 feat 标记 done 前必须产出 docx/codeimpl-sum/设计文档-feat-XXX-功能名.md（六章节齐全）；修 bug 必须产出 docx/bugfix/BUG修复-YYYYMMDD-简述.md；两者都要登记到 progress.md 的「本次会话修改的文件」",
   "features": [
     {
       "id": "feat-001",
       "name": "基线冻结与资产清单",
-      "description": "为原有陪玩小程序建立可恢复快照与机读资产清单（23 个文件的用途与复用策略），确保重构期间资产不丢失",
+      "description": "为原有陪玩小程序建立可恢复快照与机读资产台账（用途与复用策略），确保重构期间资产不丢失；有意删除的资产记入 removedAssets",
       "dependencies": [],
       "status": "done",
-      "evidence": "git tag legacy-peiwan-baseline-v1 @ ceca05a；docs/legacy-assets.json + docs/legacy-assets.md 覆盖全部 8 个 vue 页面、api/utils 数据层、4 类配置、4 个静态图标、2 份文档"
+      "evidence": "git tag legacy-peiwan-baseline-v1 @ ceca05a；docs/legacy-assets.md + docs/legacy-assets.json 覆盖 8 个 vue 页面、api/utils 数据层、6 类配置与文档、4 个静态图标；当前在册 22 条 + removedAssets 1 条（DESIGN.md）"
     },
     {
       "id": "feat-002",
-      "name": "资产保真验证门禁",
-      "description": "零依赖的保真校验：登记资产存在性 + sha256 一致性 + pages.json 路由注册一致性 + 悬空引用扫描，纳入标准验证入口",
+      "name": "验证门禁（资产保真 + 设计令牌）",
+      "description": "零依赖校验并纳入标准入口：资产存在性与 sha256 一致性、removedAssets 记录、pages.json 路由注册一致性、悬空引用扫描；设计令牌校验（SCSS 先定义后使用、CSS 自定义属性、DESIGN.md 与 uni.scss 色值对齐），且校验脚本自带 --self-test 证明门禁非空",
       "dependencies": ["feat-001"],
       "status": "done",
-      "evidence": "node scripts/verify-assets.mjs 通过（23 条资产哈希比对通过、pages.json 7 个页面与 tabBar 图标齐全）；./init.ps1 实跑通过；反向测试：篡改 App.vue 哈希后脚本输出「资产被修改」且退出码 1；harness 审计 validate-harness 100/100"
+      "evidence": "node scripts/verify-assets.mjs 通过（22 条资产哈希一致、pages.json 7 个页面与 tabBar 图标齐全）；node scripts/check-tokens.mjs 通过（95 个变量 / 15 处引用无未定义；20 个色值全对齐）；--self-test 通过（三类问题均能检出）；反向测试：篡改 App.vue 哈希 → 输出「资产被修改」且退出码 1；./init.ps1 四步入口实跑通过；harness 审计 100/100"
     },
     {
       "id": "feat-003",
-      "name": "修复悬空资产引用（gap-001/002）",
-      "description": "补齐 /static/images/default-avatar.png（6 处页面引用）并新建协议页注册到 pages.json，消除 verify-assets 的两条告警。无依赖，可最先做",
+      "name": "协议页与图片兜底统一（gap-001/002）",
+      "description": "新建协议页并在 pages.json 注册（消 gap-002）；把现有 6 处硬编码 /static/images/default-avatar.png 改为读取图片字段（avatarUrl/coverUrl）+ primary-container 底色兜底，按 dev-006 不新增本地占位图片文件（消 gap-001）。无依赖，可最先做",
       "dependencies": ["feat-002"],
       "status": "not-started",
       "evidence": ""
@@ -28,15 +31,15 @@
     {
       "id": "feat-004",
       "name": "MVP 数据层（mock 优先）",
-      "description": "在 api/index.js 落地 MVP 模型：attractions(10)、regionTypes(3)、packages(3 SKU)、bookingTypes(half-day/full-day/hourly)、guides、orders(4 态)、roles(tourist/guide/admin)。全部走 mock（useMock = true），但每个 Api 方法签名须与未来的 HTTP 实现一一对应，页面不直连数据源。评价相关字段不得出现",
-      "dependencies": ["feat-002"],
+      "description": "在 api/index.js，按 .codebuddy/skills/api-design/SKILL.md（RESTful + /api/v1 + camelCase 字段 + 统一错误体）设计接口，并严格对齐 docx/database/schema.sql 与 seed.sql 落地 MVP 模型：regionTypes(7，字典)、attractions(20)、packageSkus(3)、bookingTypes(half-day/full-day/hourly)、guides、orders(4 态)、roles(tourist/guide/admin)。mock 规模见 docs/mvp-scope.json 的 mockScale：50 个地陪（确定性生成，覆盖 7 类区域、1-4 个擅长景点、1-3 个套餐报价、少量待审/拒绝）、20 个景点、52 个用户，用于验证分页（地陪 5 页 / 景点 2 页）与筛选。全部走 mock（useMock = true），但每个 Api 方法签名须与未来的 HTTP 实现一一对应，页面不直连数据源；评价相关字段不得出现；订单号按 docx/database/数据库设计.md 的规则生成（CD+YYMMDD+A/B/C+4 位序号）。同步整体重写 docx/接口文档.md（它是所有设计文档的接口对照基准）",
+      "dependencies": ["feat-002", "feat-014"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-005",
       "name": "订单四态状态机",
-      "description": "把现有 3 态（0 待服务/1 已完成/2 已取消）升级为 MVP 4 态（待确认/已确认/已完成/已取消），并把 statusLabels 与时段映射表从各页面收口到统一常量，避免多页面各写一套",
+      "description": "把现有 3 态（0 待服务/1 已完成/2 已取消）升级为 MVP 4 态（0 待确认/1 已确认/2 已完成/3 已取消），并把 statusLabels 与时段枚举从各页面收口到统一常量，避免多页面各写一套",
       "dependencies": ["feat-004"],
       "status": "not-started",
       "evidence": ""
@@ -44,7 +47,7 @@
     {
       "id": "feat-006",
       "name": "游客端-景点列表页（首页）",
-      "description": "改造 pages/index/index.vue 为景点列表：景点卡片（封面/名称/所属区域/区域类型标签/场景短描述），顶部标签为 3 类区域，点击进入该景点的地陪列表。原达人的性别+价格筛选抽屉改为区域类型+价格区间",
+      "description": "改造 pages/index/index.vue（原型 01 屏）：宋体大标题 + 区域文字页签（数据来自 region_types，前台只展示「启用且下有在售景点」的区域）+ 景点卡（coverUrl 封面 76×76 / 名称 / 所属区域 / 场景短描述 /「N 位地陪可约」）+ 20 条数据的分页（pageSize=10 → 2 页），点卡进入该景点的地陪列表。按定稿原型移除原搜索框与性别/价格筛选抽屉（MVP 不做景点搜索与筛选）",
       "dependencies": ["feat-004"],
       "status": "not-started",
       "evidence": ""
@@ -52,7 +55,7 @@
     {
       "id": "feat-007",
       "name": "游客端-地陪列表页（按景点筛选）",
-      "description": "新增 pages/guide/list?attractionId=xxx 并注册到 pages.json：展示能带该景点的地陪（头像/昵称/擅长区域/服务类型/价格），复用现有列表页的分页三态、空状态与筛选抽屉范式",
+      "description": "新增 pages/guide/list?attractionId=xxx 并注册到 pages.json（原型 02 屏）：摘要行 + chip 筛选（半日/全天/专项/价格）+ 地陪卡（avatarUrl 头像 / 昵称 / 接单数 / 擅长区域标签 / 服务类型 / 朱砂价格 / 看详情），只列能带该景点的地陪；复用现有列表页的分页三态与空状态",
       "dependencies": ["feat-004", "feat-006"],
       "status": "not-started",
       "evidence": ""
@@ -60,7 +63,7 @@
     {
       "id": "feat-008",
       "name": "游客端-地陪详情页",
-      "description": "改造 pages/clerk/detail.vue：保留个人介绍、擅长景点、服务套餐、可约日期；按 dev-002 移除评价区块；把预约表单与底部合计栏整体剥离到下单页",
+      "description": "改造 pages/clerk/detail.vue（原型 03 屏）：身份块（头像 / 昵称 / 区域标签 / 简介 / 接单·本周可约·套餐数三项指标）→ 擅长景点 → 3 个套餐单选 → 可约日期横条 → 底部固定操作栏（合计 + 立即预约，进入下单页）；按 dev-002 移除评价区块；预约表单整体剥离到 feat-009",
       "dependencies": ["feat-004", "feat-007"],
       "status": "not-started",
       "evidence": ""
@@ -68,7 +71,7 @@
     {
       "id": "feat-009",
       "name": "游客端-下单页",
-      "description": "新增 pages/order/create 并注册到 pages.json：景点预填（可在地陪擅长景点内更换）、选择日期、半天/全天/小时加购、填写人数、填写备注、提交预约。复用现有详情页表单的交互与样式骨架",
+      "description": "新增 pages/order/create 并注册到 pages.json（原型 04 屏）：景点/地陪/套餐三行只读回显（景点可在地陪擅长景点内更换）+ 预约日期 + 时段分段控件 + 人数步进器 + 备注 + 费用说明（门票餐饮交通不含）+ 底部固定操作栏（合计 + 提交预约）。预约类型跟随所选套餐：半日显示上午/下午分段，全天隐藏时段，小时加购显示小时数步进器",
       "dependencies": ["feat-005", "feat-008"],
       "status": "not-started",
       "evidence": ""
@@ -76,7 +79,7 @@
     {
       "id": "feat-010",
       "name": "游客端-订单页",
-      "description": "改造 pages/appointment/my.vue：Tab 与状态标签对齐 4 态，保留分页、下拉刷新、取消预约，补充订单详情展示（景点/套餐/人数/备注）",
+      "description": "改造 pages/appointment/my.vue（原型 05 屏）：四态页签（待确认/已确认/已完成/已取消）+ 订单卡（头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约），保留分页与下拉刷新",
       "dependencies": ["feat-005", "feat-009"],
       "status": "not-started",
       "evidence": ""
@@ -84,7 +87,7 @@
     {
       "id": "feat-011",
       "name": "地陪端-接单页",
-      "description": "新增 pages/guide/orders 并注册到 pages.json：查看新订单、接单/拒单、查看订单详情、更新订单状态。地陪身份由 mock 预置，mine.vue 按角色分流入口；申请开通流程不在本 MVP",
+      "description": "新增 pages/guide/orders 并注册到 pages.json（原型 06 屏）：顶部统计条（待接单/进行中/今日完成）+ 在线开关 + 待接单卡（拒单描边 / 接单实心）+ 进行中卡（完成服务）。地陪身份由 mock 预置；mine.vue 按角色分流入口，登录后仍统一落首页（pages/login/login.vue 属 keep 档，不改）",
       "dependencies": ["feat-005"],
       "status": "not-started",
       "evidence": ""
@@ -92,18 +95,26 @@
     {
       "id": "feat-012",
       "name": "管理端-后台订单管理与地陪审核",
-      "description": "改造 pages/admin/appointment.vue（查看订单、人工确认档期、处理取消）与 pages/admin/clerk.vue（审核地陪、查看可接档期）。按 MVP 砍范围：移除指向不存在的 /pages/admin/clerk/edit 的「添加/编辑达人」入口，不新建该页面",
+      "description": "改造 pages/admin/appointment.vue（原型 07 屏：统计条「待确认/已确认/今日订单」+ 日期与状态筛选行 + 订单卡 + 确认档期 / 处理取消）与 pages/admin/clerk.vue（地陪审核，套用 07 屏列表样式，保留通过/拒绝与待审徽标）。按 MVP 砍范围：移除指向不存在的 /pages/admin/clerk/edit 的「添加/编辑达人」入口，不新建该页面；投诉不做",
       "dependencies": ["feat-005", "feat-011"],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-013",
-      "name": "设计换肤与文档同步",
-      "description": "统一主色（uni.scss / tabBar 的 #ff6b81 与页面的 #FF4D6A，gap-004），DESIGN.md 换为成都文旅气质色板，README 去掉未使用的 Pinia 描述（gap-005）并同步 MVP 范围，manifest.json 更新名称与描述为地陪小程序",
-      "dependencies": ["feat-006"],
+      "name": "令牌收口与文档同步",
+      "description": "把 6 个页面里硬编码的旧色值（#FF4D6A / #E5E5E5 等）换成 $ds-* 令牌，pages.json 的 tabBar selectedColor/color 跟随（gap-004 收口）；README 去掉未使用的 Pinia 描述并同步 MVP 范围（gap-005）；manifest.json 更新名称与描述为地陪小程序。DESIGN.md 与 uni.scss 已于 2026-09-26 定稿，本轮只做页面与配置的收口，不再改规范口径",
+      "dependencies": ["feat-010", "feat-012"],
       "status": "not-started",
       "evidence": ""
+    },
+    {
+      "id": "feat-014",
+      "name": "数据库表结构与设计文档定稿",
+      "description": "按 .codebuddy/skills/database-design/SKILL.md 定下 MVP 表结构（10 张：用户、7 类区域字典、10 景点、地陪与擅长景点/区域关系、3 个套餐 SKU 与地陪报价、可约档期、四态订单），明确区域为后台可维护的字典表、预约类型由套餐决定、冗余字段避免 N+1、软删除规则按表语义分类、不使用外键约束（完整性由应用层保证）；定稿 13 位订单号规则；产出建表语句、初始化数据与设计文档，并新增表结构校验门禁",
+      "dependencies": ["feat-002"],
+      "status": "done",
+      "evidence": "docx/database/schema.sql（10 张表，全部字段带 COMMENT，金额均为 DECIMAL(10,2)，无 FOREIGN KEY，订单号 CHAR(13)）；docx/database/seed.sql（7 区域 / 3 套餐 / 20 景点，可重复执行）；docx/database/数据库设计.md（表清单与取舍过程、订单号规则、区域可维护说明、字段 DB↔接口↔旧字段映射、索引理由、mock 落地约定）；node scripts/check-schema.mjs 通过且 --self-test 检出 21 类违规（含拦截外键）；./init.ps1 已扩为 5 步"
     }
   ]
 }

@@ -38,6 +38,19 @@ const exists = async (target) => {
 const failures = [];
 const warnings = [];
 
+/** 读取 JSON，格式损坏时给出可操作的提示而不是抛栈 */
+async function readJson(file, label) {
+  const raw = await readFile(file, 'utf8');
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.log(`\n失败（1）：${label} 不是合法 JSON：${error.message}`);
+    console.log(`  文件：${toRel(file)}`);
+    console.log('\n资产保真校验未通过。请先修复 JSON 语法（常见原因：多写了闭合括号、漏了逗号），再重新运行。');
+    process.exit(1);
+  }
+}
+
 async function collectSourceFiles(dir) {
   const files = [];
   let entries;
@@ -58,7 +71,7 @@ async function collectSourceFiles(dir) {
 }
 
 async function verifyLegacyAssets() {
-  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const manifest = await readJson(manifestPath, 'docs/legacy-assets.json（资产台账）');
   let refreshed = 0;
 
   for (const asset of manifest.assets) {
@@ -99,7 +112,7 @@ async function verifyLegacyAssets() {
 }
 
 async function verifyRoutes() {
-  const pagesJson = JSON.parse(await readFile(path.join(root, 'pages.json'), 'utf8'));
+  const pagesJson = await readJson(path.join(root, 'pages.json'), 'pages.json（页面注册）');
   const registered = new Set();
 
   for (const page of pagesJson.pages || []) {

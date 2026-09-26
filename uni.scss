@@ -1,52 +1,158 @@
 /**
- * uni-app 内置样式变量
- * 陪玩小程序
+ * uni.scss —— 成都景点地陪小程序 · 设计令牌
+ *
+ * 本文件由 uni-app 自动注入所有页面的 <style lang="scss">，无需 @import。
+ * 令牌与 DESIGN.md 一一对应（定稿主题：宣纸 · 疏），改这里必须同步改 DESIGN.md。
+ *
+ * 顺序要求：$ds-* 是事实来源，必须先定义；$uni-* 是给 uni-app 内置组件用的映射，引用 $ds-*。
+ * 因此下面先写第 1 节令牌，再写第 2 节映射，不要调换。
  */
 
-/* 颜色变量 */
-$uni-color-primary: #ff6b81;
-$uni-color-success: #4cd964;
-$uni-color-warning: #f0ad4e;
-$uni-color-error: #dd524d;
+/* ==========================================================================
+   1. 项目设计令牌（$ds-*，DESIGN.md 的 SCSS 侧唯一来源）
+   ========================================================================== */
 
-/* 文字基本颜色 */
-$uni-text-color: #333;
-$uni-text-color-inverse: #fff;
-$uni-text-color-grey: #999;
-$uni-text-color-placeholder: #808080;
-$uni-text-color-disable: #c0c0c0;
+/* ---------- 1.1 色彩角色（M3） ---------- */
+
+/* Primary —— 竹青：只用于可点、选中、强调 */
+$ds-primary: #2f6b5e;
+$ds-on-primary: #ffffff;
+$ds-primary-container: #dce8e2;
+$ds-on-primary-container: #12332d;
+$ds-primary-dim: #8fb3a6;
+
+/* Secondary —— 竹灰：次级标签、chip 选中底 */
+$ds-secondary: #4c635c;
+$ds-secondary-container: #e6ebe8;
+$ds-on-secondary-container: #2c3a35;
+
+/* Tertiary —— 朱砂：全站只给价格与关键数字 */
+$ds-tertiary: #b4462f;
+$ds-tertiary-container: #f6e4df;
+$ds-on-tertiary-container: #5e1f13;
+
+/* Neutral —— 宣纸 */
+$ds-surface: #f7f4ed;
+$ds-surface-container: #fbfaf5;
+$ds-surface-high: #eceae2;
+$ds-ink: #1f1d1a;
+$ds-ink-2: #6b6862;
+$ds-outline: #d8d2c6;
+$ds-outline-variant: #e7e2d7;
+
+/* 状态色：不套系统绿橙红，全部落进竹青调性 */
+$ds-success: #3d7a5f;
+$ds-success-container: #dfece4;
+$ds-warning: #9a7124;
+$ds-warning-container: #f4e9d4;
+$ds-error: #a83a2a;
+$ds-error-container: #f6e2de;
+
+/* ---------- 1.2 字体 ---------- */
+/* 不加载网络字体：中文标题靠系统宋体回退 + 字距营造文化感 */
+$ds-font-title: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+$ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+/* 字阶（M3 Type Scale 的移动端子集） */
+$ds-fs-display: 27px;   // Display Small，行高 1.2
+$ds-fs-headline: 22px;  // Headline Small，行高 1.25
+$ds-fs-title-lg: 20px;  // Title Large，行高 1.3
+$ds-fs-title: 16px;     // Title Medium，行高 1.4
+$ds-fs-body: 15px;      // Body Large，行高 1.55
+$ds-fs-body-sm: 14px;   // Body Medium，行高 1.55
+$ds-fs-label: 13px;     // Label Large，行高 1.35
+$ds-fs-label-sm: 12px;  // Label Medium，行高 1.3
+$ds-fs-caption: 11px;   // Caption
+
+/* 中文标题字距 */
+$ds-ls-title: 0.04em;
+
+/* ---------- 1.3 形状（M3 corner radius，只保留 4 档） ---------- */
+$ds-shape-xs: 6px;
+$ds-shape-sm: 10px;
+$ds-shape-md: 12px;
+$ds-shape-lg: 20px;
+$ds-shape-full: 999px;
+
+/* ---------- 1.4 间距（8px 基数） ---------- */
+$ds-space-1: 4px;
+$ds-space-2: 8px;
+$ds-space-3: 12px;
+$ds-space-4: 16px;
+$ds-space-5: 20px;
+$ds-space-6: 24px;
+$ds-space-7: 32px;
+$ds-space-8: 40px;
+$ds-pad-screen: 20px;   // 页面左右安全边距
+
+/* ---------- 1.5 层级（只保留 3 级） ---------- */
+$ds-el-0: none;                                                                        // 默认：发丝线
+$ds-el-1: 0 1px 2px rgba(31, 29, 26, 0.04), 0 10px 24px -18px rgba(31, 29, 26, 0.22);  // 浮起卡片
+$ds-el-3: 0 -12px 28px -22px rgba(31, 29, 26, 0.3);                                    // 底部操作栏 / tabBar
+$ds-card-border: 1px solid $ds-outline-variant;
+
+/* ---------- 1.6 系统区尺寸 ---------- */
+$ds-h-statusbar-min: 20px;  // 实际用 uni.getSystemInfoSync().statusBarHeight
+$ds-h-navbar: 52px;
+$ds-h-tabbar: 74px;         // 含底部安全区
+$ds-h-touch: 44px;          // 最小触摸目标
+$ds-h-row: 56px;            // 表单单行
+$ds-h-btn: 48px;
+$ds-h-btn-sm: 40px;
+
+/* ---------- 1.7 纹理（纯 CSS，零图片） ---------- */
+$ds-grain-size: 4px;    // 宣纸颗粒间距（radial-gradient 点阵）
+$ds-grain-alpha: 0.07;  // 颗粒透明度（必须极淡）
+$ds-bamboo-alpha: 0;    // 竹影竖纹：定稿「宣纸 · 疏」为关闭
+
+/* ==========================================================================
+   2. uni-app 内置变量映射（这些名字被 uni-app 内部组件引用，不要改名）
+   原陪玩小程序的默认值已按新设计规范重新赋值：
+   主色不再是 #ff6b81，改为竹青绿 #2f6b5e（解决 gap-004 的配色不一致）。
+   ========================================================================== */
+
+/* 功能色 */
+$uni-color-primary: $ds-primary;
+$uni-color-success: $ds-success;
+$uni-color-warning: $ds-warning;
+$uni-color-error: $ds-error;
+
+/* 文字颜色 */
+$uni-text-color: $ds-ink;
+$uni-text-color-inverse: #ffffff;
+$uni-text-color-grey: $ds-ink-2;
+$uni-text-color-placeholder: #9c9890;
+$uni-text-color-disable: #c6c1b6;
 
 /* 背景颜色 */
-$uni-bg-color: #ffffff;
-$uni-bg-color-grey: #f8f8f8;
-$uni-bg-color-hover: #f1f1f1;
-$uni-bg-color-mask: rgba(0, 0, 0, 0.4);
+$uni-bg-color: $ds-surface;
+$uni-bg-color-grey: #f2efe7;
+$uni-bg-color-hover: #ebe7dd;
+$uni-bg-color-mask: rgba(31, 29, 26, 0.4);
 
 /* 边框颜色 */
-$uni-border-color: #e5e5e5;
+$uni-border-color: $ds-outline-variant;
 
 /* 文字尺寸 */
-$uni-font-size-sm: 12px;
-$uni-font-size-base: 14px;
-$uni-font-size-lg: 16px;
+$uni-font-size-sm: $ds-fs-label-sm;   // 12px
+$uni-font-size-base: $ds-fs-body-sm;  // 14px
+$uni-font-size-lg: $ds-fs-title;      // 16px
 
 /* 图片尺寸 */
 $uni-img-size-sm: 20px;
 $uni-img-size-base: 26px;
 $uni-img-size-lg: 40px;
 
-/* Border Radius */
-$uni-border-radius-sm: 2px;
-$uni-border-radius-base: 3px;
-$uni-border-radius-lg: 6px;
+/* 圆角 */
+$uni-border-radius-sm: $ds-shape-xs;
+$uni-border-radius-base: $ds-shape-sm;
+$uni-border-radius-lg: $ds-shape-md;
 $uni-border-radius-circle: 50%;
 
-/* 水平间距 */
+/* 间距 */
 $uni-spacing-row-sm: 5px;
 $uni-spacing-row-base: 10px;
 $uni-spacing-row-lg: 15px;
-
-/* 垂直间距 */
 $uni-spacing-col-sm: 4px;
 $uni-spacing-col-base: 8px;
 $uni-spacing-col-lg: 12px;

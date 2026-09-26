@@ -74,18 +74,10 @@
     {
       "path": "uni.scss",
       "category": "样式",
-      "purpose": "uni-app 内置 SCSS 变量（$uni-color-primary: #ff6b81 等）",
+      "purpose": "uni-app 内置 SCSS 变量 + 项目设计令牌（$ds-*，与 DESIGN.md 一一对应）",
       "reuse": "adapt",
-      "note": "已知不一致：此处主色 #ff6b81 与 DESIGN.md / 页面实现使用的 #FF4D6A 不同，重构时需统一",
-      "sha256": "214712708111881d070a23554b716bb953e89d24160e3950482b8ab24c5e184c"
-    },
-    {
-      "path": "DESIGN.md",
-      "category": "设计",
-      "purpose": "Linear 风格设计规范：色板、字号层级、组件样式、8px 间距系统、阴影与层级",
-      "reuse": "adapt",
-      "note": "组件规范与间距系统可直接沿用；主色 #FF4D6A（陪玩粉）需替换为成都文旅气质色板",
-      "sha256": "43861c59cc33d610716f47bbf409142453e36e419cdcf45ebcb695560ae062ca"
+      "note": "2026-09-26 定稿「宣纸 · 疏」后重写：主色改为竹青绿 #2f6b5e，新增 $ds-* 令牌体系（色彩角色 / 字阶 / 形状 / 间距 / 层级）。仍存在的偏差：各页面内硬编码的 #FF4D6A 与 pages.json tabBar 的 #ff6b81 待 feat-013 统一",
+      "sha256": "67a153293fcc2614c1adfd51c7c058e0ee8ff269a762c916d99b5335a806758c"
     },
     {
       "path": "README.md",
@@ -200,18 +192,30 @@
       "sha256": "1d90e6e04f63acb5ad3f443372f0b21ea9d9eccacba14f5e6fa9ef17cd9ad4db"
     }
   ],
+  "removedAssets": [
+    {
+      "path": "DESIGN.md",
+      "category": "设计",
+      "removedAt": "2026-09-26",
+      "reason": "用户定稿主题「宣纸 · 疏」，要求删除原陪玩小程序的 Linear 风格规范，同名路径改为竹青绿新规范",
+      "replacedBy": "DESIGN.md（竹青绿 / 宣纸·疏 重写版；属新产物，不再纳入保真校验）",
+      "approvedBy": "用户 2026-09-26 明确要求"
+    }
+  ],
   "knownGaps": [
     {
       "id": "gap-001",
       "issue": "/static/images/default-avatar.png 被 6 处页面引用，但 static/images/ 目录不存在",
       "impact": "头像全部加载失败，界面出现空白/裂图",
-      "plannedFeature": "feat-003"
+      "plannedFeature": "feat-003",
+      "resolution": "按 dev-006 不新增本地占位图：改为读取图片字段（avatarUrl / coverUrl），字段为空或加载失败时露出 primary-container 底色兜底"
     },
     {
       "id": "gap-002",
       "issue": "pages/login/login.vue 跳转 /pages/webview/agreement，该页面未在 pages.json 注册",
       "impact": "点击《用户协议》/《隐私政策》报错",
-      "plannedFeature": "feat-003"
+      "plannedFeature": "feat-003",
+      "resolution": "新建协议页并在 pages.json 注册（改 pages.json 需先登记原因再 --update）"
     },
     {
       "id": "gap-003",
@@ -222,8 +226,8 @@
     },
     {
       "id": "gap-004",
-      "issue": "uni.scss 与 pages.json tabBar 使用 #ff6b81，页面与 DESIGN.md 使用 #FF4D6A，主色不一致",
-      "impact": "视觉不统一（tabBar 与页面主色略有差异）",
+      "issue": "uni.scss 与 pages.json tabBar 原用 #ff6b81、页面与旧 DESIGN.md 用 #FF4D6A，三处主色互不一致",
+      "impact": "2026-09-26 已部分收敛：uni.scss 与 DESIGN.md 统一为竹青绿 #2f6b5e；页面内硬编码 #FF4D6A 与 pages.json tabBar #ff6b81 仍未改",
       "plannedFeature": "feat-013"
     },
     {

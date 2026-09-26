@@ -9,15 +9,23 @@ cd "$(dirname "$0")"
 FULL=0
 [ "$1" = "--full" ] && FULL=1
 
-echo "=== 1/3 环境检查 ==="
+echo "=== 1/5 环境检查 ==="
 node -v
 
 echo ""
-echo "=== 2/3 资产保真校验（零依赖） ==="
+echo "=== 2/5 资产保真校验（零依赖） ==="
 node scripts/verify-assets.mjs
 
 echo ""
-echo "=== 3/3 构建验证 ==="
+echo "=== 3/5 设计令牌校验（零依赖） ==="
+node scripts/check-tokens.mjs
+
+echo ""
+echo "=== 4/5 数据库表结构校验（零依赖） ==="
+node scripts/check-schema.mjs
+
+echo ""
+echo "=== 5/5 构建验证 ==="
 if [ ! -d node_modules ]; then
   echo "未安装依赖（node_modules 缺失）。"
   if [ "$FULL" = "1" ]; then

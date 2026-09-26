@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>成都景点地陪小程序 · HTML 原型（宣纸 · 疏）</title>
+<link rel="stylesheet" href="prototype.css">
+</head>
+<body>
+
+<!-- ============================================================
+     内联 SVG 图形库：图标 24×24 + 景点纹样 24×24
+     全部为矢量标记，不是图片文件，零请求、零体积
+     ============================================================ -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M3.4 9.2a13 13 0 0 1 17.2 0"/><path d="M7 12.8a8.4 8.4 0 0 1 10 0"/><circle cx="12" cy="16.6" r="1.3"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4.8 7.6 12l7.4 7.2"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9.2 5 16 12l-6.8 7"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 7h16M7 12h10M10 17h4"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.8 11 12 4.6l8.2 6.4v8a1 1 0 0 1-1 1h-4.4v-6H9.2v6H4.8a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.4"/><path d="M5 20c1.4-3.6 4-5.3 7-5.3s5.6 1.7 7 5.3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6"/><path d="M15.4 15.4 20 20"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6 9.4 17 19 7.4"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M4 6.6h16v13H4z"/><path d="M8 4.2v4M16 4.2v4M4 11h16"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.6"/><path d="M12 7.6V12l3.2 2"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9.2" cy="9" r="3"/><path d="M3.4 19c1-3 3.2-4.4 5.8-4.4s4.8 1.4 5.8 4.4"/><path d="M16.4 7.4a2.9 2.9 0 0 1 0 5.4"/><path d="M17.6 19h3c-.3-1.6-1-2.8-2-3.5"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 4.6h8.6l3.4 3.4v11.4H6z"/><path d="M14.6 4.6V8H18"/><path d="M8.8 12.4h6.4M8.8 15.6h4.2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 20.6s6.4-5.8 6.4-10.2A6.4 6.4 0 0 0 5.6 10.4c0 4.4 6.4 10.2 6.4 10.2z"/><circle cx="12" cy="10.4" r="2.2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.6v12.8M5.6 12h12.8"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5.6 12h12.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.6 19 6.2v5.4c0 4.2-2.8 7.4-7 8.6-4.2-1.2-7-4.4-7-8.6V6.2z"/><path d="M9 12.2l2.2 2.2L15.4 10"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M4.4 7h15.2M4.4 12h15.2M4.4 17h9.6"/></symbol>
+
+    <!-- 景点与人物不再使用自绘插画：封面与头像一律使用后端返回的图片 URL（原型阶段为网络占位图） -->
+  </defs>
+</svg>
+
+<header class="stage-head">
+  <div>
+    <p class="stage-kicker">MVP 原型 · 定稿主题 宣纸 · 疏</p>
+    <h1 class="stage-title">成都景点地陪小程序</h1>
+    <p class="stage-sub">
+      结构基线取 <code>Material Design 3</code> 的令牌：色彩角色、Type Scale、Shape 圆角、Elevation、State Layer、Motion。
+      文化表达靠「竹青绿 <code>#2f6b5e</code> + 宣纸底 <code>#f7f4ed</code> + 系统宋体标题 + 朱砂点睛」。
+      图片策略：景点封面与地陪头像一律用后端返回的 URL，原型阶段先用网络占位图；纹理是 CSS 生成的宣纸颗粒，不加载网络字体。
+    </p>
+  </div>
+  <div class="stage-badge">
+    <strong>定稿：宣纸 · 疏</strong>
+    <span>令牌见 <code>DESIGN.md</code> 与 <code>uni.scss</code>（<code>$ds-*</code>）</span>
+  </div>
+</header>
+
+<main class="stage">
+
+  <!-- ============ 01 景点列表（首页） ============ -->
+  <section class="frame">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="status-bar__icons">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <svg class="ico"><use href="#i-wifi"/></svg>
+            <i class="bat"></i>
+          </span>
+        </div>
+
+        <header class="screen-head">
+          <p class="screen-kicker">成都 · 地陪预约</p>
+          <h2 class="screen-title">今天去哪儿</h2>
+          <p class="screen-sub">10 个景点 · 本地地陪带路，先选地方再挑人</p>
+        </header>
+
+        <nav class="tabline">
+          <button class="tabline__item is-on">全部</button>
+          <button class="tabline__item">市区经典线</button>
+          <button class="tabline__item">熊猫·文创线</button>
+          <button class="tabline__item">周边一日游</button>
+        </nav>
+
+        <div class="list">
+          <article class="card attract">
+            <div class="thumb"><img src="https://picsum.photos/seed/chengdu-kuanzhai/240/240" alt="宽窄巷子封面" loading="lazy"></div>
+            <div>
+              <h3 class="attract__name">宽窄巷子</h3>
+              <p class="attract__meta">青羊区 · 经典打卡</p>
+              <div class="attract__foot">
+                <span class="attract__guides">3 位地陪可约</span>
+                <span class="attract__go"><svg class="ico"><use href="#i-chevron"/></svg></span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card attract">
+            <div class="thumb"><img src="https://picsum.photos/seed/chengdu-panda/240/240" alt="大熊猫基地封面" loading="lazy"></div>
+            <div>
+              <h3 class="attract__name">大熊猫基地</h3>
+              <p class="attract__meta">成华区 · 亲子热门</p>
+              <div class="attract__foot">
+                <span class="attract__guides">5 位地陪可约</span>
+                <span class="attract__go"><svg class="ico"><use href="#i-chevron"/></svg></span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card attract">
+            <div class="thumb"><img src="https://picsum.photos/seed/chengdu-dujiangyan/240/240" alt="都江堰封面" loading="lazy"></div>
+            <div>
+              <h3 class="attract__name">都江堰</h3>
+              <p class="attract__meta">都江堰市 · 一日游</p>
+              <div class="attract__foot">
+                <span class="attract__guides">2 位地陪可约</span>
+                <span class="attract__go"><svg class="ico"><use href="#i-chevron"/></svg></span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card attract">
+            <div class="thumb"><img src="https://picsum.photos/seed/chengdu-dufu/240/240" alt="杜甫草堂封面" loading="lazy"></div>
+            <div>
+              <h3 class="attract__name">杜甫草堂</h3>
+              <p class="attract__meta">青羊区 · 文化讲解</p>
+              <div class="attract__foot">
+                <span class="attract__guides">2 位地陪可约</span>
+                <span class="attract__go"><svg class="ico"><use href="#i-chevron"/></svg></span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <nav class="tabbar">
+          <a class="tab is-on"><svg class="ico"><use href="#i-home"/></svg><span>首页</span></a>
+          <a class="tab"><svg class="ico"><use href="#i-user"/></svg><span>我的</span></a>
+        </nav>
+      </div>
+    </div>
+    <div class="frame-cap">
+      <span class="frame-no">01</span>
+      <div>
+        <strong>景点列表（首页）</strong>
+        <p>封面图来自后端返回的 coverUrl（原型用网络占位图）；每张卡直接给出「N 位地陪可约」，把下一步说清楚</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 地陪列表 ============ -->
+  <section class="frame">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="status-bar__icons">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <svg class="ico"><use href="#i-wifi"/></svg>
+            <i class="bat"></i>
+          </span>
+        </div>
+
+        <header class="navbar">
+          <button class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></button>
+          <h2 class="navbar__title">宽窄巷子的地陪</h2>
+          <button class="icon-btn"><svg class="ico"><use href="#i-filter"/></svg></button>
+        </header>
+
+        <p class="hint" style="margin:0;padding:0 20px 10px">青羊区 · 3 位可约 · 半天约 4-5 小时</p>
+
+        <div class="chip-row">
+          <button class="chip is-on">半日</button>
+          <button class="chip">全天</button>
+          <button class="chip">专项</button>
+          <button class="chip chip--lead">价格从低到高</button>
+        </div>
+
+        <div class="list">
+          <article class="card guide">
+            <span class="avatar"><img src="https://i.pravatar.cc/160?img=12" alt="地陪 小林头像" loading="lazy"></span>
+            <div>
+              <div class="guide__top">
+                <h3 class="guide__name">青羊 · 小林</h3>
+                <span class="guide__stat">接单 128 单</span>
+              </div>
+              <div class="tag-row">
+                <span class="tag">市区经典线</span>
+                <span class="tag">熊猫·文创线</span>
+              </div>
+              <p class="guide__service">半天陪游 · 全天陪游</p>
+              <div class="guide__foot">
+                <span class="guide__price">
+                  <span class="price price--sm"><i>¥</i>300</span>
+                  <span class="guide__stat">起 / 半日</span>
+                </span>
+                <button class="btn btn--tonal btn--sm">看详情</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card guide">
+            <span class="avatar"><img src="https://i.pravatar.cc/160?img=45" alt="地陪 苏姐头像" loading="lazy"></span>
+            <div>
+              <div class="guide__top">
+                <h3 class="guide__name">青羊 · 苏姐</h3>
+                <span class="guide__stat">接单 96 单</span>
+              </div>
+              <div class="tag-row">
+                <span class="tag">市区经典线</span>
+                <span class="tag tag--quiet">文化讲解</span>
+              </div>
+              <p class="guide__service">半天陪游 · 专项讲解</p>
+              <div class="guide__foot">
+                <span class="guide__price">
+                  <span class="price price--sm"><i>¥</i>260</span>
+                  <span class="guide__stat">起 / 半日</span>
+                </span>
+                <button class="btn btn--tonal btn--sm">看详情</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card guide">
+            <span class="avatar"><img src="https://i.pravatar.cc/160?img=33" alt="地陪 陈默头像" loading="lazy"></span>
+            <div>
+              <div class="guide__top">
+                <h3 class="guide__name">锦江 · 陈默</h3>
+                <span class="guide__stat">接单 214 单</span>
+              </div>
+              <div class="tag-row">
+                <span class="tag">熊猫·文创线</span>
+                <span class="tag">周边一日游</span>
+              </div>
+              <p class="guide__service">全天陪游 · 熊猫基地专项</p>
+              <div class="guide__foot">
+                <span class="guide__price">
+                  <span class="price price--sm"><i>¥</i>600</span>
+                  <span class="guide__stat">起 / 全天</span>
+                </span>
+                <button class="btn btn--tonal btn--sm">看详情</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <nav class="tabbar">
+          <a class="tab is-on"><svg class="ico"><use href="#i-home"/></svg><span>首页</span></a>
+          <a class="tab"><svg class="ico"><use href="#i-user"/></svg><span>我的</span></a>
+        </nav>
+      </div>
+    </div>
+    <div class="frame-cap">
+      <span class="frame-no">02</span>
+      <div>
+        <strong>地陪列表</strong>
+        <p>只列能带这个景点的地陪；价格用朱砂、其余保持墨色，一屏只有一个视觉重点</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 地陪详情 ============ -->
+  <section class="frame">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="status-bar__icons">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <svg class="ico"><use href="#i-wifi"/></svg>
+            <i class="bat"></i>
+          </span>
+        </div>
+
+        <header class="navbar">
+          <button class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></button>
+          <h2 class="navbar__title">地陪详情</h2>
+          <span class="icon-btn"></span>
+        </header>
+
+        <section class="panel">
+          <div class="identity">
+            <span class="avatar"><img src="https://i.pravatar.cc/240?img=12" alt="地陪 小林头像" loading="lazy"></span>
+            <div>
+              <h3 class="attract__name">青羊 · 小林</h3>
+              <div class="tag-row">
+                <span class="tag tag--solid">市区经典线</span>
+                <span class="tag">熊猫·文创线</span>
+              </div>
+            </div>
+          </div>
+          <p class="screen-sub" style="margin-top:14px">
+            在宽窄巷子长大，做地陪四年，喜欢带人从巷子后段绕开人流，顺路喝一盏盖碗茶。
+          </p>
+          <div class="identity__meta">
+            <span class="metric"><span class="metric__value">128</span><span class="metric__label">接单</span></span>
+            <span class="metric"><span class="metric__value">4 天</span><span class="metric__label">本周可约</span></span>
+            <span class="metric"><span class="metric__value">3 个</span><span class="metric__label">服务套餐</span></span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3 class="panel__title">擅长景点</h3>
+          <div class="tag-row" style="margin-top:0">
+            <span class="tag tag--quiet">宽窄巷子</span>
+            <span class="tag tag--quiet">人民公园</span>
+            <span class="tag tag--quiet">杜甫草堂</span>
+            <span class="tag tag--quiet">青羊宫</span>
+          </div>
+        </section>
+
+        <section class="panel panel--flush">
+          <h3 class="panel__title" style="padding:16px 16px 0;margin-bottom:12px">服务套餐</h3>
+          <button class="option is-on">
+            <span class="radio"><svg class="ico"><use href="#i-check"/></svg></span>
+            <span>
+              <span class="option__name">市区半日陪游</span>
+              <p class="option__desc">4-5 小时 · 适合单区域</p>
+            </span>
+            <span class="option__price">¥300<small>/ 半日</small></span>
+          </button>
+          <button class="option">
+            <span class="radio"><svg class="ico"><use href="#i-check"/></svg></span>
+            <span>
+              <span class="option__name">市区全天陪游</span>
+              <p class="option__desc">8-10 小时 · 市区 + 周边</p>
+            </span>
+            <span class="option__price">¥600<small>/ 全天</small></span>
+          </button>
+          <button class="option">
+            <span class="radio"><svg class="ico"><use href="#i-check"/></svg></span>
+            <span>
+              <span class="option__name">熊猫基地 / 都江堰专项</span>
+              <p class="option__desc">按小时 · 含讲解、带吃</p>
+            </span>
+            <span class="option__price">¥220<small>/ 小时</small></span>
+          </button>
+        </section>
+
+        <section class="panel">
+          <h3 class="panel__title">可约日期</h3>
+          <div class="date-row">
+            <button class="date is-on"><span class="date__dow">今天</span><span class="date__day">09-26</span></button>
+            <button class="date"><span class="date__dow">周日</span><span class="date__day">09-27</span></button>
+            <button class="date"><span class="date__dow">周一</span><span class="date__day">09-28</span></button>
+            <button class="date"><span class="date__dow">周二</span><span class="date__day">09-29</span></button>
+            <button class="date"><span class="date__dow">周三</span><span class="date__day">09-30</span></button>
+          </div>
+        </section>
+
+        <div class="bottom-bar">
+          <div class="price-block">
+            <span class="price-block__label">合计 · 市区半日陪游</span>
+            <span class="price"><i>¥</i>300</span>
+          </div>
+          <button class="btn btn--filled">立即预约</button>
+        </div>
+      </div>
+    </div>
+    <div class="frame-cap">
+      <span class="frame-no">03</span>
+      <div>
+        <strong>地陪详情</strong>
+        <p>介绍 → 擅长景点 → 3 个套餐 → 可约日期，一屏走完决策；评价按要求不做</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 下单页 ============ -->
+  <section class="frame">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="status-bar__icons">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <svg class="ico"><use href="#i-wifi"/></svg>
+            <i class="bat"></i>
+          </span>
+        </div>
+
+        <header class="navbar">
+          <button class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></button>
+          <h2 class="navbar__title">确认预约</h2>
+          <span class="icon-btn"></span>
+        </header>
+
+        <section class="panel panel--flush">
+          <div class="form-row">
+            <span class="form-row__label">景点</span>
+            <span class="form-row__value">宽窄巷子<small>青羊区 · 可更换</small></span>
+          </div>
+          <div class="form-row">
+            <span class="form-row__label">地陪</span>
+            <span class="form-row__value">青羊 · 小林<small>接单 128 单</small></span>
+          </div>
+          <div class="form-row">
+            <span class="form-row__label">套餐</span>
+            <span class="form-row__value">市区半日陪游<small>4-5 小时</small></span>
+          </div>
+        </section>
+
+        <section class="panel panel--flush">
+          <div class="form-stack">
+            <label class="field-label">预约日期</label>
+            <div class="form-row" style="padding:0;min-height:auto;border:none">
+              <span class="form-row__value" style="text-align:left">2026-09-27 周日</span>
+              <span class="attract__go"><svg class="ico"><use href="#i-calendar"/></svg></span>
+            </div>
+          </div>
+
+          <div class="form-stack">
+            <label class="field-label">时段</label>
+            <div class="segmented">
+              <button class="segmented__item is-on">上午</button>
+              <button class="segmented__item">下午</button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <span class="form-row__label">人数</span>
+            <span class="stepper">
+              <button class="stepper__btn"><svg class="ico"><use href="#i-minus"/></svg></button>
+              <span class="stepper__num">2</span>
+              <button class="stepper__btn"><svg class="ico"><use href="#i-plus"/></svg></button>
+            </span>
+          </div>
+
+          <div class="form-stack">
+            <label class="field-label">备注</label>
+            <textarea class="textarea" placeholder="比如：想拍汉服照、需要地铁站集合、带小孩">想在巷子里拍些照片，麻烦帮我们避开人流</textarea>
+          </div>
+        </section>
+
+        <p class="hint">门票、餐饮、交通不含；超时按 1 小时加购，线下协商或由平台备注</p>
+
+        <div class="bottom-bar">
+          <div class="price-block">
+            <span class="price-block__label">合计</span>
+            <span class="price"><i>¥</i>300</span>
+          </div>
+          <button class="btn btn--filled">提交预约</button>
+        </div>
+      </div>
+    </div>
+    <div class="frame-cap">
+      <span class="frame-no">04</span>
+      <div>
+        <strong>下单页</strong>
+        <p>景点与套餐从上游带过来，游客只补日期、时段、人数、备注；费用说明紧贴提交按钮</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 订单页 ============ -->
+  <section class="frame">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="status-bar__icons">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <svg class="ico"><use href="#i-wifi"/></svg>
+            <i class="bat"></i>
+          </span>
+        </div>
+
+        <header class="navbar">
+          <button class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></button>
+          <h2 class="navbar__title">我的订单</h2>
+          <span class="icon-btn"></span>
+        </header>
+
+        <nav class="tabline" style="padding-top:0">
+          <button class="tabline__item is-on">待确认</button>
+          <button class="tabline__item">已确认</button>
+          <button class="tabline__item">已完成</button>
+          <button class="tabline__item">已取消</button>
+        </nav>
+
+        <div class="list">
+          <article class="card order">
+            <div class="order__top">
+              <span class="avatar avatar--sm"><img src="https://i.pravatar.cc/120?img=12" alt="地陪 小林头像" loading="lazy"></span>
+              <div style="flex:1">
+                <h3 class="order__title">宽窄巷子 · 市区半日陪游</h3>
+                <span class="order__no">#26092701</span>
+              </div>
+              <span class="tag tag--state tag--pending">待确认</span>
+            </div>
+            <dl class="order__body">
+              <div class="kv"><dt>时间</dt><dd>09-27 上午 · 2 人</dd></div>
+              <div class="kv"><dt>地陪</dt><dd>青羊 · 小林</dd></div>
+              <div class="kv"><dt>备注</dt><dd>想拍汉服照，避开人流</dd></div>
+            </dl>
+            <div class="order__foot">
+              <span class="price price--sm"><i>¥</i>300</span>
+              <div class="order__actions">
+                <button class="btn btn--danger btn--sm">取消预约</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card order">
+            <div class="order__top">
+              <span class="avatar avatar--sm"><img src="https://i.pravatar.cc/120?img=33" alt="地陪 陈默头像" loading="lazy"></span>
+              <div style="flex:1">
+                <h3 class="order__title">大熊猫基地 · 市区全天陪游</h3>
+                <span class="order__no">#26092804</span>
+              </div>
+              <span class="tag tag--state tag--confirmed">已确认</span>
+            </div>
+            <dl class="order__body">
+              <div class="kv"><dt>时间</dt><dd>10-02 全天 · 3 人</dd></div>
+              <div class="kv"><dt>地陪</dt><dd>锦江 · 陈默</dd></div>
+            </dl>
+            <div class="order__foot">
+              <span class="price price--sm"><i>¥</i>600</span>
+              <div class="order__actions">
+                <button class="btn btn--outlined btn--sm">取消预约</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <nav class="tabbar">
+          <a class="tab is-on"><svg class="ico"><use href="#i-home"/></svg><span>首页</span></a>
+          <a class="tab"><svg class="ico"><use href="#i-user"/></svg><span>我的</span></a>
+        </nav>
+      </div>
+    </div>
+    <div class="frame-cap">
+      <span class="frame-no">05</span>
+      <div>
+        <strong>订单页</strong>
+        <p>四态用同一个标签组件换配色：待确认（姜黄）/ 已确认（竹青）/ 已完成（灰）/ 已取消（朱砂）</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 接单页（地陪端） ============ -->
+  <section class="frame">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="status-bar__icons">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <svg class="ico"><use href="#i-wifi"/></svg>
+            <i class="bat"></i>
+          </span>
+        </div>
+
+        <header class="navbar">
+          <span class="icon-btn"></span>
+          <h2 class="navbar__title">接单</h2>
+          <span class="icon-btn"><i class="switch" style="display:block"></i></span>
+        </header>
+
+        <div class="stat-strip">
+          <div class="stat"><span class="stat__value stat__value--alert">3</span><span class="stat__label">待接单</span></div>
+          <div class="stat"><span class="stat__value">1</span><span class="stat__label">进行中</span></div>
+          <div class="stat"><span class="stat__value">2</span><span class="stat__label">今日完成</span></div>
+        </div>
+
+        <div class="list">
+          <article class="card order">
+            <div class="order__top">
+              <span class="avatar avatar--sm"><img src="https://i.pravatar.cc/120?img=5" alt="游客头像" loading="lazy"></span>
+              <div style="flex:1">
+                <h3 class="order__title">宽窄巷子 · 半日（上午）</h3>
+                <span class="order__no">#26092701</span>
+              </div>
+              <span class="tag tag--state tag--pending">待接单</span>
+            </div>
+            <dl class="order__body">
+              <div class="kv"><dt>时间</dt><dd>09-27 上午 · 2 人</dd></div>
+              <div class="kv"><dt>备注</dt><dd>想拍汉服照，避开人流</dd></div>
+            </dl>
+            <div class="order__foot">
+              <span class="price price--sm"><i>¥</i>300</span>
+              <div class="order__actions">
+                <button class="btn btn--outlined btn--sm">拒单</button>
+                <button class="btn btn--filled btn--sm">接单</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card order">
+            <div class="order__top">
+              <span class="avatar avatar--sm"><img src="https://i.pravatar.cc/120?img=68" alt="游客头像" loading="lazy"></span>
+              <div style="flex:1">
+                <h3 class="order__title">大熊猫基地 · 全天</h3>
+                <span class="order__no">#26092804</span>
+              </div>
+              <span class="tag tag--state tag--confirmed">已确认</span>
+            </div>
+            <dl class="order__body">
+              <div class="kv"><dt>时间</dt><dd>10-02 全天 · 3 人</dd></div>
+              <div class="kv"><dt>集合</dt><dd>待与游客确认</dd></div>
+            </dl>
+            <div class="order__foot">
+              <span class="price price--sm"><i>¥</i>600</span>
+              <div class="order__actions">
+                <button class="btn btn--tonal btn--sm">完成服务</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <nav class="tabbar">
+          <a class="tab is-on"><svg class="ico"><use href="#i-list"/></svg><span>接单</span></a>
+          <a class="tab"><svg class="ico"><use href="#i-user"/></svg><span>我的</span></a>
+        </nav>
+      </div>
+    </div>
+    <div class="frame-cap">
+      <span class="frame-no">06</span>
+      <div>
+        <strong>接单页（地陪端）</strong>
+        <p>顶部统计条 + 在线开关；一单一个决策：拒单描边、接单实心，避免两个同等重的按钮</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 后台订单管理 ============ -->
+  <section class="frame">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="status-bar">
+          <span>9:41</span>
+          <span class="status-bar__icons">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <svg class="ico"><use href="#i-wifi"/></svg>
+            <i class="bat"></i>
+          </span>
+        </div>
+
+        <header class="navbar">
+          <button class="icon-btn"><svg class="ico"><use href="#i-back"/></svg></button>
+          <h2 class="navbar__title">订单管理</h2>
+          <button class="icon-btn"><svg class="ico"><use href="#i-filter"/></svg></button>
+        </header>
+
+        <div class="stat-strip">
+          <div class="stat"><span class="stat__value stat__value--alert">3</span><span class="stat__label">待确认</span></div>
+          <div class="stat"><span class="stat__value">1</span><span class="stat__label">已确认</span></div>
+          <div class="stat"><span class="stat__value">5</span><span class="stat__label">今日订单</span></div>
+        </div>
+
+        <div class="chip-row">
+          <button class="chip chip--lead">09-27 周日</button>
+          <button class="chip is-on">全部状态</button>
+          <button class="chip">待确认</button>
+          <button class="chip">已取消</button>
+        </div>
+
+        <div class="list">
+          <article class="card order">
+            <div class="order__top">
+              <span class="avatar avatar--sm"><img src="https://i.pravatar.cc/120?img=5" alt="游客头像" loading="lazy"></span>
+              <div style="flex:1">
+                <h3 class="order__title">宽窄巷子 · 半日</h3>
+                <span class="order__no">#26092701 · 游客 小舟</span>
+              </div>
+              <span class="tag tag--state tag--pending">待确认</span>
+            </div>
+            <dl class="order__body">
+              <div class="kv"><dt>地陪</dt><dd>青羊 · 小林</dd></div>
+              <div class="kv"><dt>时间</dt><dd>09-27 上午 · 2 人</dd></div>
+            </dl>
+            <div class="order__foot">
+              <span class="price price--sm"><i>¥</i>300</span>
+              <div class="order__actions">
+                <button class="btn btn--filled btn--sm">确认档期</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card order">
+            <div class="order__top">
+              <span class="avatar avatar--sm"><img src="https://i.pravatar.cc/120?img=68" alt="游客头像" loading="lazy"></span>
+              <div style="flex:1">
+                <h3 class="order__title">大熊猫基地 · 全天</h3>
+                <span class="order__no">#26092804 · 游客 阿满</span>
+              </div>
+              <span class="tag tag--state tag--confirmed">已确认</span>
+            </div>
+            <dl class="order__body">
+              <div class="kv"><dt>地陪</dt><dd>锦江 · 陈默</dd></div>
+              <div class="kv"><dt>时间</dt><dd>10-02 全天 · 3 人</dd></div>
+            </dl>
+            <div class="order__foot">
+              <span class="price price--sm"><i>¥</i>600</span>
+              <div class="order__actions">
+                <button class="btn btn--danger btn--sm">处理取消</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <nav class="tabbar">
+          <a class="tab is-on"><svg class="ico"><use href="#i-list"/></svg><span>订单</span></a>
+          <a class="tab"><svg class="ico"><use href="#i-user"/></svg><span>我的</span></a>
+        </nav>
+      </div>
+    </div>
+    <div class="frame-cap">
+      <span class="frame-no">07</span>
+      <div>
+        <strong>后台订单管理</strong>
+        <p>管理员要的是吞吐量：统计条 + 筛选 + 一单一个主操作，信息密度比游客端高一档</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="stage-foot">
+  <section class="note">
+    <h3>色板（M3 色彩角色）</h3>
+    <div class="swatch-row">
+      <span class="swatch"><i style="background:#2f6b5e"></i><span>primary</span></span>
+      <span class="swatch"><i style="background:#dce8e2"></i><span>container</span></span>
+      <span class="swatch"><i style="background:#f7f4ed"></i><span>surface</span></span>
+      <span class="swatch"><i style="background:#b4462f"></i><span>tertiary</span></span>
+      <span class="swatch"><i style="background:#1f1d1a"></i><span>on-surface</span></span>
+      <span class="swatch"><i style="background:#e7e2d7"></i><span>outline</span></span>
+    </div>
+    <ul style="margin-top:14px">
+      <li><b>竹青 #2f6b5e</b> 只做一件事：可点的东西和选中态</li>
+      <li><b>朱砂 #b4462f</b> 是 M3 的 tertiary 角色，全站只给价格与关键数字</li>
+      <li><b>宣纸 #f7f4ed</b> 替代纯白，是"文化感"最省成本的一招</li>
+      <li>状态色（竹青 / 姜黄 / 朱砂 / 灰）全部落进同一体系，不套系统绿橙红</li>
+    </ul>
+  </section>
+
+  <section class="note">
+    <h3>图片策略</h3>
+    <ul>
+      <li><b>图片来自后端</b>：景点 <code>coverUrl</code>、地陪 <code>avatarUrl</code>，由接口返回完整 URL 后解析渲染</li>
+      <li><b>原型阶段</b>用网络占位图（<code>picsum.photos</code> / <code>i.pravatar.cc</code>），后端接通后直接换 URL，尺寸与样式不变</li>
+      <li><b>固定容器 + aspectFill</b>：容器尺寸写死、图片裁切填充，不用自绘插画或几何 SVG 冒充照片</li>
+      <li><b>兜底</b>：字段为空或加载失败时露出 <code>primary-container</code> 底色，不出现破图或拉伸</li>
+      <li>仍然不吃体积的部分：<b>零字体文件</b>（系统宋体栈 + 字距）、<b>零图片纹理</b>（宣纸颗粒是 CSS 径向点阵）</li>
+    </ul>
+  </section>
+
+  <section class="note">
+    <h3>迁移到 uni-app 的注意点</h3>
+    <ul>
+      <li>类名与原工程同构：<code>.status-bar</code> <code>.navbar</code> <code>.tabbar</code> 可直接沿用，减少一次改名</li>
+      <li>小程序端把 <code>inset</code> / <code>color-mix</code> / <code>backdrop-filter</code> 换成普通声明，避免低版本不识别</li>
+      <li>图标用 SVG 时建议改成本地 <code>.svg</code> 或图标字体，小程序 <code>&lt;use&gt;</code> 支持有限</li>
+      <li>底部 tabBar 现在只有 2 项，Material 建议 3-5 项；MVP 保持 2 项，后续可加「订单」</li>
+      <li>触摸目标全部 ≥ 44px，列表行 ≥ 56px，符合 M3 与微信规范</li>
+    </ul>
+  </section>
+</footer>
+
+<script src="prototype.js"></script>
+</body>
+</html>

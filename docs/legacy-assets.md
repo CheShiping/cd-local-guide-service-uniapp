@@ -5,8 +5,10 @@
 - 机读版本（保真门禁的事实来源，含 sha256）：`docs/legacy-assets.json`
 - 代码快照：`git tag legacy-peiwan-baseline-v1`（提交 `ceca05a`）
 - 校验命令：`node scripts/verify-assets.mjs`（改过资产后先登记原因，再 `--update` 刷新哈希）
+- 有意删除的资产记录在 `docs/legacy-assets.json` 的 `removedAssets`（当前 1 条：`DESIGN.md`）
 
 复用档位只有三档：`keep`（原样保留）/ `adapt`（保留结构，替换业务语义）/ `replace`（整体替换）。
+有意删除的资产不进 `assets`，只进 `removedAssets`，并写明原因与批准人。
 
 ## 一、资产总览
 
@@ -19,8 +21,8 @@
 | `package.json` | 配置 | 依赖与 4 个构建脚本 | keep |
 | `vite.config.js` | 配置 | `@` → 项目根目录别名 | keep |
 | `index.html` | 配置 | H5 入口模板 | keep |
-| `uni.scss` | 样式 | uni-app 内置 SCSS 变量 | adapt |
-| `DESIGN.md` | 设计 | Linear 风格设计规范（色板/字号/组件/间距） | adapt |
+| `uni.scss` | 样式 | uni-app 内置 SCSS 变量 + 项目令牌 `$ds-*`（2026-09-26 已按定稿重写） | adapt |
+| `DESIGN.md` | 设计 | 原 Linear 风格规范，**2026-09-26 已删除并重写**为「宣纸 · 疏」规范（记入 `removedAssets`） | removed |
 | `README.md` | 文档 | 结构、模块、运行方式、云开发配置 | adapt |
 | `api/index.js` | 数据层 | 云数据库封装 + `useMock` 模拟数据；User/Clerk/Category/Appointment 四模块 | adapt |
 | `utils/index.js` | 数据层 | `formatDate` / `formatPrice` / `debounce` / `throttle` | keep |
@@ -88,8 +90,9 @@
 6. **自定义导航范式**（所有页面统一）
    `status-bar` 占位（`uni.getSystemInfoSync().statusBarHeight`）+ 44px `navbar`（`nav-back` / `nav-title` / `nav-right`），配合 `pages.json` 的 `navigationStyle: custom`。
 
-7. **设计规范**（`DESIGN.md`）
-   8px 间距系统、卡片 `border-radius: 12px` + `0 1px 3px rgba(0,0,0,0.04)` 阴影、触摸目标 ≥ 44px、字号层级 24/20/17/15/14/13/12、性别色（女 `#FF4D6A` / 男 `#007AFF`）、状态色（成功 `#34C759` / 警告 `#FF9500` / 错误 `#FF3B30`）。这些与业务无关，直接沿用。
+7. **设计规范**（`DESIGN.md`，2026-09-26 已定稿重写）
+   仍然沿用的结构约定：8px 间距基数、卡片 12px 圆角、触摸目标 ≥ 44px、列表行 ≥ 56px、自定义导航栏（status-bar + 52px navbar）。
+   已替换的部分：主色由 `#FF4D6A` 改为竹青绿 `#2f6b5e`，页面底由纯白改为宣纸 `#F7F4ED`，状态色不再用系统绿橙红。令牌口径见 `DESIGN.md`，落地变量见 `uni.scss` 的 `$ds-*`。
 
 ## 四、需要改造的部分
 
@@ -98,8 +101,8 @@
 | `pages.json` | 新增 3 个页面注册（`pages/guide/list`、`pages/order/create`、`pages/guide/orders`）+ 协议页；tabBar 文案调整 | feat-003 / feat-007 / feat-009 / feat-011 |
 | `manifest.json` | `name` / `description` / `appid` 换成地陪小程序信息 | feat-013 |
 | `App.vue` | 云环境 ID 占位符 `peiwan-lite-xxx` 换成真实环境；全局色彩随新规范 | feat-013 |
-| `uni.scss` | 主色与页面实现不一致（见 gap-004），重构时统一 | feat-013 |
-| `DESIGN.md` | 主色 `#FF4D6A`（陪玩粉）换成成都文旅气质色板；基调从"游戏陪玩"改为"城市文化体验" | feat-013 |
+| `uni.scss` | 已按定稿重写：竹青绿主色 + `$ds-*` 令牌；剩余偏差是页面内硬编码色值与 `pages.json` tabBar 配色（gap-004） | feat-013 |
+| `DESIGN.md` | 已删除并重写为「宣纸 · 疏」规范（原 Linear 内容不保留） | feat-013 |
 | `README.md` | 功能模块描述替换为 MVP 范围；技术栈去掉未实际使用的 Pinia（gap-005） | feat-013 |
 | `api/index.js` | `clerks → guides`、`categories → attractions/regionTypes`，mock 换为 10 景点 + 3 套餐 + 4 态订单 + 3 角色；**全部走 mock，签名对齐未来 HTTP** | feat-004 / feat-005 |
 | `pages/index/index.vue` | 见上文第 1 点（升级为景点列表页） | feat-006 |
@@ -114,10 +117,10 @@
 
 | ID | 问题 | 影响 | 计划功能 |
 |---|---|---|---|
-| gap-001 | `/static/images/default-avatar.png` 被 6 处引用，但 `static/images/` 目录不存在 | 头像全部裂图 | feat-003 |
-| gap-002 | 登录页跳转 `/pages/webview/agreement`，该页面未注册 | 点协议链接报错 | feat-003 |
+| gap-001 | `/static/images/default-avatar.png` 被 6 处引用，但 `static/images/` 目录不存在 | 头像全部裂图 | feat-003（**不新增本地占位图**：改为图片字段 + `primary-container` 底色兜底，见 dev-006） |
+| gap-002 | 登录页跳转 `/pages/webview/agreement`，该页面未注册 | 点协议链接报错 | feat-003（新建协议页并在 `pages.json` 注册；改 `pages.json` 需先登记再 `--update`） |
 | gap-003 | 管理端跳转 `/pages/admin/clerk/edit`，该页面不存在 | 添加/编辑达人不可用 | feat-012（**按 MVP 砍范围：移除入口，不新建页面**） |
-| gap-004 | `uni.scss` 与 tabBar 用 `#ff6b81`，页面与 `DESIGN.md` 用 `#FF4D6A` | 主色不统一 | feat-013 |
+| gap-004 | 三处主色原不一致：`uni.scss` / tabBar 用 `#ff6b81`，页面与旧 `DESIGN.md` 用 `#FF4D6A` | 已部分收敛：`uni.scss` 与 `DESIGN.md` 统一为 `#2f6b5e`；页面硬编码色值与 tabBar 配色待改 | feat-013 |
 | gap-005 | README 声称使用 Pinia，实际未安装未使用 | 文档与实际不符 | feat-013 |
 
 `scripts/verify-assets.mjs` 会把 gap-001 / gap-002 / gap-003 作为告警输出（不判失败，因为它们不是这次重构引入的），修掉后告警自然消失。

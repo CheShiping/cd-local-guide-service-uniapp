@@ -17,7 +17,7 @@
 
 1. 确认工作目录为仓库根目录
 2. 阅读本文件
-3. 阅读业务范围：`MVP 范围：只做 3 件事.md`（人读）+ `docs/mvp-scope.json`（机读：10 景点 / 3 区域 / 3 套餐 / 4 态订单 / 7 页面 / 4 处修订见 `deviations`）
+3. 阅读业务范围：`docs/MVP 范围：只做 3 件事.md`（人读）+ `docs/mvp-scope.json`（机读：10 景点 / 3 区域 / 3 套餐 / 4 态订单 / 7 页面 / 4 处修订见 `deviations`）
 4. 运行 `./init.ps1`（Windows PowerShell）或 `bash init.sh`（Git Bash），确认基线为绿
 5. 阅读 `feature_list.json`，只看当前一个功能
 6. 涉及改动范围与复用策略时，查 `docs/legacy-assets.md`
@@ -44,8 +44,8 @@
 
 MVP 规模上限（超出即越界）：
 
-- 景点 10 个（见 `docs/mvp-scope.json`）；**首页是景点列表页**，游客先选景点，再选该景点下的地陪
-- 区域标签 3 类：市区经典线 / 熊猫·文创线 / 周边一日游（同时作为景点列表的顶部筛选）
+- 景点 20 个（见 `docs/mvp-scope.json` 与 `docx/database/seed.sql`）；**首页是景点列表页**，游客先选景点，再选该景点下的地陪
+- 区域标签 **7 类**（后台可维护的字典表 `region_types`，初始数据见 `docx/database/seed.sql`）：市区经典线 / 熊猫·文创线 / 周边一日游 / 川西古镇线 / 山野度假线 / 都市夜游线 / 亲子研学线。它同时是景点列表的顶部筛选，前台只展示「启用且下有在售景点」的区域
 - 定价 3 个 SKU：市区半日陪游 200-400 元、市区全天陪游 500-800 元、熊猫基地/都江堰专项陪游 150-300 元/小时；门票餐饮交通不含
 - 预约类型 3 种：半天（上午/下午）、全天（1 天）、小时加购（1 小时）——超时不自动计费，线下协商或后台备注
 - 订单 4 态：待确认 / 已确认 / 已完成 / 已取消
@@ -56,28 +56,63 @@ MVP 明确不做：IM、实时定位、分销代理、团购、广场发单、�
 
 `docs/mvp-scope.json` 的 `deviations` 记录了相对原始 MVP 文档的 4 处修订（景点优先、去评价、地陪申请延后、mock 优先），以该文件为准。
 
-平台与数据层三个不变式：
+平台与数据层四个不变式：
 
 - 微信小程序为主，H5 保持可调试（登录页已做平台双通道）
 - **MVP 全部走 mock**（`api/index.js` 的 `useMock = true`）；后续对接真实后端 HTTP 请求时，只切换数据层实现，页面代码不动
 - 因此每个 Api 方法签名必须与未来的 HTTP 实现一一对应；页面里不要直连数据库、不要写死 mock 数据
+- **数据库不使用外键约束**：表间只用 id 关联 + 索引，完整性由应用层保证（写入前校验、订单快照冗余、关系表唯一索引、状态流转白名单）；`scripts/check-schema.mjs` 会拦截任何 `FOREIGN KEY`
+- **mock 规模**（见 `docs/mvp-scope.json` 的 `mockScale`）：7 区域 / **20 景点** / 3 套餐 / **50 地陪** / 52 用户；字典与基础数据以 `docx/database/seed.sql` 为准，mock 不得自造不一致的区域或景点；地陪 50（5 页）与景点 20（2 页）用于验证分页、筛选与「加载更多」
 
 ## 必需产物
 
 - `feature_list.json` — 功能状态唯一事实来源
 - `progress.md` — 会话连续性日志
 - `docs/legacy-assets.md` / `docs/legacy-assets.json` — 原有资产清单与保真门禁数据
+- `DESIGN.md` + `uni.scss` — 视觉规范与落地令牌（定稿主题：宣纸 · 疏，两者必须同步改）
+- `docx/database/schema.sql` + `docx/database/数据库设计.md` — 数据库表结构唯一事实来源（改表必须同步文档并跑校验）
+- `docx/` — 设计实现文档与 Bug 修复文档归档（见下节）
 - `session-handoff.md` — 跨会话交接
 - `init.ps1` / `init.sh` — 标准启动与验证入口
+
+## 文档归档（docx/）
+
+**代码设计实现文档**——每个功能标记 `done` 前必须产出：
+
+- 路径：`docx/codeimpl-sum/设计文档-feat-XXX-功能名.md`（`docx/` 下已有 `codeimpl-sum/` 与 `bugfix/` 两个归档目录，按类别放入，不要平铺到 `docx/` 根）
+- 必备章节：目标与范围、涉及的接口（对照 `docx/接口文档.md`）、文件结构与关键实现、状态与数据流、验证证据、遗留问题
+
+**Bug 修复文档**——每修一个 bug 必须产出：
+
+- 路径：`docx/bugfix/BUG修复-YYYYMMDD-简述.md`
+- 必备章节：现象、复现步骤、根因、修复方案、改动文件、回归验证结果
+
+归档文档写入后需在 `progress.md` 的"本次会话修改的文件"中列出。
+
+## 项目内技能（动手前先读）
+
+仓库内 `.codebuddy/skills/` 提供项目约定，做对应工作前**必须先读**：
+
+| 技能 | 路径 | 用于 |
+|---|---|---|
+| `api-design` | `.codebuddy/skills/api-design/SKILL.md` | RESTful 约定：资源名词、`/api/v1`、camelCase 字段、统一错误体、分页 |
+| `database-design` | `.codebuddy/skills/database-design/SKILL.md` | 表名复数小写下划线、`pk_/uk_/idx_/fk_` 索引命名、金额 `DECIMAL`、标准字段 |
+| `uniapp` | `.codebuddy/skills/uniapp/` | uni-app 页面与组件写法 |
 
 ## 验证命令
 
 ```powershell
-# 完整验证（推荐，Windows）
+# 完整验证（推荐，Windows，共 5 步）
 ./init.ps1
 
-# 仅资产保真 + 路由一致性（零依赖，秒级）
-node scripts/verify-assets.mjs
+# 单项校验（都零依赖、秒级）
+node scripts/verify-assets.mjs   # 资产保真 + 路由一致性
+node scripts/check-tokens.mjs    # 设计令牌（SCSS 顺序 / CSS 变量 / 色值对齐）
+node scripts/check-schema.mjs    # 数据库表结构（命名 / 必备列 / 金额类型 / MVP 边界）
+
+# 自检（证明门禁非空，改动校验脚本后跑一次）
+node scripts/check-tokens.mjs --self-test
+node scripts/check-schema.mjs --self-test
 
 # 小程序产物构建
 npm run build:mp-weixin
@@ -89,8 +124,11 @@ npm run build:mp-weixin
 
 - [ ] 目标行为已实现
 - [ ] `node scripts/verify-assets.mjs` 通过
+- [ ] 涉及样式改动时 `node scripts/check-tokens.mjs` 通过；涉及数据模型时 `node scripts/check-schema.mjs` 通过
 - [ ] `npm run build:mp-weixin` 通过（或说明为何本次不适用）
-- [ ] 证据已写入 `feature_list.json` / `progress.md`
+- [ ] 设计实现文档已归档到 `docx/codeimpl-sum/设计文档-feat-XXX-功能名.md`（六章节齐全）
+- [ ] 涉及的 Bug 已归档到 `docx/bugfix/BUG修复-YYYYMMDD-简述.md`
+- [ ] 证据已写入 `feature_list.json` / `progress.md`，且新归档文档已列入 `progress.md` 的「本次会话修改的文件」
 - [ ] 下一会话能直接跑起 `./init.ps1`
 
 ## 范围边界
