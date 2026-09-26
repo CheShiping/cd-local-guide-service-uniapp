@@ -36,8 +36,8 @@ export const MOTION = {
   base: 360,
   /** 页面进入（H5 用 CSS 模拟；小程序是原生转场） */
   page: 320,
-  /** 页面退出：返回前先播，播完再真正 navigateBack */
-  pageLeave: 260,
+  /** 页面退出：与页面进入同幅同时长（进出对称），播完再真正 navigateBack */
+  pageLeave: 320,
   /** 加载指示器转一圈（常量运动，用 linear） */
   spin: 900,
   /** 列表入场逐项延迟 */

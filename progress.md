@@ -86,7 +86,7 @@
 | 切分类（六个列表） | 卡片按行进方向入场（左右各 24px），逐项 +60ms 封顶 300ms | **360ms** `--ease-out` |
 | 加载更多 | 加载态换 `linear` 转圈；新追加卡片上浮 8px | **360ms** `--ease-out` |
 | **页面进入**（navigateTo / 首次显示） | 根节点常带 `is-page-in`；**仅 H5**（小程序是原生转场；App 用 `pages.json` 的 `app-plus`） | 320ms `--ease-out` |
-| **页面返回**（导航栏返回键） | 换 `is-page-out` → 播完再 `navigateBack()`；刻意不淡到 0，避免闪空底 | 260ms `--ease-in-out` |
+| **页面返回**（导航栏返回键） | 换 `is-page-out` → 播完再 `navigateBack()`；**与进入完全对称**（同 32px / 同曲线，方向相反） | 320ms `--ease-out` |
 | 等宽页签（我的订单 4 态 / 地陪审核 2 态） | 单根滑动下划线 `translateX(下标 × 100%)` | 280ms `--ease-in-out` |
 | 分段控件（接单 / 下单） | 滑动滑块，宽度由段数算，只动 `transform` | 280ms `--ease-in-out` |
 | 横向滚动页签行（首页区域） | 下划线改真实元素，`scaleX(0)→scaleX(1)` 收放，不动 `width` | 360ms / 160ms |
@@ -121,6 +121,7 @@
 - [ ] **H5 返回转场的「换页那一下」只能靠眼睛验收**：上一页是被缓存复用的，返回时不会再播进入动画；已用「不淡到 0 + 同色宣纸底」把跳变压到最小，但顺不顺必须人工看
 - [ ] **本轮 8 个功能全部未做真机人工走查**：静态门禁只能证明结构与数据自洽，证明不了交互与观感
 - [x] ~~无测试框架~~ **部分解决**：新增 `scripts/smoke-flow.mjs`（第 7 项门禁，动态运行 mock 数据层跑三端闭环 + 负向用例 + 自检）。剩余缺口是「页面层」没有自动化：模板渲染、交互与样式仍只能靠人工走查
+- [ ] **「URL 参数未归一化」这类页面层问题全门禁都看不见**（2026-09-26 用户报错暴露）：下单页把字符串参数与数字 id 用 `===` 比较，静默回落成 `packages[0]`，且因为数据层 `byId()` 有 `Number()` 兜底，`smoke-flow.mjs` 一路绿。已修复（`toId()` 入口归一化），但**能拦住它的门禁还没有** —— 候选方案见「未来候选」的「页面层门禁」
 - [x] ~~静态门禁看不见运行时问题~~ **已验证**：本轮两个阻断级 bug（mock 仓库缺字典表、档期生成恒空）都通过了全部静态门禁，只有动态门禁抓到 —— 已归档为两份 bugfix 文档
 - [ ] 景点封面与游客/管理员头像仍依赖网络占位图：`picsum.photos` / `i.pravatar.cc` 离线时看到的是容器底色（这是设计好的兜底行为）
 - [ ] **包体风险（待用户决定）**：`static/guide/` 39 张素材合计 **12.56MB**（平均 330KB、最大 1.33MB），微信小程序主包上限 **2MB**，超出 6.3 倍 → 上小程序前需要压缩（长边 240px 约 0.5MB）或改走后端/CDN URL；H5 演示不受影响
@@ -163,19 +164,43 @@
 - **入场用 CSS 动画 + 节点批次重建，不用 `transition` + 时序标志位**：后者依赖「先渲染隐藏态 → 下一帧移除」，mock 返回过快时可能整段不播；前者靠 `:key="enterSeq + '-' + id"` 让节点重建，动画必定从首帧开始，不需要任何 hack
 - **内容切换刻意放慢（360ms，逐项 +60ms 封顶 300ms）**：一类动效一次替换整屏、且不常发生，慢一点才看得清「新内容是从哪边换过来的」；反过来按压反馈必须跟手（140ms）。UI 动效预算因此从 300ms 放宽到 **400ms**
 - **页面转场要分平台处理**（feat-015）：小程序（含微信）的 `navigateTo` / `navigateBack` 是**原生转场**，自己再加就是双重动画；H5 的官方 `animationType` 不生效，得用 CSS 模拟（进入 `is-page-in` / 返回先播 `is-page-out` 再 `navigateBack()`）；App 才认 `pages.json` 的 `globalStyle.app-plus`。三端差异写进 `DESIGN.md` §13.4
-- **H5 的返回离场刻意不淡到 0**（`opacity: 0.15` + 右移 40%）：全站页面底色都是同一张宣纸，露出来的那块与上一页底色一致，换页那一下几乎看不出来；淡到 0 反而会先闪一块空底
+- **H5 的返回离场刻意不淡到 0**（`opacity → 0.7` + 右移 8px）：全站页面底色都是同一张宣纸，露出来的那块与上一页底色一致，换页那一下几乎看不出来；淡到 0 反而会先闪一块空底
+- **页面进出必须完全对称（2026-09-26 用户反馈后改了三版才定稿）**：进入 `32px / 320ms / --ease-out`，返回就用**同一组参数、方向相反**（`translateX(0) → 32px` + `opacity 1 → 0`）。三版教训：`opacity 0.15` + 右移 40%（整页滑走）**太吵**；右移 8px **与进入力度不匹配**；纯淡出不位移 **更不对称（进来 32px、出去 0px）**。**「对称」优先于「单看哪一版更好看」** —— 同族动作一轻一重、一大一小，比动画本身更刺眼。另：`.is-page-out` 必须 `fill-mode: both`（改 `backwards` 会在播完时弹回不透明）
 - **keyframes 只放 `App.vue` 全局样式**：页面样式是 `scoped` 的，同名 keyframes 会被编译成七个不同名字；顺带统一掉登录页自带的 `@keyframes spin`
 - **入场 `animation-fill-mode` 用 `backwards` 而不是 `both`**：`both` 会残留 `transform: translateX(0)`，把按压反馈的 `scale` 盖掉
 - **降低动效不是「全部关掉」**：`prefers-reduced-motion` 下保留淡入（帮助理解状态变化），只去掉位移与回弹；因此入场动画名必须写在 class 里，不能内联 `animation-name`（内联优先级高于样式表的降级规则）
 - **动效也进门禁**（feat-015）：新增 `scripts/check-motion.mjs` 拦 **12 类**违规（`transition: all`、动 layout 属性、`ease-in`、`transition` 用 `linear`、`animation` 用 `linear`、`scale(0)`、`:hover`、页面内 `@keyframes`、动画名不存在、内联 `animationName`、超 400ms、**`utils/motion.js` 的 `MOTION` 与 `uni.scss` 时长令牌不一致**），并接入 `init.ps1` 第 4 步
 - **按压反馈用 `hover-class="is-pressed"` 而不是 `:active`**：小程序里 `:active` 不可靠；并配 `hover-stay-time="70"`（默认 400ms 会让按下后迟迟不回弹）。按压是两层：`scale(0.96)` 回弹 + `::after` 8% `currentColor` 叠层（照 `DESIGN.md` §8「用 8% 主色叠层，不用 opacity 变暗」）
 - **JS 时长必须与 SCSS 令牌对齐**（feat-015）：页面返回要「等动画播完再 `navigateBack()`」，`setTimeout` 用的是 `MOTION.pageLeave`、动画用的是 `$ds-dur-page-leave`，两边不等就会截断动画或白等 —— 所以门禁里加了逐项比对
+- **URL 参数一律在 `onLoad` 归一化，页面内部只认数字 id**（2026-09-26 下单页 bug）：路由参数永远是字符串、接口 id 是数字，混用 `===` 会**静默**落空（`find` 返回 `undefined` 后还有 `|| packages[0]` 兜底，于是不报错、只是默默算错）。比起逐个比较点补 `Number()`，入口收敛一份更不容易漏，且提交给接口的 `payload` 与将来 HTTP 的 JSON 约定一致
 
 ## 未来候选（MVP 之后再说，现在不许实现）
 
 地陪自助申请开通 + 平台审核、后台区域管理界面（表结构已就绪，只差页面）、景点池继续扩展、评价与评分体系、真实后端 HTTP 对接、在线开关落库、支付与自动结算、IM 聊天、多城市、动态定价、团购/分销、广场发单、达人等级、复杂排班、行程日志与轨迹回放、门店管理、把 tabBar 图标形状换成成都主题图形（生成器已就绪，改 `SHAPES` 即可）、排序切换的列表重排动画（需 FLIP，与「只动 transform」的预算冲突，MVP 不做）、接单页与地陪审核页的横滑切换（`createTabRow()` 已就绪，接上只需 5 行）
 
+**页面层门禁（本次 bug 暴露的缺口，值得单独立项）**：`check-tokens` / `check-motion` / `check-schema` / `check-mock` / `smoke-flow` 都看不见「页面把 URL 参数（字符串）与接口 id（数字）用 `===` 比较」。本次下单页就是这么静默回落成 `packages[0]` 的。可行做法：在 `scripts/check-mock.mjs` 已有的页面扫描里加一条规则 —— 与 `xxxId` 做严格比较时必须显式数值化（要求 `Number(a) === Number(b)`，或在 `onLoad` 用 `toId()` 归一化后不再出现裸 `=== this.xxxId`）；需配 `--self-test` 夹具。
+
 ## 本次会话修改的文件
+
+### 本次（用户反馈：下单页提交被拒 + 返回动画改轻）
+
+**一、修「下单页提交被拒」（阻断闭环的 bug）**
+
+- `pages/order/create.vue` - 修复：URL 参数（字符串）与接口 id（数字）用 `===` 比较导致 `selectedPackage` 静默回落成 `packages[0]`（金额与控件跟着错），提交时 `timeSlot` / `hours` 缺失被接口拒回 → 新增模块级 `toId()`，`onLoad` 统一归一化
+- `docx/bugfix/BUG修复-20260926-下单页套餐ID类型不匹配导致控件错位.md` - 新建：本次修复归档（含 33 组用例的「旧逻辑 33/33 选错套餐 / 新逻辑 0 失败」对比）
+- `feature_list.json` - feat-009 的 `evidence` 补本次修复说明
+- `session-handoff.md` - 交接补「URL 参数必须在入口归一化」一条
+
+**二、返回动画与进入对称（feat-015 的返工，三版后定稿）**
+
+- `App.vue` - `@keyframes ds-page-out` 由「`opacity: 0.15` + `translateX(40%)`」→「`opacity: 0.7` + `translateX(8px)`」→「`opacity: 0.7` 不位移」→ **「`opacity 1 → 0` + `translateX(0 → 32px)`，与 `ds-page-in` 同参数反方向」**；`.is-page-out` 曲线由 `$ds-ease-in-out` 改 `$ds-ease-out`（与进入一致）
+- `uni.scss` - `$ds-dur-page-leave` **260 → 200 → 180 → 320ms**（与 `$ds-dur-page` 同值；注释写明「进出对称」）
+- `utils/motion.js` - `MOTION.pageLeave` 同步改 **320**（与令牌成对改，门禁逐项比对）
+- `DESIGN.md` - §13.1 时长表「页面退出」改 320ms / `--ease-out`；§13.4 改为「与进入完全对称」并补三版试错对照表；§14 变更记录补一行
+- `docs/legacy-assets.json` - App.vue / uni.scss 两条 note 登记本次定稿原因后 `--update` 刷新哈希
+- `feature_list.json` - feat-015 的 `evidence` 追加本次返工
+- `progress.md` - 本文件：动效清单表「页面返回」行、决策、本节
+- `session-handoff.md` - 交接的动效走查项改为「返回应与进入同力度，只反方向」
 
 ### 本轮（feat-015 动效）
 
@@ -333,6 +358,7 @@
 - 改 `pages.json` 或任何在册资产后：先登记 `docs/legacy-assets.json` 的原因 → `node scripts/verify-assets.mjs --update` → 重跑 `./init.ps1`。
 - `init.ps1` 必须保持 UTF-8 BOM 编码。
 - 本轮 6 个新页面/改造页面**都没有做真机走查**，任何交互问题都优先怀疑这一点。
+- **URL 参数（`onLoad(options)`）永远是字符串，接口 id 是数字**：混用 `===` 会静默落空，而且往往还有 `|| packages[0]` 之类的兜底，于是「不报错、只是默默算错」。新页面取参后一律先归一化（参考 `pages/order/create.vue` 的 `toId()`）。判断是否有同类隐患：搜页面里的 `=== this.xxxId`。
 - **报错栈与源码对不上时，先怀疑构建/模块缓存**：本轮有**三次**「报的错在源码里不存在」（`store.regionTypes` undefined、`byId` undefined、`OrderApi` undefined），都是 dev server 或小程序产物还在用旧模块。动过 `api/mock/*` 后尤其要重启，因为 mock 的仓库是模块级缓存（`getDb()` 只算一次）。
   **三步法**（已写进 `AGENTS.md`）：① 停 dev server → ② `Remove-Item -Recurse -Force node_modules\.vite, dist` → ③ 重启 + 浏览器硬刷新；然后看控制台有没有 `[api] 数据层 <版本>｜…` 这一行。
   数据层现在会**自证**：`api/index.js` 的 `DATA_LAYER_VERSION` 打在启动日志里，缺模块时 `pickModule()` 直接抛出可操作错误。

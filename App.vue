@@ -110,11 +110,14 @@ button {
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* 返回：当前页右移并淡下去。刻意不淡到 0 —— 全站页面底色都是同一张宣纸，
-   露出来的那一块和上一页的底色一致，所以换页那一下几乎看不出来 */
+/* 返回：与进入**完全对称** —— 同 32px 位移、同 320ms、同 ease-out，方向相反。
+   进入从右侧 32px 淡入，返回就向右侧 32px 淡出，两个方向观感一致。
+   刻意与 ds-page-in 用同一组参数：进出不对称（一大一小、一快一慢）比动画本身更刺眼。
+   注意 .is-page-out 必须用 fill-mode: both 保持结束态直到 navigateBack，
+   改成 backwards 会在播完时弹回不透明，闪一下 */
 @keyframes ds-page-out {
   from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0.15; transform: translateX(40%); }
+  to   { opacity: 0; transform: translateX(32px); }
 }
 
 /* ---------- 列表入场 ---------- */
@@ -172,7 +175,7 @@ button {
 }
 
 .is-page-out {
-  animation: ds-page-out $ds-dur-page-leave $ds-ease-in-out both;
+  animation: ds-page-out $ds-dur-page-leave $ds-ease-out both;
 }
 /* #endif */
 

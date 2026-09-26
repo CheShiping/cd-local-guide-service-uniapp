@@ -175,6 +175,17 @@ const DOW = ['周日', '周一', '周二', '周三', '周四', '周五', '周六
 const MAX_PEOPLE = 9;
 const MAX_HOURS = 8;
 
+/**
+ * URL 参数一律是字符串，而接口返回的 id 是数字。
+ * 不在入口归一化，本页所有 `=== id` 的查找都会静默落空：
+ * selectedPackage 回落成 packages[0]（金额、时段/小时数控件全跟着错），
+ * attractionName 变成空。提交时段位或小时数缺失，接口报「不合规」。
+ */
+function toId(value) {
+  const id = Number(value);
+  return Number.isFinite(id) && id > 0 ? id : '';
+}
+
 /* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
 const pageMotion = createPageMotion();
 
@@ -240,9 +251,9 @@ export default {
     const sys = uni.getSystemInfoSync();
     this.statusBarHeight = sys.statusBarHeight || 20;
 
-    this.guideId = options.guideId || '';
-    this.packageSkuId = options.packageSkuId || '';
-    this.attractionId = options.attractionId || '';
+    this.guideId = toId(options.guideId);
+    this.packageSkuId = toId(options.packageSkuId);
+    this.attractionId = toId(options.attractionId);
     this.appointDate = options.appointDate || '';
 
     const today = new Date();

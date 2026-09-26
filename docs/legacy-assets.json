@@ -20,8 +20,8 @@
       "category": "入口",
       "purpose": "应用启动、全局样式（page/button 重置/安全区）、未登录时重定向到登录页、微信云开发初始化",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-013：全局样式改用 $ds-* 令牌；移除已废弃的微信云开发初始化（重构后走 HTTP，占位环境 ID 会在真机报错）；未登录重定向登录页的逻辑保留。2026-09-26 feat-015：全局样式末尾新增动效段 —— 9 个 @keyframes（入场 up/next/prev、淡入、弹入、转圈、页面进入/退出 + 降级用的页面淡出）、列表入场与按压反馈的通用类、.ds-spinner（含 --on-primary / --lg 变体）、.is-page-in / .is-page-out（页面转场，用条件编译只对 H5 生效）、.ds-pressable.is-pressed::after 的 8% 当前色叠层、prefers-reduced-motion 降级。keyframes 必须留在全局：页面样式是 scoped 的，各自声明会被编译成不同名字，七屏共用不了（由 scripts/check-motion.mjs 把关）",
-      "sha256": "e655964198474b9569dbdc380a41a7afede8ffe933d9bbffaf96f393a31fb1bb"
+      "note": "2026-09-26 feat-013：全局样式改用 $ds-* 令牌；移除已废弃的微信云开发初始化（重构后走 HTTP，占位环境 ID 会在真机报错）；未登录重定向登录页的逻辑保留。2026-09-26 feat-015：全局样式末尾新增动效段 —— 9 个 @keyframes（入场 up/next/prev、淡入、弹入、转圈、页面进入/退出 + 降级用的页面淡出）、列表入场与按压反馈的通用类、.ds-spinner（含 --on-primary / --lg 变体）、.is-page-in / .is-page-out（页面转场，用条件编译只对 H5 生效）、.ds-pressable.is-pressed::after 的 8% 当前色叠层、prefers-reduced-motion 降级。keyframes 必须留在全局：页面样式是 scoped 的，各自声明会被编译成不同名字，七屏共用不了（由 scripts/check-motion.mjs 把关）。2026-09-26 返回动画定稿：`.is-page-out` 的 `ds-page-out` 与 `ds-page-in` **完全对称**（同 32px 位移 / 同 320ms / 同 `$ds-ease-out`，方向相反）；`.is-page-out` 需保持 `fill-mode: both` 直到 navigateBack。中途试过「opacity 0.15 + translateX(40%)」（整页滑走太吵）与「opacity 0.7 + 8px」（与进入力度不匹配）—— 结论：进出不对称比动画本身更刺眼",
+      "sha256": "e4d948097313a92f49a2b79f90ff6f4ee620b4193a4225388d35ec0c8527e580"
     },
     {
       "path": "main.js",
@@ -76,8 +76,8 @@
       "category": "样式",
       "purpose": "uni-app 内置 SCSS 变量 + 项目设计令牌（$ds-*，与 DESIGN.md 一一对应）",
       "reuse": "adapt",
-      "note": "2026-09-26 定稿「宣纸 · 疏」后重写：主色改为竹青绿 #2f6b5e，新增 $ds-* 令牌体系（色彩角色 / 字阶 / 形状 / 间距 / 层级）。feat-013 完成收口：8 个页面与 pages.json tabBar 的旧色值已全部换成 $ds-* / 新色值，仓库中已无 #FF4D6A 与 #ff6b81 的实际引用。2026-09-26 feat-015：新增 §1.8 动效令牌（$ds-dur-press/fast/slide/base/page/page-leave/spin、$ds-ease-out、$ds-ease-in-out、$ds-stagger-step/max），与 DESIGN.md §13 一一对应；时长预算 ≤ 400ms（内容切换刻意用满 360ms 以看清「从哪边换过来」，加载指示器的 $ds-dur-spin 是常量运动属例外）；这批时长与 utils/motion.js 的 MOTION 必须成对改，不一致由 scripts/check-motion.mjs 直接报错",
-      "sha256": "39952e2cbf0ce1a5bb5d8a277c9d1b53141d75da6220be38c7f3990b367cb586"
+      "note": "2026-09-26 定稿「宣纸 · 疏」后重写：主色改为竹青绿 #2f6b5e，新增 $ds-* 令牌体系（色彩角色 / 字阶 / 形状 / 间距 / 层级）。feat-013 完成收口：8 个页面与 pages.json tabBar 的旧色值已全部换成 $ds-* / 新色值，仓库中已无 #FF4D6A 与 #ff6b81 的实际引用。2026-09-26 feat-015：新增 §1.8 动效令牌（$ds-dur-press/fast/slide/base/page/page-leave/spin、$ds-ease-out、$ds-ease-in-out、$ds-stagger-step/max），与 DESIGN.md §13 一一对应；时长预算 ≤ 400ms（内容切换刻意用满 360ms 以看清「从哪边换过来」，加载指示器的 $ds-dur-spin 是常量运动属例外）；这批时长与 utils/motion.js 的 MOTION 必须成对改，不一致由 scripts/check-motion.mjs 直接报错。2026-09-26：`$ds-dur-page-leave` 260 → 200 → 180 → **320ms**（与 `$ds-dur-page` 同值：页面进出对称），`utils/motion.js` 的 `MOTION.pageLeave` 同步改为 320",
+      "sha256": "94c1931b104f3a67d8edf55e24be443446e4a1f54521f559294b3a6cca71f267"
     },
     {
       "path": "README.md",

@@ -260,7 +260,7 @@ $ds-font-body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Mic
 | 页签指示器滑动、分段滑块 | 280ms | `--ease-in-out` | `$ds-dur-slide` |
 | **内容切换**（分类切换、加载更多的新项） | **360ms** | `--ease-out` | `$ds-dur-base` |
 | 页面进入 | 320ms | `--ease-out` | `$ds-dur-page` |
-| 页面退出（返回） | 260ms | `--ease-in-out` | `$ds-dur-page-leave` |
+| 页面退出（返回） | **320ms**（与进入同值） | `--ease-out` | `$ds-dur-page-leave` |
 | 加载指示器转一圈 | 900ms | `linear` + `infinite` | `$ds-dur-spin` |
 
 曲线取强缓动，不用 CSS 内置关键字：
@@ -304,7 +304,18 @@ $ds-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* 屏上移动 */
 
 H5 这套实现放在 `utils/motion.js` 的 `createPageMotion()`（`pageMotion` + `goBackWithMotion()`），各页 `goBack()` 只调 `goBackWithMotion()`。**进/出动画与两个 class 都用条件编译只对 H5 生效**，所以小程序端行为与没加过完全一致。
 
-返回的离场动画刻意**不淡到 0**（`opacity → 0.15` + 右移 40%）：全站页面底色都是同一张宣纸，露出来的那一块与上一页的底色一致，换页那一下几乎看不出来；淡到 0 反而会先闪一下空底再切。
+返回的离场动画与进入**完全对称**：同 32px 位移、同 320ms、同 `--ease-out`，方向相反 —— 进入从右侧 32px 淡入，返回就向右侧 32px 淡出。
+
+**进出必须成对设计**：两个方向一大一小、一快一慢，比动画本身难看更刺眼。这条改过三版，记账以免再走回头路：
+
+| 版本 | 为什么不行 |
+|---|---|
+| `opacity: 0.15` + 右移 40%（最初） | 等于整页滑走，太吵 |
+| `opacity: 0.7` + 右移 8px | 幅度小了，但和进入的力度不匹配，仍看得出在动 |
+| `opacity: 0.7`、不位移（180ms） | 更不对称：进来 32px、出去 0px |
+| **与进入同参数、只反方向（定稿）** | 进出观感一致 |
+
+`.is-page-out` 必须用 `animation-fill-mode: both` 把结束态保持到 `navigateBack()`；改成 `backwards` 会在播完那一下弹回不透明，闪一下。
 
 ### 13.5 按压反馈
 
@@ -342,3 +353,4 @@ H5 这套实现放在 `utils/motion.js` 的 `createPageMotion()`（`pageMotion` 
 | 2026-09-26 | tabBar 图标改为**代码生成**（线性 24 网格 / stroke 1.6；未选中 `$ds-ink-2`、选中 `$ds-primary`），修掉「粉色图标 + 竹青文字」的不一致。生成器：`scripts/gen-tabbar-icons.mjs` |
 | 2026-09-26 | 新增 §13 动效：时长/曲线令牌（`uni.scss` §1.8）、属性白名单（只动 transform / opacity + 颜色）、四组动效（内容切换 / 加载更多 / 指示器移动 / 状态过渡）、按压反馈用 `hover-class`、`prefers-reduced-motion` 降级、明确不做的地方。门禁：`scripts/check-motion.mjs` |
 | 2026-09-26 | §13 修订：① 内容切换放慢到 **360ms**（逐项 +60ms 封顶 300ms），预算由 300ms 放宽到 400ms；新增 `$ds-dur-slide`（指示器 280ms）；② 新增 §13.4 **页面转场**（小程序原生 / H5 用 CSS 模拟进入与返回 / App 用 `pages.json` 的 `app-plus`）；③ §13.5 按压反馈补 `::after` 8% 叠层，并把按压覆盖到全部可点元素；④ 门禁加「`utils/motion.js` ↔ `uni.scss` 时长一致性」 |
+| 2026-09-26 | §13.4 返回动画**定稿为与进入完全对称**（同 32px / 同 320ms / 同 `--ease-out`，方向相反）。中途试过三版（40% 滑走 → 8px → 纯淡出不位移），问题分别是「太吵」「与进入力度不匹配」「与进入不对称」，已记进 §13.4 的对照表。`$ds-dur-page-leave` 260 → 200 → 180 → **320ms**（与 `$ds-dur-page` 同值） |

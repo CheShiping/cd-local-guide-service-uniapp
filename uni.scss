@@ -115,7 +115,7 @@ $ds-dur-fast: 160ms;        // 颜色 / 背景 / 边框等状态切换
 $ds-dur-slide: 280ms;       // 指示器 / 分段滑块在屏上移动
 $ds-dur-base: 360ms;        // 内容切换：整批内容被替换，要慢到看得清是从哪边换过来的
 $ds-dur-page: 320ms;        // 页面进入（H5 用 CSS 模拟；小程序是原生转场）
-$ds-dur-page-leave: 260ms;  // 页面退出（返回前先播，H5 用；小程序是原生转场）
+$ds-dur-page-leave: 320ms;  // 页面退出（返回前先播，H5 用）—— 与 $ds-dur-page 保持一致：进出对称，同幅同时长
 $ds-dur-spin: 900ms;        // 加载指示器一圈（linear，infinite）
 $ds-ease-out: cubic-bezier(0.23, 1, 0.32, 1);      // 入场 / 出场
 $ds-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  // 屏上移动（指示器滑动）
