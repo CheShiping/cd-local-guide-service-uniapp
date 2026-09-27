@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏：右侧是在线开关 -->
@@ -58,12 +58,7 @@
       @scrolltolower="loadMore"
     >
       <view class="list">
-        <view
-          v-for="(item, index) in orderList"
-          :key="enterSeq + '-' + item.id"
-          :class="['card', 'order', enterAnim]"
-          :style="enterStyle(index)"
-        >
+        <view v-for="item in orderList" :key="item.id" class="card order">
           <view class="order__top">
             <view class="avatar">
               <image :src="item.touristAvatarUrl" class="avatar__img" mode="aspectFill" />
@@ -164,7 +159,6 @@
  * 因此「进行中」的口径是 isGuideCommitted（我已接下的单），否则接完单的订单会从列表消失。
  */
 import { OrderApi, ORDER_STATUS, BOOKING_TYPES, bookingTypeLabel } from '@/api/index.js';
-import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 const ONLINE_KEY = 'guide_online';
 
@@ -173,17 +167,9 @@ const scopeTabs = [
   { label: '进行中', value: 'inProgress' }
 ];
 
-/* 列表入场：切分段带方向，加载更多只让新追加的那几项上浮 */
-const listEnter = createListEnter();
-
-/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
-
 export default {
   data() {
     return {
-      ...listEnter.data(),
-      ...pageMotion.data(),
       scopeTabs,
       scope: 'waiting',
       orderList: [],
@@ -227,10 +213,7 @@ export default {
   },
 
   methods: {
-    ...listEnter.methods,
-    ...pageMotion.methods,
-
-    async loadOrders(refresh = false, dir = ENTER_UP) {
+    async loadOrders(refresh = false) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -248,8 +231,6 @@ export default {
           pageSize: this.pageSize
         });
 
-        /* 切分段：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
-        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.orderList.length);
         this.orderList = refresh ? list : [...this.orderList, ...list];
         this.hasMore = hasMore;
         if (counts) this.counts = counts;
@@ -263,12 +244,10 @@ export default {
       }
     },
 
-    changeScope(scope, dir = 0) {
+    changeScope(scope) {
       if (this.scope === scope) return;
-      /* 点选时方向由下标差推出（待接单 ↔ 进行中） */
-      const from = this.activeScopeIndex;
       this.scope = scope;
-      this.loadOrders(true, dir || stepDirection(from, this.activeScopeIndex));
+      this.loadOrders(true);
     },
 
     loadMore() {
@@ -358,7 +337,7 @@ export default {
     },
 
     goBack() {
-      this.goBackWithMotion();
+      uni.navigateBack();
     }
   }
 };
@@ -370,6 +349,8 @@ export default {
   flex-direction: column;
   height: 100vh;
   background: $ds-surface;
+  /* 光斑：薄荷偏冷的顶光，是工作台不是逛街（气泡漫游 · bg-top-cool 档） */
+  background-image: $ds-bg-top-cool;
 }
 
 .status-bar {
@@ -440,15 +421,17 @@ export default {
   transform: translateX(20px);
 }
 
-/* ---------- 统计条 ---------- */
+/* ---------- 统计条（玻璃三格，数字用深紫、警示用藕粉） ---------- */
 .stat-strip {
   flex-shrink: 0;
   display: flex;
   margin: 0 $ds-pad-screen $ds-space-3;
-  padding: $ds-space-3 0;
+  padding: 15px 0;
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
+  overflow: hidden;
 }
 
 .stat {
@@ -456,22 +439,24 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .stat__value {
-  font-size: $ds-fs-title-lg;
-  font-weight: 700;
-  color: $ds-ink;
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1;
+  color: $ds-tertiary;
 
   &--alert {
-    color: $ds-tertiary;
+    color: $ds-brand-2;
   }
 }
 
 .stat__label {
-  margin-top: $ds-space-1;
-  font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  font-size: 10.5px;
+  color: $ds-ink-3;
 }
 
 /* ---------- 分段控件 ---------- */
@@ -480,20 +465,21 @@ export default {
   flex-shrink: 0;
   display: flex;
   margin: 0 $ds-pad-screen $ds-space-3;
-  padding: 3px;
-  background: $ds-surface-high;
-  border-radius: $ds-shape-sm;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: $ds-shape-full;
 }
 
 /* 选中块：只用 translateX 滑，不动 width / left */
 .segmented__thumb {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  border-radius: $ds-shape-xs;
-  background: $ds-surface-container;
-  transition: transform $ds-dur-base $ds-ease-in-out;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  border-radius: $ds-shape-full;
+  background: #ffffff;
+  box-shadow: 0 4px 12px -8px rgba(80, 70, 140, 0.6);
+  transition: transform $ds-dur-slide $ds-ease-in-out;
 }
 
 .segmented__item {
@@ -504,12 +490,12 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-xs;
+  border-radius: $ds-shape-full;
 
   &.is-on {
     .segmented__text {
-      color: $ds-primary;
-      font-weight: 600;
+      color: $ds-secondary;
+      font-weight: 650;
     }
   }
 }
@@ -536,11 +522,12 @@ export default {
 .card {
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
 }
 
 .order {
-  padding: $ds-space-3;
+  padding: $ds-space-4;
 }
 
 .order__top {
@@ -551,11 +538,11 @@ export default {
 .avatar {
   position: relative;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: $ds-shape-xs;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   overflow: hidden;
-  background: $ds-primary-container;
+  background: $ds-surface-high;
 }
 
 .avatar__img {
@@ -585,9 +572,10 @@ export default {
 
 .tag {
   flex-shrink: 0;
-  padding: 2px $ds-space-2;
-  border-radius: $ds-shape-xs;
+  padding: 3px 10px;
+  border-radius: $ds-shape-full;
   font-size: $ds-fs-caption;
+  font-weight: 700;
 
   &--0 {
     background: $ds-warning-container;
@@ -638,8 +626,8 @@ export default {
 }
 
 .price {
-  font-size: $ds-fs-title;
-  font-weight: 700;
+  font-size: 19px;
+  font-weight: 750;
   color: $ds-tertiary;
 }
 
@@ -659,20 +647,21 @@ export default {
   color: $ds-ink-2;
 }
 
-/* ---------- 按钮 ---------- */
+/* ---------- 按钮：一律胶囊；拒单描边、接单黑实心、完成服务雾紫浅底 ---------- */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-sm;
+  border-radius: $ds-shape-full;
 
   &--sm {
     height: 36px;
-    padding: 0 $ds-space-4;
+    padding: 0 16px;
   }
 
   &--outlined {
-    border: 1px solid $ds-outline;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px $ds-outline;
 
     .btn__text {
       color: $ds-ink-2;
@@ -680,10 +669,11 @@ export default {
   }
 
   &--filled {
-    background: $ds-primary;
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
 
     .btn__text {
-      color: $ds-on-primary;
+      color: #ffffff;
     }
   }
 

@@ -26,7 +26,7 @@ export default {
 </script>
 
 <style lang="scss">
-/* 全局样式：令牌见 uni.scss 的 $ds-*（与 DESIGN.md 同步） */
+/* 全局样式：令牌见 uni.scss 的 $ds-*（与 DESIGN.md 同步，主题：气泡漫游） */
 page {
   background-color: $ds-surface;
   font-size: $ds-fs-body;
@@ -49,11 +49,23 @@ button {
   }
 }
 
-/* 隐藏滚动条 */
+/* 隐藏滚动条（全部端、全部容器，防止内容高度变化时闪出滚动条） */
 ::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+* {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* 旧 Edge */
+}
+
+/* 页面内容一律不允许横向溢出（横向滚动只属于 scroll-view 内部） */
+html,
+body,
+.uni-page-body {
+  overflow-x: hidden;
 }
 
 /* 安全区域适配 */
@@ -70,30 +82,15 @@ button {
    ========================================================================== */
 
 /* ---------- 关键帧 ---------- */
-/* 入场一律从「差一点」开始（位移 8-32px），不从 scale(0) 从无到有 */
-@keyframes ds-card-in-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* 横向切换：从行进方向的那一侧进来，说明「内容是从这边换过来的」 */
-@keyframes ds-card-in-next {
-  from { opacity: 0; transform: translateX(24px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes ds-card-in-prev {
-  from { opacity: 0; transform: translateX(-24px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
+/* 动效只服务状态变化（shadcn 对齐）：淡入、0.96 缩放入场、常量运动。
+   页面切换一律瞬时（小程序是原生转场；H5 不再做手写转场 —— 淡入淡出会透出下层页面）。 */
 @keyframes ds-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
 @keyframes ds-pop-in {
-  from { opacity: 0; transform: scale(0.6); }
+  from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
 
@@ -102,41 +99,9 @@ button {
   to { transform: rotate(360deg); }
 }
 
-/* ---------- 页面转场（仅 H5 需要手写） ---------- */
-/* 小程序（含微信）的 navigateTo / navigateBack 是原生转场，自己再动一层会变成双重动画；
-   所以这两个动画与 .is-page-* 只在 H5 生效（见下面的条件编译）。 */
-@keyframes ds-page-in {
-  from { opacity: 0; transform: translateX(32px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-/* 返回：与进入**完全对称** —— 同 32px 位移、同 320ms、同 ease-out，方向相反。
-   进入从右侧 32px 淡入，返回就向右侧 32px 淡出，两个方向观感一致。
-   刻意与 ds-page-in 用同一组参数：进出不对称（一大一小、一快一慢）比动画本身更刺眼。
-   注意 .is-page-out 必须用 fill-mode: both 保持结束态直到 navigateBack，
-   改成 backwards 会在播完时弹回不透明，闪一下 */
-@keyframes ds-page-out {
-  from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(32px); }
-}
-
-/* ---------- 列表入场 ---------- */
-/* fill-mode 用 backwards 而不是 both：延迟期间先按 from 藏住，
-   播完就交还给普通样式，否则残留的 transform 会盖掉按压反馈的 scale。 */
-.ds-enter-up,
-.ds-enter-next,
-.ds-enter-prev {
-  animation-duration: $ds-dur-base;
-  animation-timing-function: $ds-ease-out;
-  animation-fill-mode: backwards;
-}
-
-.ds-enter-up { animation-name: ds-card-in-up; }
-.ds-enter-next { animation-name: ds-card-in-next; }
-.ds-enter-prev { animation-name: ds-card-in-prev; }
-
+/* ---------- 状态淡入 / 缩放 ---------- */
 .ds-fade-in {
-  animation: ds-fade-in $ds-dur-base $ds-ease-out backwards;
+  animation: ds-fade-in $ds-dur-fast $ds-ease-out backwards;
 }
 
 .ds-pop-in {
@@ -165,19 +130,6 @@ button {
   height: 28px;
   border-width: 3px;
 }
-
-/* ---------- 页面转场类（仅 H5） ---------- */
-/* 进入：各页根节点上就带着 is-page-in，页面被创建时动画自然播一次 */
-/* 退出：页面在返回前把类换成 is-page-out，播完再真正 navigateBack（见 utils/motion.js） */
-/* #ifdef H5 */
-.is-page-in {
-  animation: ds-page-in $ds-dur-page $ds-ease-out backwards;
-}
-
-.is-page-out {
-  animation: ds-page-out $ds-dur-page-leave $ds-ease-out both;
-}
-/* #endif */
 
 /* ---------- 按压反馈 ---------- */
 /* 小程序里 :active 不可靠，统一用 view 的 hover-class="is-pressed" */
@@ -216,12 +168,6 @@ button {
 /* 不是「全部关掉」：淡入帮助理解状态变化，要留；位移与按压回弹去掉。
    WXSS 支持 @media 时小程序同样生效，不支持则被忽略（H5 一定生效）。 */
 @media (prefers-reduced-motion: reduce) {
-  .ds-enter-up,
-  .ds-enter-next,
-  .ds-enter-prev {
-    animation-name: ds-fade-in;
-  }
-
   .ds-pressable {
     transition: none;
   }
@@ -237,19 +183,5 @@ button {
   .ds-spinner {
     animation-duration: 1600ms;
   }
-
-  /* 页面转场只留淡入淡出，去掉位移 */
-  .is-page-in {
-    animation-name: ds-fade-in;
-  }
-
-  .is-page-out {
-    animation-name: ds-page-fade-out;
-  }
-}
-
-@keyframes ds-page-fade-out {
-  from { opacity: 1; }
-  to   { opacity: 0; }
 }
 </style>

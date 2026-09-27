@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计系统 · 达咩App 成都景点地陪小程序</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="ds.css">
+</head>
+<body>
+<script src="sprite.js"></script>
+
+<div class="ds-wrap">
+
+  <!-- ============ 头部 ============ -->
+  <header class="ds-hero">
+    <span class="ds-hero__kick">✦ 设计系统 · v1.0</span>
+    <h1>成都景点地陪小程序</h1>
+    <p class="ds-hero__sub">
+      定稿方向「<b>气泡漫游</b>」：低饱和三色 + 三级墨阶 + 玻璃拟态 + 大圆角。
+      按钮准则来自达咩App规范优化稿——<b>全部纯色、不用渐变</b>，主按钮纯黑胶囊，次按钮雾紫浅底，切换栏与日期选中态纯黑胶囊。
+      动效与 <b>shadcn/ui</b> 保持一致：快、克制、状态驱动，无弹性超调、无逐项入场编排。
+      本页即规范的「活文档」，所有示例都直接消费 <code style="font-family:ui-monospace,Consolas,monospace;font-size:12px">tokens.css</code> 里的令牌。
+    </p>
+    <div class="ds-hero__meta">
+      <span>7 个界面</span><span>10 组令牌</span><span>50+ 图标</span><span>零依赖 · 零构建</span><span>uni-app 可直接迁移</span>
+    </div>
+  </header>
+
+  <nav class="ds-nav">
+    <a href="#principle">原则</a><a href="#color">色彩</a><a href="#type">字体</a><a href="#space">间距</a>
+    <a href="#shape">圆角与深度</a><a href="#motion">动效</a><a href="#icons">图标</a><a href="#components">组件</a><a href="#backdrop">背景光斑</a>
+  </nav>
+
+  <!-- ============ 原则 ============ -->
+  <section class="ds-sec" id="principle">
+    <span class="ds-sec__kick">00</span>
+    <h2>四条原则</h2>
+    <p class="ds-sec__desc">这套系统所有后续判断都从这四条推出来；冲突时，靠前的赢。</p>
+    <div class="ds-grid ds-sec__body">
+      <div class="ds-tile"><div class="ds-tile__b"><p class="ds-tile__n">动效只服务状态变化</p><p class="ds-tile__u">开合、选中、按压才动。不做入场编排、不做循环装饰、不做逐项 stagger——那是 shadcn 明确不做的。</p></div></div>
+      <div class="ds-tile"><div class="ds-tile__b"><p class="ds-tile__n">全部纯色，不用渐变</p><p class="ds-tile__u">主按钮纯黑胶囊、次按钮雾紫浅底、选中态黑胶囊。渐变只允许出现在背景光斑这种「光」上，不出现在控件上。</p></div></div>
+      <div class="ds-tile"><div class="ds-tile__b"><p class="ds-tile__n">低饱和三色 + 三级墨阶</p><p class="ds-tile__u">雾紫 / 藕粉 / 薄荷负责情绪，墨阶负责可读性。任何新颜色都必须先回答「它属于这三个里的哪一个」。</p></div></div>
+      <div class="ds-tile"><div class="ds-tile__b"><p class="ds-tile__n">先定令牌，再写样式</p><p class="ds-tile__u">tokens.css 是唯一事实来源。写新组件时不允许出现裸 hex，只能引用令牌；要新颜色就先加令牌。</p></div></div>
+    </div>
+  </section>
+
+  <!-- ============ 色彩 ============ -->
+  <section class="ds-sec" id="color">
+    <span class="ds-sec__kick">01</span>
+    <h2>色彩</h2>
+    <p class="ds-sec__desc">三色分工严格：<b>雾紫</b>只给可点和选中，<b>藕粉</b>只给待确认和提醒，<b>薄荷</b>只给已确认和完成。价格用雾紫，是列表里唯一的品牌色重点。</p>
+    <div class="ds-sec__body">
+      <h3 class="ds-sub">品牌</h3>
+      <div class="ds-grid">
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:#8f7fe0"></i><div class="ds-tile__b"><p class="ds-tile__n">雾紫 · brand-1</p><p class="ds-tile__v">#8f7fe0</p><p class="ds-tile__u">可点、选中、价格、链接、图标强调</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:#e58fa6"></i><div class="ds-tile__b"><p class="ds-tile__n">藕粉 · brand-2</p><p class="ds-tile__v">#e58fa6</p><p class="ds-tile__u">待确认、提醒、次级强调、统计告警</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:#7fc4ae"></i><div class="ds-tile__b"><p class="ds-tile__n">薄荷 · brand-3</p><p class="ds-tile__v">#7fc4ae</p><p class="ds-tile__u">已确认、完成、成功、背景光斑</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:#17141f"></i><div class="ds-tile__b"><p class="ds-tile__n">主按钮黑 · ink-btn</p><p class="ds-tile__v">#17141f</p><p class="ds-tile__u">主操作、切换栏与日期的选中态</p></div></div>
+      </div>
+
+      <h3 class="ds-sub">墨阶</h3>
+      <div class="ds-grid">
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:#2a2740"></i><div class="ds-tile__b"><p class="ds-tile__n">ink</p><p class="ds-tile__v">#2a2740</p><p class="ds-tile__u">主文字、标题、订单号以外的关键值</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:#6a6584"></i><div class="ds-tile__b"><p class="ds-tile__n">ink-2</p><p class="ds-tile__v">#6a6584</p><p class="ds-tile__u">次要文字、说明、表单标签</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:#9a95ae"></i><div class="ds-tile__b"><p class="ds-tile__n">ink-3</p><p class="ds-tile__v">#9a95ae</p><p class="ds-tile__u">辅助文字、占位符、角标、已完成态</p></div></div>
+      </div>
+
+      <h3 class="ds-sub">面与线</h3>
+      <div class="ds-grid">
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:#fdfcfa"></i><div class="ds-tile__b"><p class="ds-tile__n">scr-bg</p><p class="ds-tile__v">#fdfcfa</p><p class="ds-tile__u">屏幕底色，奶油白而非纯白</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.55))"></i><div class="ds-tile__b"><p class="ds-tile__n">surface</p><p class="ds-tile__v">rgba(255,255,255,.74)</p><p class="ds-tile__u">玻璃卡片，配合 backdrop-blur 16px</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:rgba(143,127,224,.16)"></i><div class="ds-tile__b"><p class="ds-tile__n">brand-tint</p><p class="ds-tile__v">rgba(143,127,224,.13)</p><p class="ds-tile__u">次按钮浅底、选中项底、图标底</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:repeating-linear-gradient(45deg,rgba(42,39,64,.13) 0 4px,transparent 4px 8px)"></i><div class="ds-tile__b"><p class="ds-tile__n">line-strong</p><p class="ds-tile__v">rgba(42,39,64,.13)</p><p class="ds-tile__u">描边、分隔线；line 是更浅的发丝线</p></div></div>
+      </div>
+
+      <h3 class="ds-sub">语义状态</h3>
+      <div class="ds-grid">
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:rgba(233,195,122,.45)"></i><div class="ds-tile__b"><p class="ds-tile__n">待确认 · pending</p><p class="ds-tile__v">姜黄 #96702a</p><p class="ds-tile__u">订单待确认、待接单、今日告警数字</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:rgba(127,196,174,.45)"></i><div class="ds-tile__b"><p class="ds-tile__n">已确认 · confirm</p><p class="ds-tile__v">薄荷 #4f8f7c</p><p class="ds-tile__u">已确认、已完成</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:rgba(42,39,64,.10)"></i><div class="ds-tile__b"><p class="ds-tile__n">已完成 · done</p><p class="ds-tile__v">ink-3</p><p class="ds-tile__u">已完成的订单标签，主动降权</p></div></div>
+        <div class="ds-tile"><i class="ds-tile__swatch" style="background:rgba(229,143,166,.4)"></i><div class="ds-tile__b"><p class="ds-tile__n">已取消 · cancel</p><p class="ds-tile__v">藕粉 #b26479</p><p class="ds-tile__u">已取消、拒单、处理取消</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 字体 ============ -->
+  <section class="ds-sec" id="type">
+    <span class="ds-sec__kick">02</span>
+    <h2>字体</h2>
+    <p class="ds-sec__desc">品牌字体是「<b>造字工房元黑体</b>」，原型阶段用系统黑体 + 800 字重替代；数字统一走 <code style="font-family:ui-monospace,Consolas,monospace;font-size:12px">--font-num</code>，让价格与统计对齐。只有五级字号，不许自造。</p>
+    <div class="ds-sec__body ds-type">
+      <div class="ds-type__row"><div class="ds-type__meta"><code>--fs-display</code><small>26px · 800 · 1.28</small></div><div style="font-size:26px;font-weight:800;line-height:1.28;color:var(--ink)">今天去哪儿</div></div>
+      <div class="ds-type__row"><div class="ds-type__meta"><code>--fs-title</code><small>17px · 750 · 1.30</small></div><div style="font-size:17px;font-weight:750;line-height:1.3;color:var(--ink)">宽窄巷子</div></div>
+      <div class="ds-type__row"><div class="ds-type__meta"><code>--fs-body</code><small>14px · 400-600 · 1.60</small></div><div style="font-size:14px;line-height:1.6;color:var(--ink)">本地地陪带路，先选地方再挑人</div></div>
+      <div class="ds-type__row"><div class="ds-type__meta"><code>--fs-label</code><small>12.5px · 400-650 · 1.72</small></div><div style="font-size:12.5px;line-height:1.72;color:var(--ink-2)">门票、餐饮、交通不含；超时按 1 小时加购</div></div>
+      <div class="ds-type__row"><div class="ds-type__meta"><code>--fs-caption</code><small>11px · 600-700 · 1.40</small></div><div style="font-size:11px;font-weight:650;color:var(--ink-3)">经典打卡 · 距你 3.2km</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 间距 ============ -->
+  <section class="ds-sec" id="space">
+    <span class="ds-sec__kick">03</span>
+    <h2>间距</h2>
+    <p class="ds-sec__desc">全部是 4 的倍数。屏幕左右安全边距固定 22px，列表卡片间距 14px——这两个值不参与缩放。</p>
+    <div class="ds-sec__body ds-space">
+      <div class="ds-space__row"><code>--sp-1 <span>4px</span></code><i class="ds-space__bar" style="width:4px"></i></div>
+      <div class="ds-space__row"><code>--sp-2 <span>8px</span></code><i class="ds-space__bar" style="width:8px"></i></div>
+      <div class="ds-space__row"><code>--sp-3 <span>12px</span></code><i class="ds-space__bar" style="width:12px"></i></div>
+      <div class="ds-space__row"><code>--sp-4 <span>16px</span></code><i class="ds-space__bar" style="width:16px"></i></div>
+      <div class="ds-space__row"><code>--sp-5 <span>20px</span></code><i class="ds-space__bar" style="width:20px"></i></div>
+      <div class="ds-space__row"><code>--sp-6 <span>24px</span></code><i class="ds-space__bar" style="width:24px"></i></div>
+      <div class="ds-space__row"><code>--pad-screen <span>22px</span></code><i class="ds-space__bar" style="width:22px;background:var(--ink-btn)"></i></div>
+      <div class="ds-space__row"><code>--gap-list <span>14px</span></code><i class="ds-space__bar" style="width:14px;background:var(--brand-2)"></i></div>
+    </div>
+  </section>
+
+  <!-- ============ 圆角与深度 ============ -->
+  <section class="ds-sec" id="shape">
+    <span class="ds-sec__kick">04</span>
+    <h2>圆角与深度</h2>
+    <p class="ds-sec__desc">深度只靠光，不靠边框：卡片是「柔影 + 一圈内描白」，按钮是「黑胶囊自带下坠影」。描边只用于描边型按钮和发丝分隔线。</p>
+    <div class="ds-sec__body">
+      <h3 class="ds-sub">圆角</h3>
+      <div class="ds-grid">
+        <div class="ds-tile"><div class="ds-tile__swatch" style="height:78px;display:grid;place-items:center;background:var(--brand-tint)"><i style="display:block;width:64px;height:44px;border-radius:28px;background:var(--brand-1)"></i></div><div class="ds-tile__b"><p class="ds-tile__n">--r-card · 28px</p><p class="ds-tile__u">卡片、面板</p></div></div>
+        <div class="ds-tile"><div class="ds-tile__swatch" style="height:78px;display:grid;place-items:center;background:var(--brand-tint)"><i style="display:block;width:64px;height:44px;border-radius:24px;background:var(--brand-2)"></i></div><div class="ds-tile__b"><p class="ds-tile__n">--r-media · 24px</p><p class="ds-tile__u">封面图、头像块</p></div></div>
+        <div class="ds-tile"><div class="ds-tile__swatch" style="height:78px;display:grid;place-items:center;background:var(--brand-tint)"><i style="display:block;width:64px;height:44px;border-radius:20px;background:var(--brand-3)"></i></div><div class="ds-tile__b"><p class="ds-tile__n">--r-input · 20px</p><p class="ds-tile__u">输入框、日期块、指标块</p></div></div>
+        <div class="ds-tile"><div class="ds-tile__swatch" style="height:78px;display:grid;place-items:center;background:var(--brand-tint)"><i style="display:block;width:64px;height:30px;border-radius:999px;background:var(--ink-btn)"></i></div><div class="ds-tile__b"><p class="ds-tile__n">--r-btn · 999px</p><p class="ds-tile__u">按钮、标签、圆形图标按钮</p></div></div>
+      </div>
+      <h3 class="ds-sub">深度</h3>
+      <div class="ds-grid">
+        <div class="ds-tile"><div class="ds-tile__swatch" style="height:78px;display:grid;place-items:center;background:#fff"><i style="display:block;width:120px;height:46px;border-radius:16px;background:#fff;box-shadow:var(--sh-card)"></i></div><div class="ds-tile__b"><p class="ds-tile__n">--sh-card</p><p class="ds-tile__u">柔影 + 内描白，用于玻璃卡片</p></div></div>
+        <div class="ds-tile"><div class="ds-tile__swatch" style="height:78px;display:grid;place-items:center;background:#fff"><i style="display:block;width:120px;height:40px;border-radius:999px;background:var(--ink-btn);box-shadow:var(--sh-btn)"></i></div><div class="ds-tile__b"><p class="ds-tile__n">--sh-btn</p><p class="ds-tile__u">黑胶囊按钮的下坠影</p></div></div>
+        <div class="ds-tile"><div class="ds-tile__swatch" style="height:78px;display:grid;place-items:center;background:#fff"><i style="display:block;width:120px;height:46px;border-radius:16px;background:#fff;box-shadow:var(--ring)"></i></div><div class="ds-tile__b"><p class="ds-tile__n">--ring</p><p class="ds-tile__u">键盘焦点环（:focus-visible）</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 动效 ============ -->
+  <section class="ds-sec" id="motion">
+    <span class="ds-sec__kick">05</span>
+    <h2>动效 · shadcn 对齐</h2>
+    <p class="ds-sec__desc">
+      shadcn 的动效之所以耐看，是因为它<b>只解释状态</b>：抽屉开了、菜单弹出了、开关切换了。
+      对应到本系统就是——<b>进场 150–200ms + ease-enter，退场一律 100ms + ease-exit，位移只有 2px 或缩放 0.96</b>；
+      按压只缩放 0.98 不位移；<b>不做</b>弹性超调、不做逐项 stagger、不做循环装饰。
+    </p>
+    <div class="ds-sec__body">
+      <h3 class="ds-sub">时长与缓动</h3>
+      <div class="ds-tokens">
+        <div class="ds-token"><code>--dur-fast · 150ms</code><span><b>默认。</b>颜色、透明度、小控件状态、按压反馈</span></div>
+        <div class="ds-token"><code>--dur-base · 200ms</code><span>卡片、面板、开关滑块等较大表面的进出</span></div>
+        <div class="ds-token"><code>--dur-slow · 300ms</code><span>展开、抽屉、手风琴这类高度变化</span></div>
+        <div class="ds-token"><code>--dur-exit · 100ms</code><span><b>退场永远比进场快</b>，这是 shadcn 手感的关键</span></div>
+        <div class="ds-token"><code>--ease-std · cubic-bezier(.4,0,.2,1)</code><span>Tailwind 默认曲线，所有过渡用这个</span></div>
+        <div class="ds-token"><code>--ease-enter · cubic-bezier(.16,1,.3,1)</code><span>Radix content-show 曲线，只用于进场</span></div>
+        <div class="ds-token"><code>--ease-exit · cubic-bezier(.4,0,1,1)</code><span>进场的反向（ease-in），只用于退场</span></div>
+        <div class="ds-token"><code>--press-scale · 0.98</code><span>按压反馈：只缩放，不位移、不改透明度</span></div>
+      </div>
+
+      <h3 class="ds-sub">动效原语 · 点按钮重放</h3>
+      <div class="ds-grid ds-grid--wide" id="motion-demos">
+        <div><div class="ds-demo"><span class="anim-zoom-in" data-replay>zoom-in</span><button class="ds-demo__btn" data-anim="anim-zoom-in">重放</button></div><p class="ds-demo__label" style="text-align:center;margin-top:8px">zoom-in · 200ms · 弹层/卡片进场</p></div>
+        <div><div class="ds-demo"><span class="anim-slide-top" data-replay>slide-top</span><button class="ds-demo__btn" data-anim="anim-slide-top">重放</button></div><p class="ds-demo__label" style="text-align:center;margin-top:8px">slide-top · 200ms · 下拉面板</p></div>
+        <div><div class="ds-demo"><span class="anim-slide-bottom" data-replay>slide-bottom</span><button class="ds-demo__btn" data-anim="anim-slide-bottom">重放</button></div><p class="ds-demo__label" style="text-align:center;margin-top:8px">slide-bottom · 200ms · 底部抽屉</p></div>
+        <div><div class="ds-demo"><span class="anim-fade-in" data-replay>fade-in</span><button class="ds-demo__btn" data-anim="anim-fade-in">重放</button></div><p class="ds-demo__label" style="text-align:center;margin-top:8px">fade-in · 150ms · 遮罩/轻提示</p></div>
+        <div><div class="ds-demo"><span class="anim-fade-out" data-replay style="opacity:1">fade-out</span><button class="ds-demo__btn" data-anim="anim-fade-out">重放</button></div><p class="ds-demo__label" style="text-align:center;margin-top:8px">fade-out · 100ms · 退场永远更快</p></div>
+        <div><div class="ds-demo"><span class="anim-zoom-out" data-replay>zoom-out</span><button class="ds-demo__btn" data-anim="anim-zoom-out">重放</button></div><p class="ds-demo__label" style="text-align:center;margin-top:8px">zoom-out · 100ms · 关闭弹层</p></div>
+      </div>
+
+      <h3 class="ds-sub">按住看按压反馈（只缩放 0.98，不位移）</h3>
+      <div class="ds-row" style="margin-top:14px">
+        <button class="btn" type="button">立即预约</button>
+        <button class="btn btn--soft" type="button">看详情</button>
+        <button class="btn btn--out" type="button">拒单</button>
+        <button class="btn btn--danger btn--sm" type="button">取消预约</button>
+      </div>
+
+      <h3 class="ds-sub">状态切换（滑块走 transform，不触发布局）</h3>
+      <div class="ds-row" style="margin-top:14px">
+        <i class="switch"></i>
+        <div class="seg" style="min-width:180px"><button class="seg__item is-on" type="button">上午</button><button class="seg__item" type="button">下午</button></div>
+        <button class="chip is-on" type="button">半日</button>
+        <button class="chip" type="button">全天</button>
+      </div>
+
+      <h3 class="ds-sub">明令禁止</h3>
+      <div class="ds-tokens">
+        <div class="ds-token"><code>弹性超调</code><span>cubic-bezier(.34,1.56,.64,1) 这类会过冲的曲线一律不用——它让界面显得廉价</span></div>
+        <div class="ds-token"><code>逐项 stagger</code><span>列表项不要 80ms 一个地排队进场；shadcn 从不这么做</span></div>
+        <div class="ds-token"><code>循环装饰动画</code><span>除加载 spinner 外，没有任何元素在持续动</span></div>
+        <div class="ds-token"><code>transition: all</code><span>只写具体属性，避免意外触发布局动画</span></div>
+        <div class="ds-token"><code>位移超过 4px</code><span>进场位移最多 2px；要更大的空间感就用 scale(0.96)</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 图标 ============ -->
+  <section class="ds-sec" id="icons">
+    <span class="ds-sec__kick">06</span>
+    <h2>图标</h2>
+    <p class="ds-sec__desc">全部内联 SVG，24×24 网格、<code style="font-family:ui-monospace,Consolas,monospace;font-size:12px">stroke: currentColor</code>，粗细由 <code style="font-family:ui-monospace,Consolas,monospace;font-size:12px">--icon-sw: 1.42</code> 统一控制——刻意调细，降低存在感。颜色永远继承文字色，不单独配色。来源集中在 <code style="font-family:ui-monospace,Consolas,monospace;font-size:12px">sprite.js</code>，三个页面共用。</p>
+    <div class="ds-sec__body ds-icons" id="icon-grid"></div>
+  </section>
+
+  <!-- ============ 组件 ============ -->
+  <section class="ds-sec" id="components">
+    <span class="ds-sec__kick">07</span>
+    <h2>组件</h2>
+    <p class="ds-sec__desc">下面这些是七个界面里反复出现的最小集合。每个组件只允许这几个变体，新需求先看能不能用现有变体拼出来。</p>
+    <div class="ds-sec__body">
+      <h3 class="ds-sub">按钮 · 全部纯色，主按钮黑胶囊</h3>
+      <div class="ds-row" style="margin-top:14px">
+        <button class="btn" type="button">立即预约</button>
+        <button class="btn" type="button"><svg class="ico"><use href="#i-calendar"/></svg>提交预约</button>
+        <button class="btn btn--soft btn--sm" type="button">看详情</button>
+        <button class="btn btn--out btn--sm" type="button">拒单</button>
+        <button class="btn btn--danger btn--sm" type="button">取消预约</button>
+      </div>
+
+      <h3 class="ds-sub">切换栏与筛选 · 选中态 = 黑胶囊</h3>
+      <div style="margin-top:14px">
+        <nav class="tabline" style="padding:0 0 14px">
+          <button class="tabline__item is-on" type="button">全部</button>
+          <button class="tabline__item" type="button">市区经典线</button>
+          <button class="tabline__item" type="button">熊猫·文创线</button>
+        </nav>
+        <div class="chip-row" style="padding:0">
+          <button class="chip is-on" type="button">半日</button>
+          <button class="chip" type="button">全天</button>
+          <button class="chip" type="button">专项</button>
+          <button class="chip chip--lead" type="button"><svg class="ico"><use href="#i-sliders"/></svg>价格从低到高</button>
+        </div>
+      </div>
+
+      <h3 class="ds-sub">标签 · 四态同一组件换色</h3>
+      <div class="ds-row" style="margin-top:14px">
+        <span class="tag tag--state tag--pending">待确认</span>
+        <span class="tag tag--state tag--confirmed">已确认</span>
+        <span class="tag tag--state tag--done">已完成</span>
+        <span class="tag tag--state tag--canceled">已取消</span>
+        <span class="tag tag--solid">市区经典线</span>
+        <span class="tag">熊猫·文创线</span>
+        <span class="tag tag--ghost">人民公园</span>
+      </div>
+
+      <h3 class="ds-sub">表单控件</h3>
+      <div class="ds-row" style="margin-top:14px;align-items:flex-start">
+        <div class="seg" style="min-width:190px"><button class="seg__item is-on" type="button">上午</button><button class="seg__item" type="button">下午</button></div>
+        <span class="stepper"><button class="stepper__btn" type="button"><svg class="ico"><use href="#i-minus"/></svg></button><span class="stepper__n">2</span><button class="stepper__btn" type="button"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+        <i class="switch"></i>
+      </div>
+      <div style="margin-top:16px;max-width:420px"><textarea class="ta" rows="2">想在巷子里拍些照片，麻烦帮我们避开人流</textarea></div>
+
+      <h3 class="ds-sub">价格与统计</h3>
+      <div class="ds-row" style="margin-top:14px">
+        <span class="price"><i>¥</i>300</span>
+        <span class="price price--sm"><i>¥</i>260</span>
+        <span class="metric" style="min-width:96px"><span class="metric__v">128</span><span class="metric__l">接单</span></span>
+        <span class="metric" style="min-width:96px"><span class="metric__v" style="color:var(--brand-2)">3</span><span class="metric__l">待接单</span></span>
+      </div>
+
+      <h3 class="ds-sub">卡片 · 景点卡与地陪卡</h3>
+      <div class="ds-grid ds-grid--wide" style="margin-top:14px">
+        <article class="acard card">
+          <div class="acard__media">
+            <span class="acard__ph"><svg class="ico"><use href="#i-temple"/></svg></span>
+            <img src="https://picsum.photos/seed/dm-kuanzhai/320/320" alt="" loading="lazy" onerror="this.remove()">
+            <span class="acard__cc"><svg class="ico"><use href="#i-pin"/></svg>经典打卡</span>
+          </div>
+          <div class="acard__body">
+            <div class="acard__top"><h3 class="acard__name">宽窄巷子</h3><span class="acard__score"><svg class="ico"><use href="#i-star"/></svg>4.8</span></div>
+            <p class="acard__meta"><svg class="ico"><use href="#i-pin"/></svg>青羊区 · 距你 3.2km</p>
+            <div class="acard__foot"><span class="acard__guides"><svg class="ico"><use href="#i-users"/></svg>3 位地陪可约</span><span class="acard__go"><svg class="ico"><use href="#i-chev"/></svg></span></div>
+          </div>
+        </article>
+        <article class="gcard card">
+          <span class="avatar"><img src="../static/guide/qinxiaolin.jpg" alt="" style="--focus:50% 24%" onerror="this.remove()"></span>
+          <div>
+            <div class="gcard__top"><h3 class="gcard__name">青羊 · 小林</h3><span class="gcard__stat">接单 128 单</span></div>
+            <div class="tag-row"><span class="tag">市区经典线</span><span class="tag">熊猫·文创线</span></div>
+            <p class="gcard__svc">半天陪游 · 全天陪游</p>
+            <div class="gcard__foot"><span class="gcard__price"><span class="price price--sm"><i>¥</i>300</span><span class="gcard__stat">起 / 半日</span></span><button class="btn btn--soft btn--sm" type="button">看详情</button></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 背景光斑 ============ -->
+  <section class="ds-sec" id="backdrop">
+    <span class="ds-sec__kick">08</span>
+    <h2>背景光斑 · 七档</h2>
+    <p class="ds-sec__desc">
+      背景不是一套通用的：方向（右上→左下 / 左上→右下 / 上→下）和三色的混合比例、浓淡都跟着页面性格走。
+      规则只有三条——<b>光斑彼此错开不叠压</b>；<b>薄荷只出现在角上</b>；<b>「从哪开始到哪结束」的方向感交给最后一层底色渐变，不靠叠光斑</b>。
+      下方七档即七个界面的实际取值。
+    </p>
+    <div class="ds-sec__body ds-bggrid" id="bg-grid"></div>
+  </section>
+
+  <footer class="ds-foot">
+    达咩App · 成都景点地陪小程序 设计系统 v1.0 · 定稿方向「气泡漫游」。<br>
+    令牌：<code style="font-family:ui-monospace,Consolas,monospace">tokens.css</code> · 组件：<code style="font-family:ui-monospace,Consolas,monospace">style.css</code> · 图标：<code style="font-family:ui-monospace,Consolas,monospace">sprite.js</code> · 界面原型：<code style="font-family:ui-monospace,Consolas,monospace">index.html</code>。
+    迁移到 uni-app 时，把 tokens.css 的每组令牌映射进 <code style="font-family:ui-monospace,Consolas,monospace">uni.scss</code> 的 <code style="font-family:ui-monospace,Consolas,monospace">$ds-*</code> 即可。
+  </footer>
+</div>
+
+<script>
+/* 图标库网格 */
+(function () {
+  var ids = ['wifi','back','chev','chev-down','arrow-ur','search','sliders','close','check','plus','minus','bell','info','refresh',
+             'home','user','list','grid','compass','map','pin','calendar','clock','users','chat','star','heart','shield',
+             'ticket','wallet','card','tag','spark','bolt','fire','crown','gift','send','camera','image','edit','share','phone','smile',
+             'temple','panda','pagoda','lantern','tea','leaf','water','mountain'];
+  document.getElementById('icon-grid').innerHTML = ids.map(function (id) {
+    return '<span class="ds-icon"><svg class="ico"><use href="#i-' + id + '"/></svg>' + id + '</span>';
+  }).join('');
+}());
+
+/* 背景光斑七档 */
+(function () {
+  var BGS = [
+    ['tr',        '01 景点列表',   '右上 → 左下 · 粉为主，薄荷守左上角'],
+    ['tl',        '02 地陪列表',   '左上 → 右下 · 粉三块，薄荷守右上角'],
+    ['top',       '03 地陪详情',   '上 → 下 · 顶光聚在人物身上'],
+    ['calm',      '04 下单页',     '右上角一点 · 表单最克制'],
+    ['tl-soft',   '05 订单页',     '左上 → 右下 · 中弱，粉为主'],
+    ['top-cool',  '06 接单页',     '上 → 下 · 薄荷偏冷，工作台'],
+    ['calm-ink',  '07 后台管理',   '右上紫 + 左上薄荷 · 最安静']
+  ];
+  document.getElementById('bg-grid').innerHTML = BGS.map(function (b) {
+    return '<div class="ds-bgtile"><div class="ds-bgtile__screen screen__bg screen__bg--' + b[0] + '"></div>' +
+           '<div class="ds-bgtile__b"><strong>' + b[1] + '</strong><span>' + b[2] + '</span></div></div>';
+  }).join('');
+}());
+
+/* 动效重放：重挂 class，让动画从头跑 */
+(function () {
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('[data-anim]');
+    if (!btn) return;
+    var box = btn.parentNode.querySelector('[data-replay]');
+    if (!box) return;
+    var cls = btn.getAttribute('data-anim');
+    box.className = '';
+    /* 强制 reflow，确保动画能重跑 */
+    void box.offsetWidth;
+    box.className = cls;
+    if (cls === 'anim-fade-out' || cls === 'anim-zoom-out') {
+      setTimeout(function () { box.style.opacity = ''; }, 140);
+    }
+  });
+}());
+
+/* 规范页里的轻交互 */
+(function () {
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    var sw = t.closest && t.closest('.switch');
+    if (sw) { sw.classList.toggle('is-off'); return; }
+    var groups = ['tabline__item', 'chip', 'seg__item'];
+    for (var i = 0; i < groups.length; i++) {
+      var el = t.closest && t.closest('.' + groups[i]);
+      if (el) {
+        var sibs = el.parentNode.querySelectorAll('.' + groups[i]);
+        Array.prototype.forEach.call(sibs, function (s) { s.classList.remove('is-on'); });
+        el.classList.add('is-on');
+        return;
+      }
+    }
+  });
+}());
+</script>
+</body>
+</html>

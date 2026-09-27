@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
@@ -57,12 +57,7 @@
       @scrolltolower="loadMore"
     >
       <view class="list">
-        <view
-          v-for="(guide, index) in guideList"
-          :key="enterSeq + '-' + guide.id"
-          :class="['card', enterAnim]"
-          :style="enterStyle(index)"
-        >
+        <view v-for="guide in guideList" :key="guide.id" class="card">
           <view class="card__main">
             <view class="avatar">
               <image :src="guide.avatarUrl" class="avatar__img" mode="aspectFill" />
@@ -140,24 +135,15 @@
  * 地陪申请开通流程本身是后续升级项（dev-003），MVP 的地陪由 mock 种子数据预置。
  */
 import { GuideApi, GUIDE_STATUS } from '@/api/index.js';
-import { createListEnter, createPageMotion, stepDirection, ENTER_UP } from '@/utils/motion.js';
 
 const tabs = [
   { label: '待审核', value: GUIDE_STATUS.PENDING },
   { label: '已通过', value: GUIDE_STATUS.APPROVED }
 ];
 
-/* 列表入场：切页签带方向，加载更多只让新追加的那几项上浮 */
-const listEnter = createListEnter();
-
-/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
-
 export default {
   data() {
     return {
-      ...listEnter.data(),
-      ...pageMotion.data(),
       tabs,
       currentTab: GUIDE_STATUS.PENDING,
       guideList: [],
@@ -194,9 +180,6 @@ export default {
   },
 
   methods: {
-    ...listEnter.methods,
-    ...pageMotion.methods,
-
     async loadTotals() {
       try {
         const [pending, approved] = await Promise.all([
@@ -210,7 +193,7 @@ export default {
       }
     },
 
-    async loadList(refresh = false, dir = ENTER_UP) {
+    async loadList(refresh = false) {
       if (this.loading) return;
       if (!refresh && !this.hasMore) return;
 
@@ -227,8 +210,6 @@ export default {
           ? await GuideApi.getPendingGuides(params)
           : await GuideApi.getGuideList(params);
 
-        /* 切页签：整批卡片换方向入场；加载更多：只有新追加的这几项上浮 */
-        this.beginEnter(refresh ? dir : ENTER_UP, refresh ? 0 : this.guideList.length);
         this.guideList = refresh ? list : [...this.guideList, ...list];
         this.hasMore = hasMore;
         this.pageNo++;
@@ -240,12 +221,10 @@ export default {
       }
     },
 
-    changeTab(tab, dir = 0) {
+    changeTab(tab) {
       if (this.currentTab === tab) return;
-      /* 点选时方向由下标差推出 */
-      const from = this.activeTabIndex;
       this.currentTab = tab;
-      this.loadList(true, dir || stepDirection(from, this.activeTabIndex));
+      this.loadList(true);
     },
 
     loadMore() {
@@ -287,7 +266,7 @@ export default {
     },
 
     goBack() {
-      this.goBackWithMotion();
+      uni.navigateBack();
     }
   }
 };
@@ -299,6 +278,8 @@ export default {
   flex-direction: column;
   height: 100vh;
   background: $ds-surface;
+  /* 光斑：后台最安静（气泡漫游 · bg-calm-ink 档） */
+  background-image: $ds-bg-calm-ink;
 }
 
 .status-bar {
@@ -342,15 +323,17 @@ export default {
   color: $ds-ink;
 }
 
-/* ---------- 统计条 ---------- */
+/* ---------- 统计条（玻璃三格，数字用深紫、警示用藕粉） ---------- */
 .stat-strip {
   flex-shrink: 0;
   display: flex;
   margin: 0 $ds-pad-screen $ds-space-3;
-  padding: $ds-space-3 0;
+  padding: 15px 0;
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
+  overflow: hidden;
 }
 
 .stat {
@@ -358,70 +341,69 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .stat__value {
-  font-size: $ds-fs-title-lg;
-  font-weight: 700;
-  color: $ds-ink;
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1;
+  color: $ds-tertiary;
 
   &--alert {
-    color: $ds-tertiary;
+    color: $ds-brand-2;
   }
 }
 
 .stat__label {
-  margin-top: $ds-space-1;
-  font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  font-size: 10.5px;
+  color: $ds-ink-3;
 }
 
-/* ---------- 页签 ---------- */
+/* ---------- 页签（新规范：选中态 = 黑胶囊） ---------- */
 .tabline {
   position: relative;
   flex-shrink: 0;
   display: flex;
-  border-bottom: 1px solid $ds-outline-variant;
+  gap: $ds-space-2;
+  padding: 0 $ds-pad-screen 14px;
 }
 
 .tabline__item {
   position: relative;
   flex: 1;
-  min-height: $ds-h-touch;
+  min-height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: $ds-shape-full;
+  background: rgba(255, 255, 255, 0.6);
+  transition: background-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
+
     .tabline__text {
-      color: $ds-primary;
-      font-weight: 600;
+      color: #ffffff;
+      font-weight: 700;
     }
   }
 }
 
-/* 等宽页签用一根会滑的线：宽度由下标算，位移只用 translateX 的百分比 */
 .tabline__indicator {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 2px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  transition: transform $ds-dur-base $ds-ease-in-out;
+  display: none;   /* 胶囊选中态替代了下划线 */
 }
 
 .tabline__bar {
-  width: 22px;
-  height: 2px;
-  border-radius: 1px;
-  background: $ds-primary;
+  display: none;
 }
 
 .tabline__text {
-  font-size: $ds-fs-body-sm;
-  color: $ds-ink-2;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ds-ink-3;
   transition: color $ds-dur-fast $ds-ease-out;
 }
 
@@ -429,9 +411,9 @@ export default {
   margin-left: $ds-space-1;
   padding: 0 5px;
   border-radius: $ds-shape-full;
-  background: $ds-tertiary;
+  background: $ds-brand-2;
   font-size: $ds-fs-caption;
-  color: $ds-on-primary;
+  color: #ffffff;
 }
 
 /* ---------- 列表 ---------- */
@@ -448,10 +430,11 @@ export default {
 }
 
 .card {
-  padding: $ds-space-3;
+  padding: $ds-space-4;
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
 }
 
 .card__main {
@@ -463,9 +446,9 @@ export default {
   flex-shrink: 0;
   width: 52px;
   height: 52px;
-  border-radius: $ds-shape-sm;
+  border-radius: 50%;
   overflow: hidden;
-  background: $ds-primary-container;
+  background: $ds-surface-high;
 }
 
 .avatar__img {
@@ -488,26 +471,30 @@ export default {
 
 .card__name {
   font-size: $ds-fs-body-sm;
-  font-weight: 600;
+  font-weight: 750;
   color: $ds-ink;
 }
 
 .tag-row {
   display: flex;
   flex-wrap: wrap;
-  gap: $ds-space-2;
+  gap: 5px;
   margin-top: $ds-space-2;
 }
 
 .tag {
-  padding: 1px $ds-space-2;
-  border: 1px solid $ds-outline;
-  border-radius: $ds-shape-xs;
+  display: inline-flex;
+  align-items: center;
+  height: 23px;
+  padding: 0 10px;
+  border-radius: $ds-shape-full;
   font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  font-weight: 600;
+  color: $ds-on-secondary-container;
+  background: rgba(143, 127, 224, 0.1);
 
   &--state {
-    border: none;
+    font-weight: 700;
   }
 
   &--0 {
@@ -550,28 +537,30 @@ export default {
   border-top: 1px solid $ds-outline-variant;
 }
 
-/* ---------- 按钮 ---------- */
+/* ---------- 按钮：一律胶囊；通过黑实心、拒绝藕粉描边 ---------- */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-sm;
+  border-radius: $ds-shape-full;
 
   &--sm {
     height: 36px;
-    padding: 0 $ds-space-4;
+    padding: 0 16px;
   }
 
   &--filled {
-    background: $ds-primary;
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
 
     .btn__text {
-      color: $ds-on-primary;
+      color: #ffffff;
     }
   }
 
   &--danger {
-    border: 1px solid $ds-error;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(176, 69, 47, 0.4);
 
     .btn__text {
       color: $ds-error;

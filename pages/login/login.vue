@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="content">
       <!-- 品牌区：零素材，靠宋体字距与竹青底色撑住气质 -->
       <view class="logo-section">
@@ -87,15 +87,10 @@
 
 <script>
 import { UserApi } from '@/api/index.js';
-import { createPageMotion } from '@/utils/motion.js';
-
-/* 页面转场：登录页只用到进入（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
 
 export default {
   data() {
     return {
-      ...pageMotion.data(),
       agreed: false,
       loading: false
     };
@@ -106,8 +101,6 @@ export default {
   },
 
   methods: {
-    ...pageMotion.methods,
-
     async checkLogin() {
       try {
         const user = await UserApi.getCurrentUser();
@@ -237,6 +230,8 @@ export default {
 .page {
   min-height: 100vh;
   background: $ds-surface;
+  /* 光斑：与首页同一档，右上 → 左下最欢迎（气泡漫游 · bg-tr 档） */
+  background-image: $ds-bg-tr;
 }
 
 .content {
@@ -258,27 +253,25 @@ export default {
 .logo-wrap {
   width: 80px;
   height: 80px;
-  border-radius: $ds-shape-lg;
-  background: $ds-primary;
+  border-radius: $ds-shape-md;
+  background: $ds-ink-btn;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: $ds-el-1;
+  box-shadow: $ds-btn-shadow;
 }
 
 .logo-word {
-  font-family: $ds-font-title;
   font-size: 40px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0;
-  color: $ds-on-primary;
+  color: #ffffff;
 }
 
 .app-name {
   margin-top: $ds-space-5;
-  font-family: $ds-font-title;
   font-size: $ds-fs-headline;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: $ds-ls-title;
   color: $ds-ink;
 }
@@ -315,21 +308,24 @@ export default {
   gap: $ds-space-3;
 }
 
+/* 主按钮：纯黑胶囊（不用渐变），一屏一个主操作 */
 .login-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: $ds-h-btn;
-  background: $ds-primary;
-  border-radius: $ds-shape-sm;
+  height: 46px;
+  background: $ds-ink-btn;
+  border-radius: $ds-shape-full;
+  box-shadow: $ds-btn-shadow;
 
   &.outline {
-    background: transparent;
-    border: 1px solid $ds-outline;
+    background: rgba(255, 255, 255, 0.68);
+    box-shadow: inset 0 0 0 1px $ds-outline;
 
     .btn-text {
       color: $ds-ink-2;
+      font-weight: 650;
     }
   }
 }
@@ -354,19 +350,19 @@ export default {
 }
 
 .checkbox {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid $ds-outline;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px $ds-outline;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: $ds-surface-container;
-  transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
+  background: rgba(255, 255, 255, 0.7);
+  transition: background-color $ds-dur-fast $ds-ease-out, box-shadow $ds-dur-fast $ds-ease-out;
 
   &.checked {
-    background: $ds-primary;
-    border-color: $ds-primary;
+    background: $ds-ink-btn;
+    box-shadow: none;
   }
 }
 
@@ -383,7 +379,7 @@ export default {
 
 .agreement-link {
   font-size: $ds-fs-label-sm;
-  color: $ds-primary;
+  color: $ds-secondary;
 }
 
 /* ---------- Loading ---------- */
@@ -393,7 +389,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(31, 29, 26, 0.4);
+  background: rgba(42, 39, 64, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -401,8 +397,8 @@ export default {
 }
 
 .loading-box {
-  background: $ds-surface-container;
-  border-radius: $ds-shape-md;
+  background: rgba(255, 255, 255, 0.86);
+  border-radius: $ds-shape-lg;
   padding: $ds-space-6 $ds-space-8;
   display: flex;
   flex-direction: column;

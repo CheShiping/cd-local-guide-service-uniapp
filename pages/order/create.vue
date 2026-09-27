@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <!-- 导航栏 -->
@@ -169,7 +169,6 @@
  *   半日 → 选上午/下午；全天 → 隐藏时段；小时加购 → 显示小时数
  */
 import { GuideApi, OrderApi, BOOKING_TYPE_UI, TIME_SLOT_LABELS } from '@/api/index.js';
-import { createPageMotion } from '@/utils/motion.js';
 
 const DOW = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 const MAX_PEOPLE = 9;
@@ -186,13 +185,9 @@ function toId(value) {
   return Number.isFinite(id) && id > 0 ? id : '';
 }
 
-/* 页面转场：进入淡入 + 返回时先播离场动画（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
-
 export default {
   data() {
     return {
-      ...pageMotion.data(),
       guideId: '',
       attractionId: '',
       packageSkuId: '',
@@ -274,8 +269,6 @@ export default {
   },
 
   methods: {
-    ...pageMotion.methods,
-
     async loadGuide() {
       try {
         const data = await GuideApi.getGuideDetail(this.guideId);
@@ -342,7 +335,7 @@ export default {
     },
 
     goBack() {
-      this.goBackWithMotion();
+      uni.navigateBack();
     },
 
     async submit() {
@@ -403,6 +396,8 @@ export default {
   flex-direction: column;
   height: 100vh;
   background: $ds-surface;
+  /* 光斑：表单页要克制，右上只剩一点紫（气泡漫游 · bg-calm 档） */
+  background-image: $ds-bg-calm;
 }
 
 .status-bar {
@@ -457,10 +452,12 @@ export default {
   padding: $ds-space-4;
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
 
   &--flush {
     padding: $ds-space-1 0;
+    overflow: hidden;
   }
 }
 
@@ -470,13 +467,13 @@ export default {
   align-items: center;
   justify-content: space-between;
   min-height: $ds-h-row;
-  padding: $ds-space-2 $ds-space-4;
+  padding: $ds-space-2 18px;
 }
 
 .form-row__label {
   flex-shrink: 0;
   width: 64px;
-  font-size: $ds-fs-body-sm;
+  font-size: 13.5px;
   color: $ds-ink-2;
 }
 
@@ -488,26 +485,31 @@ export default {
 }
 
 .value__main {
-  font-size: $ds-fs-body-sm;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 700;
   color: $ds-ink;
 }
 
 .value__sub {
   margin-top: 2px;
   font-size: $ds-fs-label-sm;
-  color: $ds-ink-2;
+  color: $ds-ink-3;
 }
 
 /* ---------- 需要填的部分 ---------- */
 .form-stack {
-  padding: $ds-space-3 $ds-space-4;
+  padding: $ds-space-3 18px;
+
+  + .form-stack {
+    border-top: 1px solid $ds-outline-variant;
+  }
 }
 
 .field-label {
   display: block;
   margin-bottom: $ds-space-2;
-  font-size: $ds-fs-label;
+  font-size: $ds-fs-label-sm;
+  font-weight: 700;
   color: $ds-ink-2;
 }
 
@@ -517,12 +519,14 @@ export default {
   justify-content: space-between;
   min-height: $ds-h-touch;
   padding: 0 $ds-space-3;
-  background: $ds-surface-high;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid transparent;
   border-radius: $ds-shape-sm;
 }
 
 .picker__text {
-  font-size: $ds-fs-body-sm;
+  font-size: 14.5px;
+  font-weight: 700;
   color: $ds-ink;
 }
 
@@ -534,20 +538,21 @@ export default {
 .segmented {
   position: relative;
   display: flex;
-  padding: 3px;
-  background: $ds-surface-high;
-  border-radius: $ds-shape-sm;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: $ds-shape-full;
 }
 
 /* 选中块：只用 translateX 滑，不动 width / left */
 .segmented__thumb {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  border-radius: $ds-shape-xs;
-  background: $ds-surface-container;
-  transition: transform $ds-dur-base $ds-ease-in-out;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  border-radius: $ds-shape-full;
+  background: #ffffff;
+  box-shadow: 0 4px 12px -8px rgba(80, 70, 140, 0.6);
+  transition: transform $ds-dur-slide $ds-ease-in-out;
 }
 
 .segmented__item {
@@ -558,12 +563,12 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-xs;
+  border-radius: $ds-shape-full;
 
   &.is-on {
     .segmented__text {
-      color: $ds-primary;
-      font-weight: 600;
+      color: $ds-secondary;
+      font-weight: 650;
     }
   }
 }
@@ -580,10 +585,10 @@ export default {
 }
 
 .stepper__btn {
-  width: 32px;
-  height: 32px;
-  border-radius: $ds-shape-full;
-  border: 1px solid $ds-outline;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: $ds-primary-container;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -592,24 +597,25 @@ export default {
 .stepper__sign {
   font-size: 15px;
   line-height: 1;
-  color: $ds-ink;
+  color: $ds-secondary;
 }
 
 .stepper__num {
-  min-width: 40px;
+  min-width: 26px;
   text-align: center;
-  font-size: $ds-fs-body-sm;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 750;
   color: $ds-ink;
 }
 
 .textarea {
   width: 100%;
-  height: 76px;
-  padding: $ds-space-3;
-  background: $ds-surface-high;
+  height: 78px;
+  padding: $ds-space-3 14px;
+  background: rgba(255, 255, 255, 0.7);
   border-radius: $ds-shape-sm;
-  font-size: $ds-fs-body-sm;
+  font-size: 13px;
+  line-height: 1.6;
   color: $ds-ink;
 }
 
@@ -621,8 +627,8 @@ export default {
   display: block;
   padding: 0 $ds-pad-screen;
   font-size: $ds-fs-label-sm;
-  line-height: 1.5;
-  color: $ds-ink-2;
+  line-height: 1.6;
+  color: $ds-ink-3;
 }
 
 /* ---------- 底部操作栏 ---------- */
@@ -635,43 +641,46 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $ds-space-3 $ds-pad-screen;
-  padding-bottom: max(#{$ds-space-3}, env(safe-area-inset-bottom));
-  background: $ds-surface-container;
-  border-top: 1px solid $ds-outline-variant;
+  gap: 14px;
+  padding: 13px $ds-pad-screen;
+  padding-bottom: max(13px, env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.78);
+  border-top: 1px solid rgba(42, 39, 64, 0.06);
   box-shadow: $ds-el-3;
 }
 
 .price-block__label {
   display: block;
   font-size: $ds-fs-caption;
-  color: $ds-ink-2;
+  color: $ds-ink-3;
 }
 
 .price {
-  font-size: $ds-fs-title-lg;
-  font-weight: 700;
+  font-size: 25px;
+  font-weight: 750;
   color: $ds-tertiary;
 }
 
 .price__symbol {
-  font-size: $ds-fs-label-sm;
+  font-size: 13px;
   font-weight: 600;
 }
 
+/* 主按钮：纯黑胶囊（不用渐变），一屏一个主操作 */
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $ds-shape-sm;
+  border-radius: $ds-shape-full;
 
   &--filled {
     height: $ds-h-btn;
     padding: 0 $ds-space-6;
-    background: $ds-primary;
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
 
     .btn__text {
-      color: $ds-on-primary;
+      color: #ffffff;
     }
   }
 

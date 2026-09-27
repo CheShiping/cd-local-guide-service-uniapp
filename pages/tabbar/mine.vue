@@ -1,5 +1,5 @@
 <template>
-  <view :class="['page', pageMotion]">
+  <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <view class="header-content">
@@ -153,7 +153,6 @@ import {
   ORDER_STATUS,
   switchMockRole
 } from '@/api/index.js';
-import { createPageMotion } from '@/utils/motion.js';
 
 const roleOptions = [
   { label: ROLE_LABELS[ROLES.TOURIST], value: ROLES.TOURIST },
@@ -161,13 +160,9 @@ const roleOptions = [
   { label: ROLE_LABELS[ROLES.ADMIN], value: ROLES.ADMIN }
 ];
 
-/* 页面转场：本页是 tabBar 页，只用到进入（H5；小程序是原生转场） */
-const pageMotion = createPageMotion();
-
 export default {
   data() {
     return {
-      ...pageMotion.data(),
       userInfo: {},
       roleOptions,
       useMock: USE_MOCK,
@@ -205,8 +200,6 @@ export default {
   },
 
   methods: {
-    ...pageMotion.methods,
-
     async loadUser() {
       try {
         const user = await UserApi.getCurrentUser();
@@ -290,10 +283,12 @@ export default {
 .page {
   min-height: 100vh;
   background: $ds-surface;
+  /* 光斑：信息密度高、最安静（气泡漫游 · bg-calm-ink 档） */
+  background-image: $ds-bg-calm-ink;
 }
 
 .status-bar {
-  background: $ds-surface;
+  background: transparent;
 }
 
 .header-content {
@@ -301,10 +296,8 @@ export default {
 }
 
 .header-title {
-  font-family: $ds-font-title;
   font-size: $ds-fs-display;
-  font-weight: 700;
-  letter-spacing: $ds-ls-title;
+  font-weight: 800;
   color: $ds-ink;
 }
 
@@ -314,7 +307,8 @@ export default {
   padding: $ds-space-4;
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
 }
 
 .user-main {
@@ -327,11 +321,13 @@ export default {
 }
 
 .avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: $ds-shape-sm;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  /* 圆头像 + 细双环：照片不「飘」在玻璃底上 */
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9), 0 0 0 3.5px rgba(143, 127, 224, 0.22);
   /* 头像来自接口字段；为空或加载失败时露底色兜底 */
-  background: $ds-primary-container;
+  background: $ds-surface-high;
 }
 
 .user-content {
@@ -348,16 +344,17 @@ export default {
 
 .user-name {
   font-size: $ds-fs-title;
-  font-weight: 600;
+  font-weight: 750;
   color: $ds-ink;
 }
 
 .role-tag {
-  padding: 1px $ds-space-2;
+  padding: 3px 10px;
   background: $ds-primary-container;
-  border-radius: $ds-shape-xs;
+  border-radius: $ds-shape-full;
   font-size: $ds-fs-caption;
-  color: $ds-on-primary-container;
+  font-weight: 600;
+  color: $ds-on-secondary-container;
 }
 
 .user-tip {
@@ -376,7 +373,8 @@ export default {
 .menu-group {
   background: $ds-surface-container;
   border: $ds-card-border;
-  border-radius: $ds-shape-md;
+  border-radius: $ds-shape-lg;
+  box-shadow: $ds-el-1;
   overflow: hidden;
 }
 
@@ -424,12 +422,13 @@ export default {
 
 .menu-badge {
   min-width: 20px;
-  padding: 1px $ds-space-2;
+  padding: 1px 8px;
   border-radius: $ds-shape-full;
-  background: $ds-tertiary;
+  background: $ds-brand-2;
   text-align: center;
   font-size: $ds-fs-caption;
-  color: $ds-on-primary;
+  font-weight: 600;
+  color: #ffffff;
 
   &.warn {
     background: $ds-warning;
@@ -438,7 +437,7 @@ export default {
 
 .arrow {
   font-size: 18px;
-  color: $ds-outline;
+  color: $ds-ink-3;
 }
 
 /* ---------- 演示身份切换 ---------- */
@@ -454,18 +453,18 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid $ds-outline;
   border-radius: $ds-shape-full;
-  /* 实底选中态：底色与边框一起过渡，切换身份才不是硬跳 */
-  transition: background-color $ds-dur-fast $ds-ease-out, border-color $ds-dur-fast $ds-ease-out;
+  background: rgba(255, 255, 255, 0.6);
+  /* 实底选中态（黑胶囊）：底色一起过渡，切换身份才不是硬跳 */
+  transition: background-color $ds-dur-fast $ds-ease-out;
 
   &.is-on {
-    background: $ds-secondary-container;
-    border-color: $ds-secondary-container;
+    background: $ds-ink-btn;
+    box-shadow: $ds-btn-shadow;
 
     .role-chip__text {
-      color: $ds-on-secondary-container;
-      font-weight: 600;
+      color: #ffffff;
+      font-weight: 700;
     }
   }
 }
