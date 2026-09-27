@@ -2,20 +2,22 @@
 /**
  * 动效静态校验（零依赖）
  *
- * 规范在 DESIGN.md §13，令牌在 uni.scss §1.8，通用计算在 utils/motion.js。
+ * 规范在 DESIGN.md §13，令牌在 uni.scss §1.10，时长镜像在 utils/motion.js 的 MOTION。
  * 这里只查「机器能一眼判死」的几条，把最容易写坏的动效坑挡在提交前：
  *
- *   1. 不许动 layout —— transition 的属性只允许 transform / opacity / color / background-color / border-color
+ *   1. 不许动 layout —— transition 的属性只允许 transform / opacity / color / background-color
+ *      / border-color / box-shadow（box-shadow 只给单选环这类小元素与卡片层级，见 DESIGN.md §13.2）
  *      （写 `transition: all` 或 `transition: 200ms ease`（隐式 all）都算违规）
- *   2. 不许 `ease-in` —— 入场用 $ds-ease-out，屏上移动用 $ds-ease-in-out
+ *   2. 不许 `ease-in` —— 过渡统一 $ds-ease-out，进场用 $ds-ease-enter
  *   3. `linear` 只给加载指示器（常量运动）；transition 上出现 linear 一律算错
- *   4. UI 动效时长 ≤ 300ms，且 vue 文件里只能写 $ds-dur-* 令牌，不许出现裸的 `200ms`
- *   5. 不许 `scale(0)` —— 入场从「差一点」开始，不从无到有
+ *   4. UI 动效时长 ≤ 400ms（当前定稿只用到 150 / 200ms），且 vue 文件里只能写 $ds-dur-* 令牌，不许出现裸的 `200ms`
+ *   5. 不许 `scale(0)` —— 缩放从「差一点」开始，不从无到有
  *   6. 不许 `:hover` —— 触摸端没有 hover，按压反馈统一用 hover-class="is-pressed"
  *   7. keyframes 必须放在 App.vue 的全局样式里；页面不许自带 @keyframes
  *   8. 页面里引用的动画名必须在 App.vue 有对应 @keyframes（写错的动画名会静默失效）
- *   9. 入场动画名不许内联 —— 必须写在 class 里，否则 prefers-reduced-motion 覆盖不掉
+ *   9. 动画名不许内联 —— 必须写在 class 里，否则 prefers-reduced-motion 覆盖不掉
  *  10. App.vue 必须有 prefers-reduced-motion 降级
+ *  11. utils/motion.js 的 MOTION 与 uni.scss 的 $ds-dur-* 必须逐项一致
  *
  * 用法：
  *   node scripts/check-motion.mjs              # 校验真实文件
@@ -28,20 +30,21 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import os from 'node:os';
 import path from 'node:path';
 
-/** transition 允许的动画属性（跳过 layout 与 paint） */
+/** transition 允许的动画属性（跳过 layout；box-shadow 见 DESIGN.md §13.2 白名单） */
 const TRANSITION_PROPS = new Set([
   'transform',
   'opacity',
   'color',
   'background-color',
-  'border-color'
+  'border-color',
+  'box-shadow'
 ]);
 
 /** 时间字面量：140ms / 0.22s */
 const TIME_LITERAL = /^\d*\.?\d+m?s$/;
 
-/* UI 动效的时长上限。用户明确要求内容切换「慢到看得清」，
-   所以预算从 300ms 放宽到 400ms —— 仍然只允许「一次性、低频、整屏替换」的场景用满。 */
+/* UI 动效的时长上限：定稿「气泡漫游」只用到 150ms（按压 / 颜色）与 200ms（指示器 / 较大表面），
+   预算留到 400ms 是给将来的一次性、低频过渡留余量。 */
 const MAX_UI_DURATION_MS = 400;
 
 /** 把 `140ms` / `0.22s` 换算成毫秒；不是时间返回 null */
@@ -463,7 +466,7 @@ for (const note of notes) console.log(`  ${note}`);
 if (failures.length) {
   console.log(`\n失败（${failures.length}）：`);
   for (const failure of failures) console.log(`  x ${failure}`);
-  console.log('\n动效校验未通过。规范见 DESIGN.md §13，令牌见 uni.scss §1.8。');
+  console.log('\n动效校验未通过。规范见 DESIGN.md §13，令牌见 uni.scss §1.10。');
   process.exit(1);
 }
 

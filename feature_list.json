@@ -1,7 +1,7 @@
 {
-  "scopeSource": "docs/mvp-scope.json（人读版：docs/MVP 范围：只做 3 件事.md；已含 6 处经用户拍板的修订）",
-  "prototypeSource": "design/html/prototype.html（7 屏，定稿主题 宣纸 · 疏；每个 feat 的界面细节以对应屏为准）",
-  "designSource": "DESIGN.md（规范）+ uni.scss（$ds-* 令牌），两者必须同步修改，由 scripts/check-tokens.mjs 校验",
+  "scopeSource": "docs/mvp-scope.json（人读版：docs/MVP 范围：只做 3 件事.md；已含 9 处经用户拍板的修订 dev-001 ~ dev-009）",
+  "prototypeSource": "design/redesign/index.html（七屏，定稿主题「气泡漫游」，2026-09-27 feat-016 起为视觉基准；tokens.css / style.css 是原型侧的色值、圆角与阴影来源。design/html/ 与 design/prototypes/ 为历史原型，仅存档）",
+  "designSource": "DESIGN.md（规范）+ uni.scss（$ds-* 令牌），两者必须同步修改，由 scripts/check-tokens.mjs 与 scripts/check-motion.mjs 校验；原型侧对照 design/redesign/tokens.css",
   "docPolicy": "任何 feat 标记 done 前必须产出 docx/codeimpl-sum/设计文档-feat-XXX-功能名.md（六章节齐全）；修 bug 必须产出 docx/bugfix/BUG修复-YYYYMMDD-简述.md；两者都要登记到 progress.md 的「本次会话修改的文件」",
   "features": [
     {
@@ -122,7 +122,16 @@
       "description": "把七屏里所有「硬跳」补成有依据的动效，三类替换各配一组：① 内容横向切换 —— 切分类时列表卡片按行进方向入场（左右各 24px、360ms、逐项 +60ms 封顶 300ms）；② 页面切换（进入 / 返回）—— 小程序走原生转场不加料，H5 用 CSS 模拟（进入淡入右移、返回先播离场再 navigateBack），App 用 pages.json 的 globalStyle.app-plus；③ 导航栏切换 —— 等宽页签改单根滑动下划线、分段控件改滑动滑块、横向滚动页签行下划线改 scaleX 收放，全部只动 transform；④ 加载更多 —— 加载态换常量运动的转圈指示器，新追加卡片上浮入场；⑤ 状态过渡 —— chip / 套餐单选 / 可约日期 / 在线开关 / 角色切换；⑥ 按压反馈覆盖全部可点元素（卡片、按钮、页签、chip、分段项、菜单行、返回图标、步进器、勾选框、协议链接），scale(0.96) + 8% 当前色叠层；⑦ prefers-reduced-motion 降级保留淡入。落实方式：CSS 动画（无 JS 逐帧）+ 节点批次重建，不动 layout 属性；新增 utils/motion.js（createListEnter / createPageMotion）与 scripts/check-motion.mjs 门禁，DESIGN.md §13 与 uni.scss §1.8 同步定令牌。明确不做：数字类内容、平台自带动效（Toast/Modal/picker/下拉刷新）、排序重排（FLIP）",
       "dependencies": ["feat-006", "feat-013"],
       "status": "done",
+      "supersededBy": "feat-016（动效口径被阶段 2 的视觉改版覆盖：列表入场编排、H5 手写页面转场与 stagger 全部删除，只保留按压/颜色/指示器三类状态动效）",
       "evidence": "DESIGN.md §13 动效规范（时长/曲线/属性白名单/五组动效/页面转场的三端差异/按压反馈/明确不做/降低动效/工程约定）+ uni.scss §1.8 九个时长令牌与两条曲线（$ds-dur-press 140 / fast 160 / slide 280 / base 360 / page 320 / page-leave 260 / spin 900、$ds-ease-out / in-out、$ds-stagger-step 60 / max 300），且与 utils/motion.js 的 MOTION 逐项一致（门禁强制）；App.vue 全局新增 9 个 @keyframes、.ds-enter-* / .ds-fade-in / .ds-pop-in / .ds-spinner(--on-primary/--lg) / .is-page-in / .is-page-out（条件编译只对 H5）/ .ds-pressable + .is-pressed 与 ::after 8% 叠层 / prefers-reduced-motion 降级；新增 utils/motion.js（MOTION / enterAnimClass / staggerDelay / stepDirection / createListEnter / createPageMotion）；11 个页面接入页面转场（有返回键的 8 页 goBack 改走 goBackWithMotion），6 个列表页接入方向入场与分页入场，等宽页签（我的订单 4 态、地陪审核 2 态）与两处分段控件（接单、下单）改滑动指示器，全站可点元素补按压反馈，登录页删除自带 @keyframes spin 改用全局指示器；pages.json 补 app-plus 转场配置；新增 scripts/check-motion.mjs（12 类违规 + --self-test 全检出，含 SCSS 令牌 ↔ JS 常量一致性）并接入 init.ps1 / init.sh 第 4 步；./init.ps1 8 步全绿（保真告警 0 / 令牌 106 变量 / 动效 9 keyframes + 9 令牌一致 / 闭环 50/50），11 条改动资产已先登记原因再刷新哈希；产出 docx/codeimpl-sum/设计文档-feat-015-动效规范与落地.md。2026-09-26 返工（用户反馈「返回动画看着不舒服，要简单轻微」→「保持与进入动画一致」，三版定稿）：ds-page-out 由 opacity 0.15 + translateX(40%) → 0.7 + 8px → 只淡一层不位移 → **与 ds-page-in 完全对称（opacity 1→0 + translateX(0→32px)，同 32px / 同 320ms / 同 $ds-ease-out，方向相反）**；$ds-dur-page-leave 与 MOTION.pageLeave 260 → 200 → 180 → 320ms（与 $ds-dur-page 同值）；.is-page-out 保持 fill-mode: both。结论：页面进出必须成对设计，不对称比单看一版难看更刺眼。DESIGN.md §13.1/§13.4（含三版对照表）/§14 同步；verify-assets --update 刷新 App.vue / uni.scss 哈希；保真 / 令牌 / 动效三项门禁复跑通过"
+    },
+    {
+      "id": "feat-016",
+      "name": "视觉改版定稿「气泡漫游」全端落地",
+      "description": "按 design/redesign/ 的方向把整体视觉换掉：低饱和三色（雾紫 #8f7fe0 / 藕粉 #e58fa6 / 薄荷 #7fc4ae）+ 墨阶 + 玻璃拟态 + 大圆角 + 纯色胶囊按钮（主按钮纯黑 #17141f）；背景光斑按七屏各配一档；页签 / chip / 日期 / 单选选中态统一改黑胶囊（弃用下划线指示器）；头像改圆形双环；DESIGN.md 全量重写、uni.scss 令牌重写，11 个页面与 pages.json / manifest.json / README 同步；动效口径收敛为「只服务状态变化」（150 / 200ms）；tabBar 图标按新配色重新生成。",
+      "dependencies": ["feat-013", "feat-015"],
+      "status": "done",
+      "evidence": "提交 bb3d0ab（2026-09-27 feat(design)）：DESIGN.md 全量重写为「气泡漫游」（§13 动效改为与 shadcn/ui 对齐，属性白名单含 box-shadow）、uni.scss 重写为气泡漫游令牌（雾紫 / 藕粉 / 薄荷 + 墨阶 + 七档光斑变量），11 个页面按新系统改造（黑胶囊选中态与主按钮、玻璃卡片、七档分屏光斑、圆形双环头像），首页对齐原型（输入框搜索条、快捷图标大卡矩阵、附近热门区块、封面场景角标）。动效收敛：utils/motion.js 的 MOTION 由 9 项缩为 5 项时长 + 2 条曲线（press 150 / fast 150 / slide 200 / base 200 / spin 900），$ds-stagger-* 归零；**列表入场编排与 H5 手写页面转场整体删除**（页面不再引用 motion.js，App.vue 只剩 ds-fade-in / ds-pop-in / ds-spin 三个 @keyframes）；切分类改滚动复位到顶部；滚动条全局隐藏；tabBar 配色改 #9a95ae / #6f61bd 并由 scripts/gen-tabbar-icons.mjs 重新生成 4 张图标。门禁实测（2026-09-27）：check-tokens 通过（uni.scss 120 变量 / 15 处引用 / DESIGN.md 13 个色值全对齐）、check-schema 通过（10 表 109 字段）、check-mock 通过（52 用户 / 50 地陪 / 20 景点 / 16 订单 / 头像素材 39 张）、smoke-flow 50/50。**遗留（本次未收尾）**：verify-assets 因 16 条被改资产未登记原因、未刷新哈希而为红；check-motion 的属性白名单当时缺 box-shadow，已于 2026-09-27 对齐 DESIGN.md §13.2；uni.scss §1.10 残留 $ds-dur-page / $ds-dur-page-leave / $ds-stagger-*（页面已无引用）"
     }
   ]
 }

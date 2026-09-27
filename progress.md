@@ -2,10 +2,11 @@
 
 ## 当前状态
 
-**最后更新：** 2026-09-26
-**当前功能：** 无进行中 —— **MVP 全部功能已完成**（feat-001 ~ feat-015 中 15 个全部 `done`）
-**验证入口：** `./init.ps1` / `bash init.sh` 共 **8 步**（第 7 步「端到端闭环校验」见下方 bug 记录；第 4 步「动效校验」为本轮 feat-015 新增）
-**当前阶段：** 阶段 0「保留原有资产」= 完成；阶段 1「成都景点地陪小程序」= **7 个页面全部落地、三端闭环打通、动效规范落地**，剩余工作只剩真机人工走查与后端对接
+**最后更新：** 2026-09-27
+**当前功能：** 无进行中 —— **MVP 全量 + 视觉改版全部完成**（feat-001 ~ feat-016 共 16 个 `done`）
+**验证入口：** `./init.ps1` / `bash init.sh` 共 **8 步**
+**当前阶段：** 阶段 0「保留原有资产」完成 → 阶段 1「成都景点地陪小程序」完成（7 页 + 三端闭环 + 数据层/数据库定稿）→ 阶段 2「视觉改版定稿『气泡漫游』」完成（feat-016，提交 `bb3d0ab`）→ **阶段 3「联调与验收」进行中**
+**门禁现状（2026-09-27 实测，不要凭印象）：** `check-tokens` ✅（120 变量 / 15 引用 / 13 色值对齐）、`check-motion` ✅（白名单已与 `DESIGN.md` §13.2 对齐）、`check-schema` ✅（10 表 109 字段）、`check-mock` ✅（52 用户 / 50 地陪 / 20 景点 / 16 订单）、`smoke-flow` ✅ **50/50** ｜ **`verify-assets` ❌**（16 条被改资产未登记原因、未刷新哈希 —— 见「阻塞 / 风险」第 1 条，**动手改代码前先收尾**）
 
 ## 阶段 1 范围（已锁定）
 
@@ -19,13 +20,14 @@
 - **图片策略**：景点 `coverUrl`、地陪 `avatarUrl` 由后端返回；原型阶段先用网络占位图；禁止自绘插画冒充照片
 - 不做：IM、定位、分销、团购、广场、等级、自动结算、多城市、优惠券、动态定价、行程日志、轨迹、门店、复杂排班、加价规则、评价、地陪申请流程、投诉
 
-## 视觉（已定稿）
+## 视觉（已定稿：气泡漫游）
 
-- **主题：宣纸 · 疏**（唯一有效主题；历史备选「竹影 · 纹」「青瓷 · 紧」按定稿移除）
-- 骨架：Material Design 3 令牌（色彩角色 / Type Scale / Shape / Elevation / State Layer / Motion）
-- 主色竹青绿 `#2f6b5e` 只用于可点与选中；朱砂 `#b4462f`（M3 tertiary）只给价格与关键数字；页面底为宣纸 `#f7f4ed`
-- 标题走系统宋体栈 + `letter-spacing: .04em`，**不加载任何字体文件**；纹理用 CSS 径向点阵生成
-- 三个同步源：`DESIGN.md`（文字口径）+ `uni.scss`（`$ds-*` 落地令牌）+ `design/html/prototype.html`（7 屏视觉基准）
+- **主题：气泡漫游**（2026-09-27 feat-016 起唯一有效主题；历史主题「宣纸 · 疏」及其备选全部作废。来源 `design/redesign/`）
+- 视觉语言：低饱和三色（雾紫 `#8f7fe0` / 藕粉 `#e58fa6` / 薄荷 `#7fc4ae`）+ 墨阶 + 玻璃拟态 + 大圆角 + **纯色胶囊按钮**（主按钮纯黑 `#17141f`）
+- 深紫 `#7b6bd0`（`$ds-tertiary`）全站**只**给价格与关键数字；页底奶油白 `#fdfcfa`；每屏一组背景光斑（七档 `$ds-bg-*`）
+- 页签 / chip / 日期 / 单选选中态一律**黑胶囊**（弃用下划线指示器）；卡片玻璃片不描边；头像一律圆形 + 细双环
+- 字体不加载文件：系统黑体栈 + 800 字重替代（品牌字体「造字工房元黑体」仅作设计意图）
+- 同步源：`DESIGN.md`（文字口径）+ `uni.scss`（`$ds-*` 落地令牌）+ `design/redesign/`（七屏原型与 `tokens.css`）；`design/html/`、`design/prototypes/` 仅历史存档
 
 ## 数据库（已定稿）
 
@@ -64,7 +66,7 @@
 - [x] 资产台账与保真门禁：`docs/legacy-assets.md` / `.json`（22 条在册 + 1 条 `removedAssets`）+ `scripts/verify-assets.mjs`
 - [x] harness 骨架：`AGENTS.md`、`feature_list.json`、`progress.md`、`session-handoff.md`
 - [x] MVP 范围固化 + 8 处修订：`docs/mvp-scope.json`
-- [x] HTML 原型 7 屏 + 视觉定稿落地：`design/html/prototype.html`、`DESIGN.md`、`uni.scss`
+- [x] HTML 原型 7 屏 + 视觉定稿落地：`design/html/prototype.html`、`DESIGN.md`、`uni.scss`（**已被 feat-016 取代**：视觉基准改 `design/redesign/`）
 - [x] **feat-014 数据库表结构定稿**：10 张表 / 109 字段 + `seed.sql` + `scripts/check-schema.mjs`
 - [x] **feat-004 MVP 数据层**：`api/` 分层（constants / errors / mock / http）+ `scripts/check-mock.mjs`
 - [x] **feat-003 协议页与图片兜底**：`pages/webview/agreement.vue` + 6 处图片引用改字段 + 底色兜底
@@ -77,29 +79,28 @@
 - [x] **feat-011 接单页**：`pages/guide/orders` + `mine.vue` 角色分流 + 演示身份切换
 - [x] **feat-012 后台**：订单管理视觉重做 + 地陪审核页重写，`gap-003` 关闭
 - [x] **feat-013 令牌收口与文档同步**：8 页面令牌化 + tabBar/manifest/README/App.vue + 删除过渡适配层
-- [x] **feat-015 动效规范与落地**：内容横向切换的方向性入场、页签/分段滑动指示器、加载更多（转圈 + 新卡片上浮）、状态过渡、按压反馈、降低动效；新增 `utils/motion.js` 与 `scripts/check-motion.mjs`
+- [x] **feat-015 动效规范与落地**（**已被 feat-016 取代**：列表入场编排、逐项 stagger、H5 手写页面转场全部删除，只留按压 / 颜色 / 指示器三类状态动效）：页签/分段滑动指示器、加载更多（转圈）、状态过渡、按压反馈、降低动效；新增 `utils/motion.js` 与 `scripts/check-motion.mjs`
+- [x] **feat-016 视觉改版定稿「气泡漫游」全端落地**（提交 `bb3d0ab`）：`DESIGN.md` 与 `uni.scss` 全量重写（低饱和三色 + 墨阶 + 玻璃拟态 + 大圆角 + 纯黑胶囊按钮 + 七档分屏光斑），11 个页面按新系统改造，`pages.json` tabBar 配色与 4 张图标重新生成，`manifest.json` 与 `README` 同步；动效口径收敛为「只服务状态变化」
 
-### 动效清单（feat-015 落地了什么）
+### 动效口径（feat-016 定稿：只服务状态变化）
+
+来源三处必须同步：`DESIGN.md` §13 ↔ `uni.scss` §1.10 ↔ `utils/motion.js` 的 `MOTION`。
 
 | 场景 | 做法 | 时长 / 曲线 |
 |---|---|---|
-| 切分类（六个列表） | 卡片按行进方向入场（左右各 24px），逐项 +60ms 封顶 300ms | **360ms** `--ease-out` |
-| 加载更多 | 加载态换 `linear` 转圈；新追加卡片上浮 8px | **360ms** `--ease-out` |
-| **页面进入**（navigateTo / 首次显示） | 根节点常带 `is-page-in`；**仅 H5**（小程序是原生转场；App 用 `pages.json` 的 `app-plus`） | 320ms `--ease-out` |
-| **页面返回**（导航栏返回键） | 换 `is-page-out` → 播完再 `navigateBack()`；**与进入完全对称**（同 32px / 同曲线，方向相反） | 320ms `--ease-out` |
-| 等宽页签（我的订单 4 态 / 地陪审核 2 态） | 单根滑动下划线 `translateX(下标 × 100%)` | 280ms `--ease-in-out` |
-| 分段控件（接单 / 下单） | 滑动滑块，宽度由段数算，只动 `transform` | 280ms `--ease-in-out` |
-| 横向滚动页签行（首页区域） | 下划线改真实元素，`scaleX(0)→scaleX(1)` 收放，不动 `width` | 360ms / 160ms |
-| chip / 套餐单选 / 可约日期 / 角色切换 | 底色 + 边框 + 文字色过渡 | 160ms `--ease-out` |
-| 在线开关 | 圆点 `translateX(20px)` 滑过去（原来是换 `justify-content` 硬跳） | 360ms `--ease-out` |
-| **按压反馈**（全部可点元素） | `hover-class="is-pressed"` + `scale(0.96)`，再叠一层 8% `currentColor`（照 §8 规范，不用 opacity 变暗） | 140ms `--ease-out` |
-| 空状态 / 「没有更多了」/ 登录遮罩 | 淡入 | 360ms `--ease-out` |
-| 勾选符号 / 套餐单选圈 | 弹入（scale 0.6 → 1） | 140ms `--ease-out` |
-| 降低动效 | 去掉位移与回弹，**保留淡入**；页面转场只留淡入淡出 | — |
+| 按压反馈（全部可点元素） | `hover-class="is-pressed"` + `hover-stay-time="70"` + `scale` 缩放（不位移，不用 opacity 变暗） | **150ms** `--ease-out` |
+| chip / 套餐单选 / 可约日期 / 开关 / 搜索条 / 角色切换 | 底色 + 边框 + 文字色过渡（`box-shadow` 用于单选环） | **150ms** `--ease-out` |
+| 等宽页签（我的订单 4 态 / 地陪审核 2 态） | 选中态改**黑胶囊**（不再用滑动下划线） | **150ms** |
+| 分段控件（接单 / 下单） | 白色滑块 `translateX` 移动，只动 `transform` | **200ms** `--ease-out` |
+| 较大表面（卡片 / 面板 / 底部操作栏） | 颜色与阴影过渡 | **200ms** `--ease-out` |
+| 首页分类 Dock | 滚过阈值后淡入 + 4px 下滑 | **150ms** |
+| 加载指示器 | 全局 `.ds-spinner`（含 `--on-primary` / `--lg`），常量运动 | **900ms** `linear` |
+| 勾选符号 / 套餐单选圈 | 弹入 `ds-pop-in` | **150ms** |
+| 降低动效 | `prefers-reduced-motion` 去掉位移与回弹、保留淡入（规则在 `App.vue` 全局样式末尾） | — |
 
-按压反馈覆盖：卡片、按钮、四态页签、chip、分段项、菜单行、返回图标、步进器、勾选框、协议链接、在线开关。
+明确**不做**：列表内容替换的入场编排与逐项 stagger（方向性位移在整页滚动容器里会横向溢出触发滚动条；切分类改为滚动复位到顶部）、**页面转场**（小程序是原生转场；H5 手写淡入淡出会透出下层页面，已删除）、数字动画（金额 / 统计 / 步进器）、滚动动效、平台自带组件（Toast / Modal / picker / 下拉刷新）。
 
-明确**不做**动效：金额与统计数字、步进器的人数/小时数（用户正在读的数）、Toast / Modal / picker / 下拉刷新（平台自带）、排序重排（需 FLIP）、**不给小程序自己加页面转场**（微信是原生转场，再加一层就是双重动画）
+**属性白名单**：`transform` / `opacity` / `color` / `background-color` / `border-color` / `box-shadow`；禁止 `transition: all`、禁止动 layout 属性、禁止 `:hover`（按压统一 `hover-class`）、禁止页面自带 `@keyframes`（由 `scripts/check-motion.mjs` 把关）
 
 ### 进行中
 
@@ -107,44 +108,49 @@
 
 ### 下一步
 
-1. **人工走查（首要，也是唯一没做过的验证维度）**：在 H5（`npm run dev:h5`）或微信开发者工具里跑一遍三端闭环 —— 游客下单 → 地陪接单 → 平台确认 → 地陪完成；重点看页签切换、下拉刷新、图片兜底、弹窗确认的观感。
+1. **收尾资产保真门禁（最优先 —— 唯一让 `./init.ps1` 变红的项）**：给 16 条被改资产的 `note` 登记「2026-09-27 视觉改版『气泡漫游』」的原因 → `node scripts/verify-assets.mjs --update` → `./init.ps1` 复跑（见「阻塞 / 风险」第 1 条）。
+2. **人工走查（唯一没做过的验证维度）**：在 H5（`npm run dev:h5`）或微信开发者工具里跑一遍三端闭环 —— 游客下单 → 地陪接单 → 平台确认 → 地陪完成；重点看**玻璃卡片两端的观感差异**（小程序无 `backdrop-filter`，退化为半透明白底）、黑胶囊选中态、七档光斑是否过浓、页签与下拉刷新、图片兜底、弹窗确认、底部操作栏是否贴底。
    > 数据层闭环已由 `scripts/smoke-flow.mjs` 证明跑得通（50/50），但它证明不了渲染与交互。
-   > **feat-015 的动效尤其需要真机看**：`hover-class` 的按压反馈、`translateX` 百分比驱动的滑动指示器、`prefers-reduced-motion` 在小程序端是否生效，都只有真机能确认。
-2. **跑一次真实构建**：`./init.ps1 -Full`（会安装依赖 + `npm run build:mp-weixin`），确认 `api/mock/seed.json` 的 JSON import、`uni.scss` 令牌、`env(safe-area-inset-bottom)` 与 `max(#{$ds-space-3}, ...)` 写法在编译期都没问题。
-3. 若走查发现问题 → 按规则产出 `docx/bugfix/BUG修复-YYYYMMDD-简述.md` 并登记到本文件。
-4. 后续升级路线见「未来候选」。
+3. **跑一次真实构建**：走 HBuilderX（`npm run build:mp-weixin` 在本仓库跑不通，CLI 期望 `src/` 布局），确认 `api/mock/seed.json` 的 JSON import、`uni.scss` 令牌、`env(safe-area-inset-bottom)` 等编译期写法。
+4. **微信端复核**：`manifest.json` 的 `mp-weixin.appid` 已填 `wx297713513aa45aca`（工作区未提交），确认 `uni.login()` 能拿到 code；同时确认「不再有任何页面转场」在微信端就是原生滑动（不该出现双重动画）。
+5. 若走查发现问题 → 按规则产出 `docx/bugfix/BUG修复-YYYYMMDD-简述.md` 并登记到本文件。
+6. **待清理的文档/令牌口径**：`README.md` 仍写着「宣纸 · 疏 / 4 个校验脚本 / `design/html/prototype.html` 原型」，与「气泡漫游」不符；`uni.scss` §1.10 残留 `$ds-dur-page` / `$ds-dur-page-leave` / `$ds-stagger-*`（页面已无引用，`$ds-ease-in-out` 仍被两处分段控件用着）。两者都不被任何门禁覆盖。
+7. 后续升级路线见「未来候选」。
 
 ## 阻塞 / 风险
 
+- [ ] **（最优先）资产保真门禁为红**：`node scripts/verify-assets.mjs` 列出 16 条「资产被修改」——11 个页面 + `App.vue` + `uni.scss` + `pages.json` + `manifest.json` + `README.md` + 4 张 tabBar 图标，全部是 feat-016 视觉改版的预期改动，但当时**没有先登记 `note` 再刷新哈希**（违反 `AGENTS.md` 铁律第 2 条）。收尾方式：逐条在 `docs/legacy-assets.json` 补登记「2026-09-27 视觉改版『气泡漫游』」的原因 → `node scripts/verify-assets.mjs --update` → `./init.ps1` 复跑。在此之前 `./init.ps1` 会在第 2 步中断，仓库处于「禁止继续新增功能」状态
+- [x] ~~`check-motion` 为红（2 处 `box-shadow` 过渡被拦）~~ **已修**（2026-09-27）：`DESIGN.md` §13.2 的属性白名单本来就允许 `box-shadow`，是校验脚本没跟上 —— 已把 `box-shadow` 加进 `scripts/check-motion.mjs` 的 `TRANSITION_PROPS`，并把脚本头部注释里「§1.8 / ≤300ms / 入场用 ease-out」等过期口径同步为「§1.10 / ≤400ms / 定稿只用到 150-200ms」；`--self-test` 的 12 类夹具仍全部检出
 - [x] ~~缺依赖：无 `node_modules`~~ **已安装**（HBuilderX / npm 装的都在）。但 **`npm run build:mp-weixin` 在本仓库跑不通，且与本轮改动无关**：根目录是 HBuilderX「普通项目」布局（源码在根），而 `@dcloudio/uni-cli` 期望源码在 `src/`，报 `ENOENT: src/manifest.json`。要么把源码挪进 `src/`（大改目录结构，需单独评估），要么接受「真实编译走 HBuilderX」。`./init.ps1` 第 8 步因此长期只能跳过
-- [ ] **新增 WXSS 未在 HBuilderX 里真机确认过**（feat-015）：`/* #ifdef H5 */` 条件编译段、`.is-pressed::after` 叠层、`animation-fill-mode: backwards`、`@media (prefers-reduced-motion)` 这四样只有真编译才知道小程序端表现如何。已用 HBuilderX 自带的 dart-sass 验证过 12 个样式块能编译（见 `docx/bugfix/BUG修复-20260926-SCSS变量未定义实为注入缓存陈旧.md`）
-- [ ] **H5 返回转场的「换页那一下」只能靠眼睛验收**：上一页是被缓存复用的，返回时不会再播进入动画；已用「不淡到 0 + 同色宣纸底」把跳变压到最小，但顺不顺必须人工看
+- [ ] **小程序端 WXSS 未在 HBuilderX 里真机确认过**（feat-016）：玻璃卡片的 `backdrop-filter` 在小程序端不生效（按 `DESIGN.md` §12 退化为半透明白底，属预期行为，不要为它写条件编译）、`.is-pressed` 叠层、`@media (prefers-reduced-motion)` 这几样只有真编译才知道小程序端表现如何。已用 HBuilderX 自带的 dart-sass 验证过样式块能编译（见 `docx/bugfix/BUG修复-20260926-SCSS变量未定义实为注入缓存陈旧.md`）
+- [x] ~~H5 返回转场的「换页那一下」只能靠眼睛验收~~ **已消解**：feat-016 彻底删除了 H5 手写页面转场（改瞬时切换），不再存在「换页那一下」的问题；页面也全部不再引用 `utils/motion.js`
 - [ ] **本轮 8 个功能全部未做真机人工走查**：静态门禁只能证明结构与数据自洽，证明不了交互与观感
 - [x] ~~无测试框架~~ **部分解决**：新增 `scripts/smoke-flow.mjs`（第 7 项门禁，动态运行 mock 数据层跑三端闭环 + 负向用例 + 自检）。剩余缺口是「页面层」没有自动化：模板渲染、交互与样式仍只能靠人工走查
 - [ ] **「URL 参数未归一化」这类页面层问题全门禁都看不见**（2026-09-26 用户报错暴露）：下单页把字符串参数与数字 id 用 `===` 比较，静默回落成 `packages[0]`，且因为数据层 `byId()` 有 `Number()` 兜底，`smoke-flow.mjs` 一路绿。已修复（`toId()` 入口归一化），但**能拦住它的门禁还没有** —— 候选方案见「未来候选」的「页面层门禁」
 - [x] ~~静态门禁看不见运行时问题~~ **已验证**：本轮两个阻断级 bug（mock 仓库缺字典表、档期生成恒空）都通过了全部静态门禁，只有动态门禁抓到 —— 已归档为两份 bugfix 文档
 - [ ] 景点封面与游客/管理员头像仍依赖网络占位图：`picsum.photos` / `i.pravatar.cc` 离线时看到的是容器底色（这是设计好的兜底行为）
 - [ ] **包体风险（待用户决定）**：`static/guide/` 39 张素材合计 **12.56MB**（平均 330KB、最大 1.33MB），微信小程序主包上限 **2MB**，超出 6.3 倍 → 上小程序前需要压缩（长边 240px 约 0.5MB）或改走后端/CDN URL；H5 演示不受影响
-- [ ] `manifest.json` 的 mp-weixin `appid` 为空、`App.vue` 已不再用云开发：发布前需填真实 appid
+- [x] ~~`mp-weixin.appid` 为空~~ **已配置**（2026-09-27，工作区未提交）：`manifest.json` 的 `mp-weixin.appid` = `wx297713513aa45aca`；同一次改动还把 uni-app `appid` 改为 `__UNI__93760BA`、应用名由「成都地陪」改为 **「耍搭」**（该文件同时被重新格式化为 2 空格缩进）。连带解除：微信端 `uni.login()` 不再报「获取登录 code 失败」。注意 `docx/bugfix/BUG修复-20260927-微信端报webapi_getwxaasyncsecinfo根因是appid未配置.md` 写于改配置**之前**，其中「appid 仍为空 / 未改动 manifest」的结论已过期
 - [ ] 未在真实 MySQL 上执行过 `schema.sql`：首次接库时需实跑并确认 `ENUM` / `CHAR(13)` 行为
 - [ ] `seed.sql` 没有地陪与订单的初始化脚本（只在 mock 里生成）：需要库内联调环境时另补 `seed-guides.sql`
 - [ ] 在线开关不落库：后端无 `guides.online` 字段，MVP 只前端记忆且不拦截接单
 - [ ] `priceFromUnit` 由前端推导（取最便宜套餐的类型）：建议 HTTP 版后端直接返回起价单位
 - [ ] 6 个头像容器尺寸仍不统一（40/44/52/56/60）：`DESIGN.md` 定义了 44/60 两档，本轮按「游客端 60、地陪端 40、订单卡 44」的语义需要保留差异，未强推统一
 - [ ] `px` 未换算 `rpx`：`$ds-*` 令牌以 px 定义，小屏一致但大屏不缩放
-- [x] ~~tabBar 图标仍是原陪玩时期的 png~~ **已修复**：4 张图标改由 `scripts/gen-tabbar-icons.mjs` 按 DESIGN.md §9 线性规范代码生成（未选中 `$ds-ink-2`、选中 `$ds-primary`），tabBar 底色由纯白改 `#fbfaf5`（对齐原型的「宣纸+8%白」）
+- [x] ~~tabBar 图标仍是原陪玩时期的 png~~ **已修复，并随 feat-016 按新配色再生成**：4 张图标由 `scripts/gen-tabbar-icons.mjs` 代码生成（24 网格 / stroke 1.7 / 4× 超采样），颜色直接读 `uni.scss` 令牌；气泡漫游定稿后为未选中 `#9a95ae`（`$ds-ink-3`）、选中 `#6f61bd`（`$ds-secondary`），tabBar 底色 `#fdfcfa`。`node scripts/gen-tabbar-icons.mjs --check` 2026-09-27 复检 4 张全部一致
 
 ## 已做出的决策
 
-- **用户拍板的 8 条范围修订**（全部写入 `docs/mvp-scope.json` 的 `deviations`）
+- **用户拍板的 9 条范围修订**（全部写入 `docs/mvp-scope.json` 的 `deviations`）
   - dev-001 先选景点再选地陪 → 首页改为景点列表页
   - dev-002 评价不做 → 卡片与详情页去掉评分/评价，`check-mock.mjs` 看住
   - dev-003 地陪申请开通先不做 → 进 `futureUpgrades`，MVP 由 mock 预置
   - dev-004 先 mock 后接真实后端 → `USE_MOCK = true`，签名对齐 HTTP
-  - dev-005 定稿「宣纸 · 疏」并删除原 `DESIGN.md`
+  - dev-005 定稿主题并删除原 `DESIGN.md`（当时定「宣纸 · 疏」；**2026-09-27 feat-016 起该主题被「气泡漫游」取代**，`DESIGN.md` 已第二次重写）
   - dev-006 图片用后端 URL、先用网络占位图、不要假 SVG
   - dev-007 区域做成后台可维护的字典表（7 类），管理界面不纳入实现计划
   - dev-008 景点池扩到 20 个，激活全部 7 类区域
+  - dev-009 地陪头像改用本地素材 `static/guide/`（39 张，文件名 = 姓名拼音；mock 有素材的地陪直接取「文件名反查出的姓名」，保证头像与姓名一致）
 - **3 态 → 4 态一次性改完**（feat-005）：常量当唯一来源，页面只消费 `statusLabel` 与 `canTransit`，不留两套语义
 - **过渡适配层按「是否被页面引用」决定去留**：feat-005 时因 `mine.vue` 仍在用而不删；feat-013 页面全部迁移后立即删除（`ClerkApi` / `CategoryApi` / `AppointmentApi`），不让「4 态压缩成 3 态」的映射长期留在代码里
 - **地陪端「进行中」与后台「已确认」是两个口径**（feat-011）：接单只写 `guideAcceptedAt` 不改状态，若地陪端只认状态 1，接完单的订单会从两个列表同时消失 → 新增 `isGuideCommitted()`（已接下的单 = 待确认+已接 或 已确认）
@@ -159,6 +165,7 @@
 - **「不新建 `/pages/admin/clerk/edit`」**：审核只需通过/拒绝（gap-003）
 - **价格用整数「元」**，不改造 `utils/index.js` 的 `formatPrice`（它把入参当分且无人调用，保持 `keep` 档）
 - **产出文档纳入完成定义**：feat 标 `done` 前必须有设计文档；改 bug 必须有 bugfix 文档
+- （下面这一组是 **feat-015 时期的动效决策，已被 feat-016 全部取代**，保留仅作决策留痕 —— 入场编排、stagger、页面转场都已删除）
 - **动效只解决三件事**（feat-015）：内容被整批替换时不要瞬移、页面被整批替换时不要瞬移、状态切换要看得见。除此之外不加动效；用户正在读的数字（金额 / 统计 / 步进器）一律不动
 - **动效一律只动 `transform` 与 `opacity`**（外加 `color` / `background-color` / `border-color`）：动 `width` / `left` 会触发 layout + paint；滑动指示器一律用 `translateX(下标 × 100%)` 的百分比，天然等于一格宽，不需要测量
 - **入场用 CSS 动画 + 节点批次重建，不用 `transition` + 时序标志位**：后者依赖「先渲染隐藏态 → 下一帧移除」，mock 返回过快时可能整段不播；前者靠 `:key="enterSeq + '-' + id"` 让节点重建，动画必定从首帧开始，不需要任何 hack
@@ -173,6 +180,12 @@
 - **按压反馈用 `hover-class="is-pressed"` 而不是 `:active`**：小程序里 `:active` 不可靠；并配 `hover-stay-time="70"`（默认 400ms 会让按下后迟迟不回弹）。按压是两层：`scale(0.96)` 回弹 + `::after` 8% `currentColor` 叠层（照 `DESIGN.md` §8「用 8% 主色叠层，不用 opacity 变暗」）
 - **JS 时长必须与 SCSS 令牌对齐**（feat-015）：页面返回要「等动画播完再 `navigateBack()`」，`setTimeout` 用的是 `MOTION.pageLeave`、动画用的是 `$ds-dur-page-leave`，两边不等就会截断动画或白等 —— 所以门禁里加了逐项比对
 - **URL 参数一律在 `onLoad` 归一化，页面内部只认数字 id**（2026-09-26 下单页 bug）：路由参数永远是字符串、接口 id 是数字，混用 `===` 会**静默**落空（`find` 返回 `undefined` 后还有 `|| packages[0]` 兜底，于是不报错、只是默默算错）。比起逐个比较点补 `Number()`，入口收敛一份更不容易漏，且提交给接口的 `payload` 与将来 HTTP 的 JSON 约定一致
+- **视觉改版整体换掉「宣纸 · 疏」**（feat-016，2026-09-27）：历史主题与备选全部作废，改为「气泡漫游」（低饱和三色 + 墨阶 + 玻璃拟态 + 大圆角 + 纯黑胶囊按钮）。做法是**先重写 `DESIGN.md` 与 `uni.scss`，再逐页落地** —— 11 个页面样式几乎重写，模板骨架与数据流基本不动，所以 `smoke-flow` 仍 50/50
+- **动效从「三组 + 入场编排」收敛为「只服务状态变化」**（feat-016）：单次 150ms（按压 / 颜色）、200ms（指示器 / 较大表面），`$ds-stagger-*` 归零；**列表入场与逐项 stagger 全部删除** —— 方向性位移在整页滚动容器里会横向溢出触发滚动条，切分类改为滚动复位到顶部
+- **H5 手写页面转场彻底删除**（feat-016）：即使进出对称，仍会「透出下层页面」；小程序本来就是原生转场 —— 结论是**不做转场**，页面切换瞬时完成，页面也不再引用 `utils/motion.js`
+- **选中态由「滑动下划线指示器」改「黑胶囊」**（feat-016）：页签 / chip / 日期 / 单选统一；只有分段控件保留白色滑块 `translateX`（200ms）
+- **`box-shadow` 进动效白名单**（feat-016 / `DESIGN.md` §13.2）：单选环与卡片层级需要过渡，只给这两类小元素用；校验脚本白名单当时没跟上，2026-09-27 已补齐
+- **`utils/motion.js` 降级为「时长镜像」**（feat-016）：页面已无引用（不再有 JS 编排的动效），保留它只为让 `check-motion.mjs` 继续把 JS 时长与 SCSS 令牌逐项比对；**不要**拿它重新做页面编排
 
 ## 未来候选（MVP 之后再说，现在不许实现）
 
@@ -181,6 +194,21 @@
 **页面层门禁（本次 bug 暴露的缺口，值得单独立项）**：`check-tokens` / `check-motion` / `check-schema` / `check-mock` / `smoke-flow` 都看不见「页面把 URL 参数（字符串）与接口 id（数字）用 `===` 比较」。本次下单页就是这么静默回落成 `packages[0]` 的。可行做法：在 `scripts/check-mock.mjs` 已有的页面扫描里加一条规则 —— 与 `xxxId` 做严格比较时必须显式数值化（要求 `Number(a) === Number(b)`，或在 `onLoad` 用 `toId()` 归一化后不再出现裸 `=== this.xxxId`）；需配 `--self-test` 夹具。
 
 ## 本次会话修改的文件
+
+### 本次（2026-09-27：恢复被删文档 + 按真实项目与阶段同步 harness）
+
+**一、恢复被历史提交删除的开发文档**（用户要求，从 `1eb122e` 的父提交 `2928dd4` 恢复）
+
+- 恢复：`AGENTS.md`、`init.sh` / `init.ps1`、`docs/`（3 份）、`docx/`（31 份：`bugfix/` / `codeimpl-sum/` / `database/` / `接口文档.md`）、`scripts/`（除 `gen-tabbar-icons.mjs` 外的 6 份门禁）、`feature_list.json`、`progress.md`、`session-handoff.md`
+- **刻意保留为新版、不被旧版覆盖**：`scripts/gen-tabbar-icons.mjs`（`bb3d0ab` 重写版）、`docs/legacy-assets.json`（磁盘版 2 处 `sha256` 与旧版不同，且与当前代码一致）、`docx/bugfix/BUG修复-20260927-微信端报webapi_getwxaasyncsecinfo…md`（该提交之后新增的文档）
+
+**二、按真实项目与所处阶段同步 harness**
+
+- `AGENTS.md` - 阶段表改「阶段 0 资产冻结 / 阶段 1 地陪 MVP / 阶段 2 视觉改版『气泡漫游』/ 阶段 3 联调与验收（进行中）」；新增「门禁现状（实测）」表；视觉口径整段重写为气泡漫游；动效口径重写为「只服务状态变化」+ 白名单含 `box-shadow` + 页面切换瞬时；验证命令与完成定义同步（去掉 `design/html/prototype.html` 与页面转场的旧口径）
+- `feature_list.json` - 新增 **feat-016**（视觉改版定稿「气泡漫游」全端落地，`done` + 证据）；feat-015 标 `supersededBy: feat-016`；`prototypeSource` 改 `design/redesign/index.html`；`scopeSource` 由「6 处修订」改为「9 处（dev-001 ~ dev-009）」
+- `progress.md` - 本文件：当前状态 / 门禁实测 / 视觉与动效口径 / 下一步 / 阻塞（新增两条门禁红项、appid 已配置）/ 决策（新增 6 条）/ 本节
+- `session-handoff.md` - 重写为阶段 3 的起点
+- `scripts/check-motion.mjs` - `TRANSITION_PROPS` 补 `box-shadow`（对齐 `DESIGN.md` §13.2）；头部注释口径同步（§1.8 → §1.10、≤300ms → ≤400ms、入场 ease-out → 过渡 ease-out / 进场 ease-enter，新增第 11 条「MOTION ↔ 令牌」）
 
 ### 本次（用户反馈：下单页提交被拒 + 返回动画改轻）
 
@@ -312,6 +340,20 @@
 
 ## 完成证据
 
+**2026-09-27 实测（视觉改版 feat-016 落地后，以这一组为准）：**
+
+- [x] `node scripts/check-tokens.mjs` → 通过（`uni.scss` 120 个变量 / 15 处引用 / `prototype.css` 65 个自定义属性；`DESIGN.md` 13 个色值全部落到 `uni.scss`）
+- [x] `node scripts/check-motion.mjs` → 通过（9 个时长令牌按 400ms 预算检查；`MOTION` 的 5 个时长与令牌逐项一致；`App.vue` 3 个 `@keyframes` 且引用名全部存在；11 个页面引用 **0** 个动画名 —— 页面已无入场编排）+ `--self-test` 12 类夹具全部检出
+- [x] `node scripts/check-schema.mjs` → 通过（10 张表 / 109 字段 / 33 条索引与约束 / 无外键）
+- [x] `node scripts/check-mock.mjs` → 通过（52 用户 / 50 地陪 / 20 景点 / 7 区域 / 3 套餐 / 16 订单；44/44 已通过地陪可被下单；39 张本地头像素材、姓名对齐命中 39/50；11 个页面均未直连 `api/mock/`）
+- [x] `node scripts/smoke-flow.mjs` → **50/50**（三端闭环 + 负向用例，本次闭环订单 `CD260927A0001`）
+- [x] `node scripts/gen-tabbar-icons.mjs --check` → 4 张图标与 `uni.scss` 令牌一致
+- [ ] **`node scripts/verify-assets.mjs` → 未通过**：16 条资产（11 个页面 + `App.vue` + `uni.scss` + `pages.json` + `manifest.json` + `README.md` + 4 张 tabBar 图标）是视觉改版的预期改动，但未登记原因、未刷新哈希 —— 收尾步骤见「下一步」第 1 条
+- [ ] 小程序真实构建：只能走 HBuilderX（`npm run build:mp-weixin` 在本仓库跑不通，CLI 期望 `src/` 布局）
+- [ ] 页面层人工走查：未执行（数据层已由动态门禁覆盖；玻璃卡片在小程序端的退化表现、按压反馈、光斑浓度只能眼睛验收）
+
+### 历史证据（feat-001 ~ feat-015 阶段，数字以当时为准）
+
 - [x] 4 个门禁全绿：`verify-assets`（22 条资产哈希一致 + 11 个页面路由一致 + **告警 0 条**）、`check-tokens`（95 变量 / 15 引用 / 20 色值对齐）、`check-schema`（10 表 / 109 字段）、`check-mock`（一致性 / 确定性 / 规模 / 可下单 44/44 / 无评价字段 / 11 页面未直连 mock）
 - [x] 5 条 gap 全部关闭：gap-001 / 002（feat-003）、gap-003（feat-012）、gap-004 / 005（feat-013）
 - [x] 反向测试（资产）：篡改副本资产哈希 → 输出「资产被修改」且退出码 1
@@ -366,12 +408,13 @@
 - **横滑不用 `swiper`**：`swiper` 要为每个分类维护独立列表状态（分页 / `hasMore` / 刷新 / 空态 × N），与「切分类 = 重拉第一页」的现有数据流是两套语义；手势方案保持一份列表状态，分页与下拉刷新全部复用
 - **横向滚动容器里的 chip / 页签必须写 `flex: none` + `white-space: nowrap`**：否则 flex 子项会被压窄、文字竖排换行（`scroll-view` 的 `white-space: nowrap` 管不了 flex 收缩）。
 - 统计类字段要检查「数据里是否真的存在这种记录」：mock 里所有订单都排在明天之后时，「今日订单」必然恒为 0。
-- **动效只走三条路**：CSS 动画（`ds-enter-*` 类 + `enterStyle(index)` 给延迟）、`translateX` 百分比驱动的滑动指示器、颜色类 `transition`。**不要**用 JS 逐帧、不要用 `transition: all`、不要动 `width` / `left`（`check-motion.mjs` 会拦）。
-- **页面转场分平台，别一把梭**：小程序（含微信）是原生转场，**什么都不要加**；H5 用 `createPageMotion()` 的 `is-page-in` / `is-page-out`；App 用 `pages.json` 的 `globalStyle.app-plus`。新页面接入只需：根节点绑 `:class="['page', pageMotion]"`、data/methods 各 spread 一次、`goBack()` 调 `goBackWithMotion()`。
-- **改了 `uni.scss` 的时长令牌，必须同步 `utils/motion.js` 的 `MOTION`**：两边不等会让「等离场动画播完再返回」截断或白等；`check-motion.mjs` 会直接报错（kebab ↔ camel 逐项比对）。
+- **阶段 3 没有待开发功能**：只剩「收尾门禁 + 人工走查 + 微信端复核 + 后端对接」。想加 MVP 之外的东西 → 写进「未来候选」，不要顺手实现。
+- **动效只有一条路**：状态过渡用 CSS `transition`（150ms 按压 / 颜色，200ms 指示器 / 较大表面），加载用全局 `.ds-spinner`，选中态用黑胶囊。**不要**再引入入场编排、stagger、页面转场、JS 逐帧、`transition: all`、动 layout 属性（`check-motion.mjs` 会拦）。
+- **页面切换瞬时，不要加转场**：小程序（含微信）是原生转场，H5 手写转场已删除（会透出下层页面）。`utils/motion.js` 现在只是「时长镜像」，页面不再引用它 —— 不要拿它做页面编排。
+- **列表内容替换不做动画**：切分类 / 切状态只重新拉第一页并把滚动复位到顶部；方向性位移在整页滚动容器里会横向溢出触发滚动条。
+- **改了 `uni.scss` 的时长令牌，必须同步 `utils/motion.js` 的 `MOTION`**：`check-motion.mjs` 会逐项比对（kebab ↔ camel）。
 - **看到 `[sass] Undefined variable $ds-xxx` 先别改代码**：`uni.scss` 是靠 Vite 的 `additionalData` 注入的，注入内容会被缓存 —— 新 `App.vue` × 旧 `uni.scss` 就会报这个。停运行 → 删 `unpackage\dist\cache` 与 `unpackage\dist\dev` → 重跑。想自证源码没问题：用 HBuilderX 自带的 dart-sass 把 `uni.scss` 与样式块拼起来 `renderSync` 一次。
-- **列表入场不要各写一套**：`utils/motion.js` 的 `createListEnter()` 给 `enterAnim` / `enterBase` / `enterSeq` 与 `beginEnter(dir, base)` / `renewEnter()` / `enterStyle(index)`；`enterSeq` 必须进 `:key`，否则切分类时同一批 key 不会重播入场。新列表页接入只需 data/methods 各 spread 一次。
-- **无方向的整批刷新（改排序、改日期筛选）调 `renewEnter()`**：只换批次 + 上浮，不要假装有左右方向。
-- **动效改动必须跑 `node scripts/check-motion.mjs`**；改设计与令牌时 `DESIGN.md` §13 与 `uni.scss` §1.8 必须同步改（和颜色、字阶同一条规矩）。
-- **入场 `animation-fill-mode` 保持 `backwards`**：改成 `both` 会残留 `transform`，把按压反馈的 `scale(0.97)` 盖掉（这条踩过）。
+- **动效改动必须跑 `node scripts/check-motion.mjs`**；改设计与令牌时 `DESIGN.md` §13 与 `uni.scss` §1.10 必须同步改（和颜色、字阶同一条规矩）。
 - **不要给正在读的数字加动效**：金额、统计条、步进器的人数是「用户正在读或正在操作的数据」，动了只会干扰。
+- **玻璃卡片在小程序端会退化**：`backdrop-filter` 不生效，只剩半透明白底 + 阴影 + 白内环。这是 `DESIGN.md` §12 认可的降级，**不要**为它写条件编译补丁。
+- **改完 `uni.scss` 的令牌记得重跑 `node scripts/gen-tabbar-icons.mjs`**（tabBar 图标颜色读令牌，手工替换会漂）；`--check` 可校验。
