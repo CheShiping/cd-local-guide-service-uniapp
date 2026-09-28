@@ -96,6 +96,24 @@
 				"selectedIconPath": "static/tabbar/home-active.png"
 			},
 			{
+				"pagePath": "pages/guide/orders",
+				"text": "接单",
+				"iconPath": "static/tabbar/orders.png",
+				"selectedIconPath": "static/tabbar/orders-active.png"
+			},
+			{
+				"pagePath": "pages/admin/appointment",
+				"text": "订单管理",
+				"iconPath": "static/tabbar/orders.png",
+				"selectedIconPath": "static/tabbar/orders-active.png"
+			},
+			{
+				"pagePath": "pages/admin/clerk",
+				"text": "地陪审核",
+				"iconPath": "static/tabbar/clerk.png",
+				"selectedIconPath": "static/tabbar/clerk-active.png"
+			},
+			{
 				"pagePath": "pages/tabbar/mine",
 				"text": "我的",
 				"iconPath": "static/tabbar/mine.png",

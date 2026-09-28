@@ -53,6 +53,21 @@
           </view>
         </view>
 
+        <!-- 成为地陪：地陪自助申请开通（dev-003）是后续升级项，MVP 先留一个入口占位 -->
+        <view
+          class="menu-item ds-pressable"
+          v-if="!isGuide && !isAdmin"
+          hover-class="is-pressed"
+          hover-stay-time="70"
+          @click="applyGuide"
+        >
+          <text class="menu-text">成为地陪</text>
+          <view class="menu-right">
+            <text class="menu-note">后续开放</text>
+            <text class="arrow">›</text>
+          </view>
+        </view>
+
         <view
           class="menu-item ds-pressable"
           v-if="isAdmin"
@@ -130,6 +145,9 @@
     </view>
 
     <text class="footnote">成都景点地陪 · MVP</text>
+
+    <!-- 角色化底部栏（游客 / 地陪 2 项，管理员 3 项；配置见 utils/tabbar.js） -->
+    <ds-tabbar />
   </view>
 </template>
 
@@ -137,8 +155,11 @@
 /**
  * 我的（账户与角色分流）
  *
- * MVP 的角色分流：游客 → 我的订单；地陪 → 接单；管理员 → 订单管理 + 地陪审核。
- * 登录后仍统一落首页（pages/login/login.vue 属 keep 档，不改），本页负责按角色给入口。
+ * MVP 的角色分流：游客 → 我的订单 + 成为地陪；地陪 → 接单；管理员 → 订单管理 + 地陪审核。
+ * 登录后仍统一落首页，本页负责按角色给入口。
+ *
+ * 三页（接单 / 订单管理 / 地陪审核）现在同时是底部栏页，所以跳转一律 switchTab；
+ * 底部栏本身按角色换项，见 components/ds-tabbar 与 utils/tabbar.js。
  *
  * 「演示身份切换」只在 USE_MOCK 为真时出现：mock 默认身份是管理员（便于演示后台），
  * 没有后端切换接口，接真实后端后删除该区块。
@@ -250,26 +271,34 @@ export default {
       try {
         await switchMockRole(role);
         await this.loadUser();
+        /* 底部栏按角色换项：已挂载的 ds-tabbar 监听这个广播（见 utils/tabbar.js） */
+        uni.$emit('role:change');
         uni.showToast({ title: `已切换为${ROLE_LABELS[role]}`, icon: 'none' });
       } catch (e) {
         uni.showToast({ title: (e && e.message) || '切换失败', icon: 'none' });
       }
     },
 
+    /* 成为地陪：地陪自助申请开通是后续升级项（docs/mvp-scope.json 的 dev-003），MVP 只留入口 */
+    applyGuide() {
+      uni.showToast({ title: '地陪申请开通正在建设中，敬请期待', icon: 'none' });
+    },
+
     goMyOrders() {
       uni.navigateTo({ url: '/pages/appointment/my' });
     },
 
+    /* 下面三页都已是底部栏页，只能用 switchTab（navigateTo 会失败） */
     goGuideOrders() {
-      uni.navigateTo({ url: '/pages/guide/orders' });
+      uni.switchTab({ url: '/pages/guide/orders' });
     },
 
     goAdminOrders() {
-      uni.navigateTo({ url: '/pages/admin/appointment' });
+      uni.switchTab({ url: '/pages/admin/appointment' });
     },
 
     goAdminGuides() {
-      uni.navigateTo({ url: '/pages/admin/clerk' });
+      uni.switchTab({ url: '/pages/admin/clerk' });
     },
 
     goAgreement(type) {
@@ -433,6 +462,11 @@ export default {
   &.warn {
     background: $ds-warning;
   }
+}
+
+.menu-note {
+  font-size: $ds-fs-caption;
+  color: $ds-ink-3;
 }
 
 .arrow {

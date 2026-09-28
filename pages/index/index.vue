@@ -207,6 +207,9 @@
         <text class="empty-tip">换个区域看看，或先选「全部」</text>
       </view>
     </scroll-view>
+
+    <!-- 角色化底部栏：游客是「首页 · 我的」；地陪 / 管理员不会停在本页（组件会收敛到各自第一屏） -->
+    <ds-tabbar />
   </view>
 </template>
 

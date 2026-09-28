@@ -12,6 +12,10 @@ export default {
 
     // 未登录则回登录页（登录页是 pages.json 的第一页，这里只兜住从其它入口进入的情况）
     this.checkLogin();
+
+    // 原生 tabBar 的项数与文案是编译期固定的，按角色增删做不到：
+    // 全端隐藏它，改由 components/ds-tabbar 按角色自绘（配置见 utils/tabbar.js）。
+    this.hideNativeTabBar();
   },
 
   methods: {
@@ -20,6 +24,13 @@ export default {
       if (!token) {
         uni.redirectTo({ url: '/pages/login/login' });
       }
+    },
+
+    /* 启动时 tabBar 可能尚未创建，失败就交给页面里的 ds-tabbar 再调一次 */
+    hideNativeTabBar() {
+      setTimeout(() => {
+        uni.hideTabBar({ animation: false, fail: () => {} });
+      }, 0);
     }
   }
 };

@@ -108,6 +108,9 @@
  *
  * 四态语义与数据源在 feat-005 已收口到 api/constants.js + OrderApi；
  * 本页只做视觉重做与订单卡字段补全（订单号 / 景点·套餐 / 金额 / 人数）。
+ *
+ * 两个入口的返回语义不同：下单页用 redirectTo 带 `from=create` 进来（返回键回首页，见 goBack），
+ * 「我的」页用 navigateTo 进来（返回键回上一页）。
  */
 import { OrderApi, ORDER_STATUS, ORDER_STATUS_LABELS, BOOKING_TYPES, canTransit, bookingTypeLabel } from '@/api/index.js';
 import { createTabRow } from '@/utils/hscroll.js';
@@ -137,7 +140,9 @@ export default {
       total: 0,
       loading: false,
       hasMore: true,
-      statusBarHeight: 20
+      statusBarHeight: 20,
+      /* 从下单页（order/create）提交后进来的：返回键该回首页，而不是回到已提交的表单前一步 */
+      fromCreate: false
     };
   },
 
@@ -155,9 +160,11 @@ export default {
     }
   },
 
-  onLoad() {
+  /* options.from 是路由字符串，只与字面量比较，不参与任何业务 id 判断 */
+  onLoad(options) {
     const sys = uni.getSystemInfoSync();
     this.statusBarHeight = sys.statusBarHeight || 20;
+    this.fromCreate = !!options && options.from === 'create';
     this.loadList(true);
   },
 
@@ -249,6 +256,13 @@ export default {
     },
 
     goBack() {
+      /* 刚下完单进来的：这趟流程的起点是首页（景点 → 地陪 → 详情 → 下单），
+         返回上一页会退回「已经提交过的表单前一步」，所以直接回首页；
+         从「我的」页进来的则正常返回上一页。 */
+      if (this.fromCreate) {
+        uni.switchTab({ url: '/pages/index/index' });
+        return;
+      }
       uni.navigateBack();
     }
   }
