@@ -132,6 +132,14 @@
       "dependencies": ["feat-013", "feat-015"],
       "status": "done",
       "evidence": "提交 bb3d0ab（2026-09-27 feat(design)）：DESIGN.md 全量重写为「气泡漫游」（§13 动效改为与 shadcn/ui 对齐，属性白名单含 box-shadow）、uni.scss 重写为气泡漫游令牌（雾紫 / 藕粉 / 薄荷 + 墨阶 + 七档光斑变量），11 个页面按新系统改造（黑胶囊选中态与主按钮、玻璃卡片、七档分屏光斑、圆形双环头像），首页对齐原型（输入框搜索条、快捷图标大卡矩阵、附近热门区块、封面场景角标）。动效收敛：utils/motion.js 的 MOTION 由 9 项缩为 5 项时长 + 2 条曲线（press 150 / fast 150 / slide 200 / base 200 / spin 900），$ds-stagger-* 归零；**列表入场编排与 H5 手写页面转场整体删除**（页面不再引用 motion.js，App.vue 只剩 ds-fade-in / ds-pop-in / ds-spin 三个 @keyframes）；切分类改滚动复位到顶部；滚动条全局隐藏；tabBar 配色改 #9a95ae / #6f61bd 并由 scripts/gen-tabbar-icons.mjs 重新生成 4 张图标。门禁实测（2026-09-27）：check-tokens 通过（uni.scss 120 变量 / 15 处引用 / DESIGN.md 13 个色值全对齐）、check-schema 通过（10 表 109 字段）、check-mock 通过（52 用户 / 50 地陪 / 20 景点 / 16 订单 / 头像素材 39 张）、smoke-flow 50/50。**遗留（本次未收尾）**：verify-assets 因 16 条被改资产未登记原因、未刷新哈希而为红；check-motion 的属性白名单当时缺 box-shadow，已于 2026-09-27 对齐 DESIGN.md §13.2；uni.scss §1.10 残留 $ds-dur-page / $ds-dur-page-leave / $ds-stagger-*（页面已无引用）"
+    },
+    {
+      "id": "feat-017",
+      "name": "角色化底部栏与首页分流",
+      "description": "底部栏项数与文案随角色变化：游客「首页（景点列表）· 我的」、地陪「接单（占原首页位置）· 我的」、管理员「订单管理（占原首页位置）· 地陪审核（新增底部栏项）· 我的」；「我的」页新增「成为地陪」占位入口（游客可见，对应 dev-003 后续升级）。原生 tabBar 是编译期静态的、无法按角色增删（setTabBarItem 只能改文案与图标），因此 pages.json 把 5 个页面都登记为 tabBar 页（switchTab 才可用），运行时用 uni.hideTabBar 隐藏原生栏，由新增的 components/ds-tabbar 自绘（配置唯一来源 utils/tabbar.js）。三个工作台页成为 tab 页后去掉返回键、跳转一律 switchTab；tabBar 图标由 2 形状扩为 4 形状（新增 orders / clerk）共 8 张。范围外：不改首页内容（游客首页仍是景点列表）、不做地陪申请开通流程、不动数据层。",
+      "dependencies": ["feat-011", "feat-012", "feat-016"],
+      "status": "done",
+      "evidence": "新增 utils/tabbar.js（角色 → 底部栏项 / 首页路径 / 图标地址的唯一来源，角色常量取自 api/constants.js 的 ROLES）+ components/ds-tabbar/ds-tabbar.vue（easycom 自绘栏：按角色换项 + 当前项高亮 + switchTab 跳转（失败回退 reLaunch）+ mounted 隐藏原生栏 + 组件自带 78px 占位使页面无需改 padding + 角色兜底 guard：当前页不属于当前角色时收敛到该角色第一屏，故管理员登录后落「订单管理」、地陪不会停在景点列表）；pages.json 的 tabBar.list 由 2 项扩为 5 项（index / guide/orders / admin/appointment / admin/clerk / tabbar/mine）；5 个页面接入 `<ds-tabbar />`（index、mine、guide/orders、admin/appointment、admin/clerk），三个工作台页去掉返回键并删 goBack()、mine 页三处 navigateTo 改 switchTab、切换演示身份后 uni.$emit('role:change') 让底部栏立刻换项；mine 页新增「成为地陪」行（游客可见，点击 toast 占位）；App.vue onLaunch 补 hideTabBar；scripts/gen-tabbar-icons.mjs 增加 orders / clerk 两个形状（ICONS + targets 2 → 4，共 8 张）；scripts/check-motion.mjs 扫描范围由 pages/ 扩为 pages/ + components/。门禁实测（2026-09-28）：./init.ps1 第 1-7 步全绿（保真 22 条通过且 16 条 feat-016 遗留资产已补登记原因后刷新哈希 —— 此前唯一红项收尾；令牌 120 变量；动效 12 个页面与公共组件 0 违规 + --self-test 12 类全检出；表结构 10 表 109 字段；mock 52/50/20/16；smoke-flow 50/50），第 8 步构建按已知原因跳过（CLI 期望 src/ 布局）；node scripts/gen-tabbar-icons.mjs --check 8 张全部与令牌一致；改动资产已先登记原因再 --update；产出 docx/codeimpl-sum/设计文档-feat-017-角色化底部栏与首页分流.md"
     }
   ]
 }

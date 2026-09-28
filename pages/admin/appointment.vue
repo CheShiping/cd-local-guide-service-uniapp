@@ -2,16 +2,9 @@
   <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
-    <!-- 导航栏 -->
+    <!-- 导航栏：管理员的第一项 tab，没有上一页可回，左侧留空占位保持标题居中 -->
     <view class="navbar">
-      <view
-        class="icon-btn ds-pressable"
-        hover-class="is-pressed"
-        hover-stay-time="70"
-        @click="goBack"
-      >
-        <text class="icon-btn__text back">‹</text>
-      </view>
+      <view class="icon-btn"></view>
       <text class="navbar__title">订单管理</text>
       <view class="icon-btn"></view>
     </view>
@@ -153,12 +146,18 @@
         <text class="empty-tip">清掉日期筛选，或换个状态看看</text>
       </view>
     </scroll-view>
+
+    <!-- 角色化底部栏（管理员：订单管理 · 地陪审核 · 我的） -->
+    <ds-tabbar />
   </view>
 </template>
 
 <script>
 /**
  * 管理端 · 订单管理（原型 07 屏）
+ *
+ * 切换到管理员身份后，本页就是底部栏第一项（管理员的「首页」），页面切换走 switchTab，
+ * 因此没有返回键（导航栏左侧留空占位保持标题居中）。
  *
  * 平台在这条链路上只做两件事：人工确认档期（0 → 1）、处理取消（0/1 → 3）；
  * 已确认的单由地陪完成服务后进终态。
@@ -348,10 +347,6 @@ export default {
       } catch (e) {
         uni.showToast({ title: (e && e.message) || '操作失败', icon: 'none' });
       }
-    },
-
-    goBack() {
-      uni.navigateBack();
     }
   }
 };

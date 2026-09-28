@@ -2,16 +2,10 @@
   <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
-    <!-- 导航栏：右侧是在线开关 -->
+    <!-- 导航栏：右侧是在线开关。本页是地陪的首页 tab（底部栏第一项），没有上一页可回，
+         左侧留 44px 空占位，保持标题居中 -->
     <view class="navbar">
-      <view
-        class="icon-btn ds-pressable"
-        hover-class="is-pressed"
-        hover-stay-time="70"
-        @click="goBack"
-      >
-        <text class="icon-btn__text back">‹</text>
-      </view>
+      <view class="icon-btn"></view>
       <text class="navbar__title">接单</text>
       <view class="icon-btn ds-pressable" hover-class="is-pressed" hover-stay-time="70" @click="toggleOnline">
         <view :class="['switch', online ? 'is-on' : '']">
@@ -145,6 +139,9 @@
         <text class="empty-tip">保持在线，有新预约会出现在这里</text>
       </view>
     </scroll-view>
+
+    <!-- 角色化底部栏（地陪：接单 · 我的） -->
+    <ds-tabbar />
   </view>
 </template>
 
@@ -152,8 +149,10 @@
 /**
  * 地陪端 · 接单（原型 06 屏）
  *
- * 地陪身份 MVP 由 mock 预置（dev-003：申请开通流程后续再做），
- * 入口在「我的」页按角色显示，登录后仍统一落首页。
+ * 切换到地陪身份后，本页就是底部栏第一项（地陪的「首页」），页面切换走 switchTab，
+ * 因此没有返回键，标题左侧用空占位保持居中。
+ *
+ * 地陪身份 MVP 由 mock 预置（dev-003：申请开通流程后续再做）。
  *
  * 关键语义：接单只写 guideAcceptedAt，订单状态仍是 0 待确认（等平台人工确认档期）。
  * 因此「进行中」的口径是 isGuideCommitted（我已接下的单），否则接完单的订单会从列表消失。
@@ -334,10 +333,6 @@ export default {
           }
         }
       });
-    },
-
-    goBack() {
-      uni.navigateBack();
     }
   }
 };

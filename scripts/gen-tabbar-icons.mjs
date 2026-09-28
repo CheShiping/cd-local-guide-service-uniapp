@@ -8,7 +8,10 @@
  * 颜色直接从 uni.scss 读取：未选中 $ds-ink-3、选中 $ds-secondary。
  * 改令牌后重跑：node scripts/gen-tabbar-icons.mjs
  * 校验现有图标与令牌是否一致：node scripts/gen-tabbar-icons.mjs --check
- * 不要手工替换这 4 张图。
+ * 不要手工替换这些图。
+ *
+ * 形状与角色化底部栏（utils/tabbar.js）一一对应：
+ *   home（游客首页）/ orders（地陪接单 · 管理员订单管理）/ clerk（地陪审核）/ mine（我的）
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -31,10 +34,8 @@ function readToken(name) {
   return m[1];
 }
 
-const COLORS = {
-  home: { normal: readToken('ds-ink-3'), active: readToken('ds-secondary') },
-  mine: { normal: readToken('ds-ink-3'), active: readToken('ds-secondary') }
-};
+const NORMAL_COLOR = readToken('ds-ink-3');
+const ACTIVE_COLOR = readToken('ds-secondary');
 
 /* ---------- 图标几何（24 网格，线段与二次贝塞尔） ---------- */
 /* 全部拆成线段（贝塞尔先展平），距离场渲染天然带圆头圆角 */
@@ -48,6 +49,18 @@ const ICONS = {
     circle(12, 8.3, 3.5),
     quad([5.3, 19.9], [5.9, 13.9], [12, 13.9]),                          // 左肩
     quad([12, 13.9], [18.1, 13.9], [18.7, 19.9])                         // 右肩
+  ],
+  /* 清单/单据：地陪「接单」与管理员「订单管理」共用 */
+  orders: [
+    [[6.2, 3.8], [17.8, 3.8], [17.8, 20.2], [6.2, 20.2], [6.2, 3.8]],    // 单据外框
+    [[9.2, 8.6], [14.8, 8.6]],                                           // 内容线 1
+    [[9.2, 12], [14.8, 12]],                                             // 内容线 2
+    [[9.2, 15.4], [12.8, 15.4]]                                          // 内容线 3（短）
+  ],
+  /* 盾牌 + 勾：地陪审核 */
+  clerk: [
+    [[12, 3.6], [18.8, 6.3], [18.8, 11.4], [12, 20.4], [5.2, 11.4], [5.2, 6.3], [12, 3.6]], // 盾牌
+    [[8.9, 11.9], [11.2, 14.2], [15.4, 9.3]]                                                 // 对勾
   ]
 };
 
@@ -165,14 +178,16 @@ function writePng(raw, size) {
 const check = process.argv.includes('--check');
 const targets = [
   ['home', 'home.png', 'home-active.png'],
+  ['orders', 'orders.png', 'orders-active.png'],
+  ['clerk', 'clerk.png', 'clerk-active.png'],
   ['mine', 'mine.png', 'mine-active.png']
 ];
 
 let mismatch = false;
 for (const [name, normalFile, activeFile] of targets) {
   const polylines = ICONS[name];
-  const normal = writePng(renderIcon(polylines, COLORS[name].normal), SIZE);
-  const active = writePng(renderIcon(polylines, COLORS[name].active), SIZE);
+  const normal = writePng(renderIcon(polylines, NORMAL_COLOR), SIZE);
+  const active = writePng(renderIcon(polylines, ACTIVE_COLOR), SIZE);
 
   for (const [file, buf] of [[normalFile, normal], [activeFile, active]]) {
     const path = join(OUT_DIR, file);
@@ -185,7 +200,7 @@ for (const [name, normalFile, activeFile] of targets) {
       }
     } else {
       writeFileSync(path, buf);
-      console.log(`✓ 已生成 ${path}（${COLORS[name][file === activeFile ? 'active' : 'normal']}）`);
+      console.log(`✓ 已生成 ${path}（${file === activeFile ? ACTIVE_COLOR : NORMAL_COLOR}）`);
     }
   }
 }

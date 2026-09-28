@@ -347,8 +347,12 @@ async function analyze(root) {
 
   notes.push(`App.vue：${keyframes.size} 个 @keyframes，引用 ${appNames.size} 个动画名`);
 
-  /* ---------- 页面：样式规则 + 动画名必须存在 + 不许内联动画名 ---------- */
-  const pageFiles = await collectFiles(path.join(root, 'pages'));
+  /* ---------- 页面与公共组件：样式规则 + 动画名必须存在 + 不许内联动画名 ----------
+     组件（components/）与页面同源：同样的属性白名单与时长预算，不能因为「不是页面」就漏检 */
+  const pageFiles = [
+    ...(await collectFiles(path.join(root, 'pages'))),
+    ...(await collectFiles(path.join(root, 'components')))
+  ];
   const usedNames = new Map();
 
   for (const file of pageFiles) {
@@ -373,7 +377,7 @@ async function analyze(root) {
     }
   }
 
-  notes.push(`页面：${pageFiles.length} 个文件，引用 ${usedNames.size} 个动画名`);
+  notes.push(`页面与公共组件：${pageFiles.length} 个文件，引用 ${usedNames.size} 个动画名`);
 
   return { failures, notes };
 }

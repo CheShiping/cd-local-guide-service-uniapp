@@ -2,16 +2,10 @@
   <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
-    <!-- 导航栏 -->
+    <!-- 导航栏：管理员的第二项 tab（底部栏「地陪审核」进入），没有上一页可回，
+         左侧留空占位保持标题居中 -->
     <view class="navbar">
-      <view
-        class="icon-btn ds-pressable"
-        hover-class="is-pressed"
-        hover-stay-time="70"
-        @click="goBack"
-      >
-        <text class="icon-btn__text back">‹</text>
-      </view>
+      <view class="icon-btn"></view>
       <text class="navbar__title">地陪审核</text>
       <view class="icon-btn"></view>
     </view>
@@ -123,6 +117,9 @@
         <text class="empty-tip">地陪申请开通流程为后续升级，MVP 阶段由种子数据预置</text>
       </view>
     </scroll-view>
+
+    <!-- 角色化底部栏（管理员：订单管理 · 地陪审核 · 我的） -->
+    <ds-tabbar />
   </view>
 </template>
 
@@ -263,10 +260,6 @@ export default {
           fail: () => resolve(false)
         });
       });
-    },
-
-    goBack() {
-      uni.navigateBack();
     }
   }
 };

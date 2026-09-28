@@ -2,11 +2,11 @@
 
 ## 当前状态
 
-**最后更新：** 2026-09-27
-**当前功能：** 无进行中 —— **MVP 全量 + 视觉改版全部完成**（feat-001 ~ feat-016 共 16 个 `done`）
+**最后更新：** 2026-09-28
+**当前功能：** 无进行中 —— **MVP 全量 + 视觉改版 + 角色化底部栏全部完成**（feat-001 ~ feat-017 共 17 个 `done`）
 **验证入口：** `./init.ps1` / `bash init.sh` 共 **8 步**
-**当前阶段：** 阶段 0「保留原有资产」完成 → 阶段 1「成都景点地陪小程序」完成（7 页 + 三端闭环 + 数据层/数据库定稿）→ 阶段 2「视觉改版定稿『气泡漫游』」完成（feat-016，提交 `bb3d0ab`）→ **阶段 3「联调与验收」进行中**
-**门禁现状（2026-09-27 实测，不要凭印象）：** `check-tokens` ✅（120 变量 / 15 引用 / 13 色值对齐）、`check-motion` ✅（白名单已与 `DESIGN.md` §13.2 对齐）、`check-schema` ✅（10 表 109 字段）、`check-mock` ✅（52 用户 / 50 地陪 / 20 景点 / 16 订单）、`smoke-flow` ✅ **50/50** ｜ **`verify-assets` ❌**（16 条被改资产未登记原因、未刷新哈希 —— 见「阻塞 / 风险」第 1 条，**动手改代码前先收尾**）
+**当前阶段：** 阶段 0「保留原有资产」完成 → 阶段 1「成都景点地陪小程序」完成（7 页 + 三端闭环 + 数据层/数据库定稿）→ 阶段 2「视觉改版定稿『气泡漫游』」完成（feat-016，提交 `bb3d0ab`）→ 阶段 3「联调与验收」进行中（feat-017：角色化底部栏与首页分流）
+**门禁现状（2026-09-28 实测，不要凭印象）：** `verify-assets` ✅（22 条资产哈希一致 —— feat-016 遗留的 16 条已补登记原因并刷新哈希，**此前唯一红项收尾**）、`check-tokens` ✅（120 变量 / 15 引用 / 13 色值对齐）、`check-motion` ✅（9 时长令牌 + `MOTION` 5 项一致 + 3 keyframes；扫描范围已含 `components/`，页面与公共组件 12 个文件 0 违规）、`check-schema` ✅（10 表 109 字段）、`check-mock` ✅（52 用户 / 50 地陪 / 20 景点 / 16 订单）、`smoke-flow` ✅ **50/50**; `./init.ps1` **1-7 步全绿**（第 8 步构建按已知原因跳过）
 
 ## 阶段 1 范围（已锁定）
 
@@ -60,6 +60,8 @@
 
 ## 状态概览
 
+- [x] **feat-017 角色化底部栏与首页分流**（2026-09-28）：底部栏项数与文案随角色变化（游客「首页·我的」/ 地陪「接单·我的」/ 管理员「订单管理·地陪审核·我的」）；原生 tabBar 隐藏、`components/ds-tabbar` 自绘（配置唯一来源 `utils/tabbar.js`）；`pages.json` 登记 5 个 tab 页；三个工作台页去掉返回键、跳转改 `switchTab`；「我的」页补「成为地陪」占位入口；图标新增 `orders` / `clerk` 两个形状（共 8 张）；顺带收尾 feat-016 遗留的资产保真红项
+
 ### 已完成（MVP 全量）
 
 - [x] 原有资产盘点与冻结：`git tag legacy-peiwan-baseline-v1` @ `ceca05a`
@@ -108,9 +110,11 @@
 
 ### 下一步
 
-1. **收尾资产保真门禁（最优先 —— 唯一让 `./init.ps1` 变红的项）**：给 16 条被改资产的 `note` 登记「2026-09-27 视觉改版『气泡漫游』」的原因 → `node scripts/verify-assets.mjs --update` → `./init.ps1` 复跑（见「阻塞 / 风险」第 1 条）。
-2. **人工走查（唯一没做过的验证维度）**：在 H5（`npm run dev:h5`）或微信开发者工具里跑一遍三端闭环 —— 游客下单 → 地陪接单 → 平台确认 → 地陪完成；重点看**玻璃卡片两端的观感差异**（小程序无 `backdrop-filter`，退化为半透明白底）、黑胶囊选中态、七档光斑是否过浓、页签与下拉刷新、图片兜底、弹窗确认、底部操作栏是否贴底。
+1. ~~**收尾资产保真门禁**~~ **已完成（2026-09-28）**：16 条被改资产的 `note` 已补登记「2026-09-27 视觉改版『气泡漫游』」与本次 feat-017 的原因 → `node scripts/verify-assets.mjs --update` 刷新哈希 → `./init.ps1` 第 2 步复跑通过（`./init.ps1` 现在 1-7 步全绿，仓库不再处于「禁止新增功能」状态）。
+2. **人工走查（唯一没做过的验证维度，当前最优先）**：在 H5（`npm run dev:h5`）或微信开发者工具里跑一遍三端闭环 —— 游客下单 → 地陪接单 → 平台确认 → 地陪完成；重点看**玻璃卡片两端的观感差异**（小程序无 `backdrop-filter`，退化为半透明白底）、黑胶囊选中态、七档光斑是否过浓、页签与下拉刷新、图片兜底、弹窗确认、底部操作栏是否贴底。
    > 数据层闭环已由 `scripts/smoke-flow.mjs` 证明跑得通（50/50），但它证明不了渲染与交互。
+   >
+   > **feat-017 新增走查项（角色化底部栏，本轮完全没在真机/浏览器里验过）**：① 原生栏是否被隐藏干净（不该出现「两条底部栏」或切换瞬间闪一下）；② 三种身份的项数与文案（游客 2 项 / 地陪 2 项 / 管理员 3 项）与当前项高亮；③ 管理员第三项「地陪审核」可点且高亮正确；④ 切换演示身份后底部栏是否立刻换项、当前页不属于新角色时是否收敛到该角色第一屏；⑤ 三个工作台页去掉返回键后能否靠底部栏回到「我的」；⑥ iPhone 安全区下自绘栏是否压住内容或留白过多。
 3. **跑一次真实构建**：走 HBuilderX（`npm run build:mp-weixin` 在本仓库跑不通，CLI 期望 `src/` 布局），确认 `api/mock/seed.json` 的 JSON import、`uni.scss` 令牌、`env(safe-area-inset-bottom)` 等编译期写法。
 4. **微信端复核**：`manifest.json` 的 `mp-weixin.appid` 已填 `wx297713513aa45aca`（工作区未提交），确认 `uni.login()` 能拿到 code；同时确认「不再有任何页面转场」在微信端就是原生滑动（不该出现双重动画）。
 5. 若走查发现问题 → 按规则产出 `docx/bugfix/BUG修复-YYYYMMDD-简述.md` 并登记到本文件。
@@ -119,7 +123,7 @@
 
 ## 阻塞 / 风险
 
-- [ ] **（最优先）资产保真门禁为红**：`node scripts/verify-assets.mjs` 列出 16 条「资产被修改」——11 个页面 + `App.vue` + `uni.scss` + `pages.json` + `manifest.json` + `README.md` + 4 张 tabBar 图标，全部是 feat-016 视觉改版的预期改动，但当时**没有先登记 `note` 再刷新哈希**（违反 `AGENTS.md` 铁律第 2 条）。收尾方式：逐条在 `docs/legacy-assets.json` 补登记「2026-09-27 视觉改版『气泡漫游』」的原因 → `node scripts/verify-assets.mjs --update` → `./init.ps1` 复跑。在此之前 `./init.ps1` 会在第 2 步中断，仓库处于「禁止继续新增功能」状态
+- [x] ~~**（最优先）资产保真门禁为红**~~ **已收尾（2026-09-28）**：feat-016 的 16 条「资产被修改」（11 个页面 + `App.vue` + `uni.scss` + `pages.json` + `manifest.json` + `README.md` + 4 张 tabBar 图标）已逐条在 `docs/legacy-assets.json` 补登记原因，本次 feat-017 改动的条目再追加一段，然后 `node scripts/verify-assets.mjs --update` 刷新 16 条哈希 → `./init.ps1` 第 2 步复跑**通过**（登记与刷新顺序未反，未用 `--update` 掩盖误改）
 - [x] ~~`check-motion` 为红（2 处 `box-shadow` 过渡被拦）~~ **已修**（2026-09-27）：`DESIGN.md` §13.2 的属性白名单本来就允许 `box-shadow`，是校验脚本没跟上 —— 已把 `box-shadow` 加进 `scripts/check-motion.mjs` 的 `TRANSITION_PROPS`，并把脚本头部注释里「§1.8 / ≤300ms / 入场用 ease-out」等过期口径同步为「§1.10 / ≤400ms / 定稿只用到 150-200ms」；`--self-test` 的 12 类夹具仍全部检出
 - [x] ~~缺依赖：无 `node_modules`~~ **已安装**（HBuilderX / npm 装的都在）。但 **`npm run build:mp-weixin` 在本仓库跑不通，且与本轮改动无关**：根目录是 HBuilderX「普通项目」布局（源码在根），而 `@dcloudio/uni-cli` 期望源码在 `src/`，报 `ENOENT: src/manifest.json`。要么把源码挪进 `src/`（大改目录结构，需单独评估），要么接受「真实编译走 HBuilderX」。`./init.ps1` 第 8 步因此长期只能跳过
 - [ ] **小程序端 WXSS 未在 HBuilderX 里真机确认过**（feat-016）：玻璃卡片的 `backdrop-filter` 在小程序端不生效（按 `DESIGN.md` §12 退化为半透明白底，属预期行为，不要为它写条件编译）、`.is-pressed` 叠层、`@media (prefers-reduced-motion)` 这几样只有真编译才知道小程序端表现如何。已用 HBuilderX 自带的 dart-sass 验证过样式块能编译（见 `docx/bugfix/BUG修复-20260926-SCSS变量未定义实为注入缓存陈旧.md`）
@@ -186,6 +190,9 @@
 - **选中态由「滑动下划线指示器」改「黑胶囊」**（feat-016）：页签 / chip / 日期 / 单选统一；只有分段控件保留白色滑块 `translateX`（200ms）
 - **`box-shadow` 进动效白名单**（feat-016 / `DESIGN.md` §13.2）：单选环与卡片层级需要过渡，只给这两类小元素用；校验脚本白名单当时没跟上，2026-09-27 已补齐
 - **`utils/motion.js` 降级为「时长镜像」**（feat-016）：页面已无引用（不再有 JS 编排的动效），保留它只为让 `check-motion.mjs` 继续把 JS 时长与 SCSS 令牌逐项比对；**不要**拿它重新做页面编排
+- **底部栏自绘，而不是用原生 tabBar**（feat-017）：原生 `tabBar.list` 编译期静态，`setTabBarItem` 只能改文案与图标、**没有删除项的 API**，做不到「管理员比游客多一项地陪审核」；同时否掉微信原生 `custom-tab-bar`（H5 不支持，而本项目要求 H5 可调试；且只能写 wxml/wxss、用不了 `$ds-*`）。落点：`pages.json` 保留 5 个 tab 页（`switchTab` 才可用）+ 运行时 `uni.hideTabBar` + `components/ds-tabbar` 自绘，配置收在 `utils/tabbar.js` 一处
+- **不做「一页装三种首页」**（feat-017）：游客首页仍是景点列表，地陪 / 管理员的「首页」是各自的工作台页（接单 / 订单管理）。靠 `ds-tabbar` 的 `guard()` **一处**把「当前页不属于当前角色」收敛到该角色第一屏（登录后落首页、切换身份后都走它），避免把三套首页塞进 `pages/index/index.vue`
+- **`<ds-tabbar />` 自带高度占位**（feat-017）：78px 占位由组件根节点提供、视觉栏是 `position: fixed`，所以页面只要把它写在根节点内容末尾 —— 4 个 `height: 100vh` 的 flex 页面不必各改布局，普通滚动页也不会被 fixed 栏压住最后一行
 
 ## 未来候选（MVP 之后再说，现在不许实现）
 
@@ -194,6 +201,34 @@
 **页面层门禁（本次 bug 暴露的缺口，值得单独立项）**：`check-tokens` / `check-motion` / `check-schema` / `check-mock` / `smoke-flow` 都看不见「页面把 URL 参数（字符串）与接口 id（数字）用 `===` 比较」。本次下单页就是这么静默回落成 `packages[0]` 的。可行做法：在 `scripts/check-mock.mjs` 已有的页面扫描里加一条规则 —— 与 `xxxId` 做严格比较时必须显式数值化（要求 `Number(a) === Number(b)`，或在 `onLoad` 用 `toId()` 归一化后不再出现裸 `=== this.xxxId`）；需配 `--self-test` 夹具。
 
 ## 本次会话修改的文件
+
+### 本次（2026-09-28：feat-017 角色化底部栏与首页分流 + 收尾 feat-016 遗留红项）
+
+**一、角色化底部栏（feat-017）**
+
+- `utils/tabbar.js` - **新建**：角色 → 底部栏项 / 首页路径 / 图标地址的唯一来源（`tabItemsByRole` / `homePathByRole` / `isTabPath` / `tabIconPath`；角色常量取 `api/constants.js` 的 `ROLES`）
+- `components/ds-tabbar/ds-tabbar.vue` - **新建**：easycom 自绘底部栏（按角色换项、当前项高亮、`switchTab` 跳转失败回退 `reLaunch`、`mounted` 隐藏原生栏、自带 78px 占位、`guard()` 角色兜底、监听 `uni.$on('role:change')`）
+- `pages.json` - `tabBar.list` 由 2 项扩为 **5 项**（新增 `pages/guide/orders`、`pages/admin/appointment`、`pages/admin/clerk`，这三页据此成为 tabBar 页）
+- `pages/index/index.vue` - 根节点内容末尾接入 `<ds-tabbar />`
+- `pages/tabbar/mine.vue` - 接入 `<ds-tabbar />`；新增「成为地陪」行（游客可见，点击 toast 占位）；接单 / 订单管理 / 地陪审核三处 `navigateTo` → `switchTab`；`switchRole` 成功后 `uni.$emit('role:change')`
+- `pages/guide/orders.vue`、`pages/admin/appointment.vue`、`pages/admin/clerk.vue` - 去掉导航栏返回键（改 44px 空占位）、删 `goBack()`、接入 `<ds-tabbar />`、注释说明「本页是某角色的 tab」
+- `App.vue` - `onLaunch` 补 `hideNativeTabBar()`（`setTimeout` + `fail` 静默；页面 `mounted` 里再兜一次）
+- `scripts/gen-tabbar-icons.mjs` - 新增 `orders`（单据 + 三行内容）与 `clerk`（盾牌 + 对勾）两个形状；`COLORS` 收敛为 `NORMAL_COLOR` / `ACTIVE_COLOR`；`targets` 2 → 4（共 8 张图）
+- `static/tabbar/{orders,orders-active,clerk,clerk-active}.png` - **新增 4 张**（脚本生成，`--check` 通过）
+
+**二、同步的口径与门禁**
+
+- `DESIGN.md` - §8 组件清单的 tabBar 行重写为角色化口径（含页面接入方式与 `switchTab` 约定）；§12 第 5 条同步；§14 变更记录加一行
+- `README.md` - 补「底部栏随角色变化」一节、`components/` 目录说明、tabBar 图标 4 → 8 个；视觉基准由 `design/html` 更正为 `design/redesign`
+- `scripts/check-motion.mjs` - 扫描范围由 `pages/` 扩为 `pages/` + `components/`（组件与页面同一套属性白名单与时长预算，不能因为「不是页面」漏检）
+- `AGENTS.md` - 门禁现状表改「2026-09-28 全绿」；启动工作流第 5 步去掉「第 2 步为红」；必需产物加 `utils/tabbar.js` 与 `components/ds-tabbar/`；新增「导航与角色（feat-017 定稿）」一节；页面数那行补「其中 5 个是 tabBar 页」
+- `docs/legacy-assets.json` - **16 条**资产先补登记原因（feat-016 遗留）→ 本次改动的条目再追加 feat-017 原因 → `node scripts/verify-assets.mjs --update` 刷新哈希 → 复跑通过（保真门禁由红转绿）
+
+**三、归档与记录**
+
+- `feature_list.json` - 新增 **feat-017**（`done` + 证据）
+- `docx/codeimpl-sum/设计文档-feat-017-角色化底部栏与首页分流.md` - **新建**：本轮设计文档（六章节齐全）
+- `progress.md` / `session-handoff.md` - 本文件与交接文件
 
 ### 本次（2026-09-27：恢复被删文档 + 按真实项目与阶段同步 harness）
 
@@ -340,7 +375,21 @@
 
 ## 完成证据
 
-**2026-09-27 实测（视觉改版 feat-016 落地后，以这一组为准）：**
+**2026-09-28 实测（feat-017 角色化底部栏落地后，以这一组为准）：**
+
+- [x] `./init.ps1` → **第 1-7 步全绿**（第 8 步构建按已知原因跳过：CLI 期望 `src/` 布局，本仓库是 HBuilderX 根目录布局）：
+  - 2/8 资产保真 → **通过**（22 条资产哈希一致；16 条先登记原因再 `--update`；**feat-016 遗留的唯一红项收尾**）
+  - 3/8 设计令牌 → 通过（`uni.scss` 120 变量 / 15 处引用 / `DESIGN.md` 13 色值全对齐）
+  - 4/8 动效 → 通过（9 时长令牌 + `MOTION` 5 项一致 + 3 keyframes；**页面与公共组件 12 个文件** 0 动画名）+ `--self-test` 12 类全检出
+  - 5/8 表结构 → 通过（10 表 / 109 字段 / 无外键）
+  - 6/8 mock → 通过（52 用户 / 50 地陪 / 20 景点 / 16 订单；11 个页面均未直连 `api/mock/`）
+  - 7/8 端到端闭环 → **50/50**（闭环订单 `CD260928A0001`）
+- [x] `node scripts/gen-tabbar-icons.mjs --check` → **8 张**图标与 `uni.scss` 令牌（`#9a95ae` / `#6f61bd`）逐张一致
+- [x] 路由一致性：`pages.json` 注册 11 个页面 + tabBar **5 项**，3 个新增 tabBar 页与 4 个新图标形状均存在
+- [x] 编辑器诊断：全部改动文件 0 error 0 warning
+- [ ] **角色化底部栏未做人工走查**：原生栏隐藏是否干净（不该出现两条栏）、切换身份后是否立刻换项、管理员第三项「地陪审核」、安全区高度只能眼睛验收
+
+**2026-09-27 实测（视觉改版 feat-016 落地后）：**
 
 - [x] `node scripts/check-tokens.mjs` → 通过（`uni.scss` 120 个变量 / 15 处引用 / `prototype.css` 65 个自定义属性；`DESIGN.md` 13 个色值全部落到 `uni.scss`）
 - [x] `node scripts/check-motion.mjs` → 通过（9 个时长令牌按 400ms 预算检查；`MOTION` 的 5 个时长与令牌逐项一致；`App.vue` 3 个 `@keyframes` 且引用名全部存在；11 个页面引用 **0** 个动画名 —— 页面已无入场编排）+ `--self-test` 12 类夹具全部检出
@@ -348,7 +397,7 @@
 - [x] `node scripts/check-mock.mjs` → 通过（52 用户 / 50 地陪 / 20 景点 / 7 区域 / 3 套餐 / 16 订单；44/44 已通过地陪可被下单；39 张本地头像素材、姓名对齐命中 39/50；11 个页面均未直连 `api/mock/`）
 - [x] `node scripts/smoke-flow.mjs` → **50/50**（三端闭环 + 负向用例，本次闭环订单 `CD260927A0001`）
 - [x] `node scripts/gen-tabbar-icons.mjs --check` → 4 张图标与 `uni.scss` 令牌一致
-- [ ] **`node scripts/verify-assets.mjs` → 未通过**：16 条资产（11 个页面 + `App.vue` + `uni.scss` + `pages.json` + `manifest.json` + `README.md` + 4 张 tabBar 图标）是视觉改版的预期改动，但未登记原因、未刷新哈希 —— 收尾步骤见「下一步」第 1 条
+- [x] ~~**`node scripts/verify-assets.mjs` → 未通过**~~ **已收尾（2026-09-28）**：16 条资产（11 个页面 + `App.vue` + `uni.scss` + `pages.json` + `manifest.json` + `README.md` + 4 张 tabBar 图标）补登记原因后 `--update` 刷新哈希，复跑通过
 - [ ] 小程序真实构建：只能走 HBuilderX（`npm run build:mp-weixin` 在本仓库跑不通，CLI 期望 `src/` 布局）
 - [ ] 页面层人工走查：未执行（数据层已由动态门禁覆盖；玻璃卡片在小程序端的退化表现、按压反馈、光斑浓度只能眼睛验收）
 

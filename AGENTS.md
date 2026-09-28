@@ -13,15 +13,17 @@
 
 阶段 3 **没有待开发功能**：不要再新增页面或功能，先做验收与门禁收尾（见 `progress.md` 的「下一步」）。要加 MVP 之外的东西，写进 `progress.md` 的「未来候选」。
 
-### 门禁现状（2026-09-27 实测，不要凭印象）
+### 门禁现状（2026-09-28 实测，不要凭印象）
 
 | 门禁 | 状态 |
 |---|---|
-| `check-tokens` / `check-schema` / `check-mock` / `smoke-flow` | 通过 |
-| `check-motion` | 通过（属性白名单已在 2026-09-27 与 `DESIGN.md` §13.2 对齐：补 `box-shadow`） |
-| **`verify-assets`** | **未通过**：16 条资产在视觉改版中被改（11 个页面 + `App.vue` + `uni.scss` + `pages.json` + `manifest.json` + `README.md` + 4 张 tabBar 图标），但未登记原因、未刷新哈希 |
+| `verify-assets` | 通过（22 条资产哈希一致；`pages.json` 11 个页面 + 5 个 tabBar 页与 8 张图标齐全） |
+| `check-tokens` | 通过（`uni.scss` 120 变量 / 15 处引用 / `DESIGN.md` 13 色值全对齐） |
+| `check-motion` | 通过（9 时长令牌 + `MOTION` 5 项一致 + 3 keyframes；**页面与公共组件** 12 个文件 0 违规） |
+| `check-schema` / `check-mock` | 通过（10 表 109 字段 / 52 用户 50 地陪 20 景点 16 订单） |
+| `smoke-flow` | 通过 **50/50** |
 
-**动手改代码前先收尾这条**：给上述资产的 `note` 登记「视觉改版「气泡漫游」」的原因 → `node scripts/verify-assets.mjs --update` → `./init.ps1` 复跑。**禁止**用 `--update` 掩盖非预期的改动。
+feat-016 遗留的「16 条被改资产未登记」已于 2026-09-28 收尾（补 `note` 原因 → `node scripts/verify-assets.mjs --update` → 复跑）。**新增改动仍按铁律先登记原因再刷新哈希**；`--update` 只刷哈希、不解释理由，直接跑等于掩盖误改。
 
 ## 启动工作流
 
@@ -31,7 +33,7 @@
 2. 阅读本文件
 3. 阅读业务范围：`docs/MVP 范围：只做 3 件事.md`（人读）+ `docs/mvp-scope.json`（机读：20 景点 / 7 类区域 / 3 套餐 / 4 态订单 / 7 页面 / 9 处修订见 `deviations`）
 4. 阅读视觉规范：`DESIGN.md`（定稿主题「气泡漫游」）+ `uni.scss`（`$ds-*` 令牌）
-5. 运行 `./init.ps1`（Windows PowerShell）或 `bash init.sh`，确认基线为绿（当前第 2 步为红，见上）
+5. 运行 `./init.ps1`（Windows PowerShell）或 `bash init.sh`，确认基线为绿（第 1-7 步；第 8 步构建在本仓库按已知原因跳过）
 6. 阅读 `feature_list.json`，只看当前一个功能
 7. 涉及改动范围与复用策略时，查 `docs/legacy-assets.md`
 8. `git log --oneline -5` 了解最近改动
@@ -64,7 +66,7 @@ MVP 规模上限（超出即越界）：
 - 定价 3 个 SKU：市区半日陪游 200-400 元、市区全天陪游 500-800 元、熊猫基地/都江堰专项陪游 150-300 元/小时；门票餐饮交通不含
 - 预约类型 3 种：半天（上午/下午）、全天（1 天）、小时加购（1 小时）——超时不自动计费
 - 订单 4 态：待确认 / 已确认 / 已完成 / 已取消
-- 页面 7 个（`pages.json` 共注册 **11** 个：7 个 MVP 页 + 登录 + 协议 + 我的 + 地陪审核）
+- 页面 7 个（`pages.json` 共注册 **11** 个：7 个 MVP 页 + 登录 + 协议 + 我的 + 地陪审核；其中 **5 个登记为 tabBar 页** —— 首页 / 接单 / 订单管理 / 地陪审核 / 我的，底部栏按角色显示 2-3 项）
 - 角色 3 种：游客 / 地陪 / 管理员（地陪身份 MVP 由 mock 预置）
 
 MVP 明确不做：IM、实时定位、分销代理、团购、广场发单、等级体系、自动结算、多城市、优惠券、动态定价、行程日志、轨迹回放、门店管理、复杂排班、加价规则、**评价（展示与提交都不做）**、地陪申请开通流程（后续升级）、投诉。
@@ -104,6 +106,15 @@ MVP 明确不做：IM、实时定位、分销代理、团购、广场发单、�
 - 数字不动画（金额 / 统计 / 步进器）；滚动不加动效；Toast / Modal / picker / 下拉刷新用平台自带。
 - `prefers-reduced-motion: reduce` 时去掉位移与回弹、保留淡入（规则在 `App.vue` 全局样式末尾）。
 
+## 导航与角色（feat-017 定稿）
+
+- **底部栏按角色变化**：游客「首页 · 我的」/ 地陪「接单 · 我的」/ 管理员「订单管理 · 地陪审核 · 我的」；唯一来源 `utils/tabbar.js`
+- **原生 tabBar 编译期静态、无法按角色增删**（`setTabBarItem` 只能改文案与图标）：`pages.json` 把 5 个页面都登记为 tabBar 页（`switchTab` 才可用），运行时用 `uni.hideTabBar` 隐藏原生栏，显示层由 `components/ds-tabbar` 自绘
+- **tab 页之间一律 `switchTab`**（成为 tabBar 页后 `navigateTo` 会失败）；三个工作台页（接单 / 订单管理 / 地陪审核）是 tab 页，**不放返回键**
+- 页面接入方式：根节点内容末尾放 `<ds-tabbar />`，高度占位（`$ds-h-tabbar` = 78px）由组件自带，**不要**各页写 `padding-bottom`
+- **角色兜底只有一处**（`ds-tabbar` 的 `guard()`）：当前页不属于当前角色时收敛到该角色第一屏 —— 登录后落首页、切换身份后都靠它，不要各页再写一套
+- 改了底部栏配色令牌要重跑 `node scripts/gen-tabbar-icons.mjs`（4 个形状 `home` / `orders` / `clerk` / `mine` 共 8 张）
+
 ## 必需产物
 
 - `feature_list.json` — 功能状态唯一事实来源
@@ -112,6 +123,8 @@ MVP 明确不做：IM、实时定位、分销代理、团购、广场发单、�
 - `DESIGN.md` + `uni.scss` — 视觉规范与落地令牌（定稿主题「气泡漫游」，两者必须同步改；`design/redesign/` 是原型侧对照）
 - `utils/motion.js` — 动效时长的 JS 镜像（供 `check-motion.mjs` 与 SCSS 令牌逐项比对；**当前无页面引用**，不要拿它做页面编排）
 - `utils/hscroll.js` — 分类行行为包（激活项居中 + 横滑切换），页面不要各写一套
+- `utils/tabbar.js` — 角色化底部栏配置（角色 → 底部栏项 / 首页路径 / 图标地址的唯一来源）
+- `components/ds-tabbar/ds-tabbar.vue` — 自绘底部栏（按角色换项 + 角色兜底）；页面在根节点**内容末尾**放一个 `<ds-tabbar />` 即可，高度占位由组件自带
 - `docx/database/schema.sql` + `docx/database/数据库设计.md` — 数据库表结构唯一事实来源
 - `docx/` — 设计实现文档与 Bug 修复文档归档（见下节）
 - `session-handoff.md` — 跨会话交接

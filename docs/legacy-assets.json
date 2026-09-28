@@ -20,8 +20,8 @@
       "category": "入口",
       "purpose": "应用启动、全局样式（page/button 重置/安全区）、未登录时重定向到登录页、微信云开发初始化",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-013：全局样式改用 $ds-* 令牌；移除已废弃的微信云开发初始化（重构后走 HTTP，占位环境 ID 会在真机报错）；未登录重定向登录页的逻辑保留。2026-09-26 feat-015：全局样式末尾新增动效段 —— 9 个 @keyframes（入场 up/next/prev、淡入、弹入、转圈、页面进入/退出 + 降级用的页面淡出）、列表入场与按压反馈的通用类、.ds-spinner（含 --on-primary / --lg 变体）、.is-page-in / .is-page-out（页面转场，用条件编译只对 H5 生效）、.ds-pressable.is-pressed::after 的 8% 当前色叠层、prefers-reduced-motion 降级。keyframes 必须留在全局：页面样式是 scoped 的，各自声明会被编译成不同名字，七屏共用不了（由 scripts/check-motion.mjs 把关）。2026-09-26 返回动画定稿：`.is-page-out` 的 `ds-page-out` 与 `ds-page-in` **完全对称**（同 32px 位移 / 同 320ms / 同 `$ds-ease-out`，方向相反）；`.is-page-out` 需保持 `fill-mode: both` 直到 navigateBack。中途试过「opacity 0.15 + translateX(40%)」（整页滑走太吵）与「opacity 0.7 + 8px」（与进入力度不匹配）—— 结论：进出不对称比动画本身更刺眼",
-      "sha256": "2674a27ddf788917903b8d2c74a3b5a01099455ae5178b9c928527fc2d323cec"
+      "note": "2026-09-26 feat-013：全局样式改用 $ds-* 令牌；移除已废弃的微信云开发初始化（重构后走 HTTP，占位环境 ID 会在真机报错）；未登录重定向登录页的逻辑保留。2026-09-26 feat-015：全局样式末尾新增动效段 —— 9 个 @keyframes（入场 up/next/prev、淡入、弹入、转圈、页面进入/退出 + 降级用的页面淡出）、列表入场与按压反馈的通用类、.ds-spinner（含 --on-primary / --lg 变体）、.is-page-in / .is-page-out（页面转场，用条件编译只对 H5 生效）、.ds-pressable.is-pressed::after 的 8% 当前色叠层、prefers-reduced-motion 降级。keyframes 必须留在全局：页面样式是 scoped 的，各自声明会被编译成不同名字，七屏共用不了（由 scripts/check-motion.mjs 把关）。2026-09-26 返回动画定稿：`.is-page-out` 的 `ds-page-out` 与 `ds-page-in` **完全对称**（同 32px 位移 / 同 320ms / 同 `$ds-ease-out`，方向相反）；`.is-page-out` 需保持 `fill-mode: both` 直到 navigateBack。中途试过「opacity 0.15 + translateX(40%)」（整页滑走太吵）与「opacity 0.7 + 8px」（与进入力度不匹配）—— 结论：进出不对称比动画本身更刺眼。2026-09-27 feat-016 视觉改版「气泡漫游」：全局样式段按新系统重写（保留 3 个 @keyframes：淡入 / 弹入 / 转圈），原为页面转场与列表入场写的 keyframes 与类整体删除（页面切换改瞬时，页面不再引用 utils/motion.js）。2026-09-28 feat-017 角色化底部栏：onLaunch 补 uni.hideTabBar —— 原生 tabBar 项数与文案编译期固定、无法按角色增删，显示层改由 components/ds-tabbar 自绘（配置 utils/tabbar.js）",
+      "sha256": "57be1cbf4aaf199f155a5259326ee4e4a724e549e63e3d299372a4733a69f708"
     },
     {
       "path": "main.js",
@@ -36,16 +36,16 @@
       "category": "配置",
       "purpose": "应用名称/描述/版本、mp-weixin 与 h5 平台配置（h5 hash 路由、端口 8080）",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-013：name 改「成都地陪」，description 改为景点地陪预约；h5 配置保留；mp-weixin 的 appid 仍为空，发布前需填真实小程序 appid",
-      "sha256": "1b81535296cd3b01456587369bcbe2cff836031456b12bc02a2dfb5add01691c"
+      "note": "2026-09-26 feat-013：name 改「成都地陪」，description 改为景点地陪预约；h5 配置保留；mp-weixin 的 appid 仍为空，发布前需填真实小程序 appid。2026-09-27 feat-016 同期配置改动：应用名由「成都地陪」改为「耍搭」、uni-app appid 改 `__UNI__93760BA`、mp-weixin.appid 填 `wx297713513aa45aca`（微信端 uni.login 才能拿到 code，见 docx/bugfix/BUG修复-20260927-…appid未配置.md），文件同时被格式化为 2 空格缩进",
+      "sha256": "2996f687f1695f053512bbb239a34250a3764d4b7c65afec28c78101bdb63aed"
     },
     {
       "path": "pages.json",
       "category": "配置",
       "purpose": "页面注册、tabBar（首页/我的）与全局样式，全部页面使用 navigationStyle: custom",
       "reuse": "adapt",
-      "note": "路由骨架与自定义导航风格保留。2026-09-26 feat-003 注册 pages/webview/agreement（消 gap-002）；feat-006~013 完成：共注册 11 个页面（新增 guide/list、order/create、guide/orders），tabBar 主色改 #2f6b5e、未选中 #6b6862、**底色由纯白改 #fbfaf5（$ds-surface-container，与原型「宣纸+8%白」对齐）**，globalStyle 背景改宣纸 #f7f4ed，页面标题改为地陪口径。2026-09-26 feat-015：globalStyle 补 app-plus 的页面转场配置（animationType slide-in-right / animationDuration 320，与 $ds-dur-page 对齐）——App 端跳转默认无动画、且只有 App 端认这份配置；小程序是原生转场、H5 官方配置不生效需自己用 CSS 模拟，三端机制不同见 DESIGN.md §13.4",
-      "sha256": "10c6a883bfaeec4e70161381a211e7d7d2acadc2f66e47e690c2c8634bccabd5"
+      "note": "路由骨架与自定义导航风格保留。2026-09-26 feat-003 注册 pages/webview/agreement（消 gap-002）；feat-006~013 完成：共注册 11 个页面（新增 guide/list、order/create、guide/orders），tabBar 主色改 #2f6b5e、未选中 #6b6862、**底色由纯白改 #fbfaf5（$ds-surface-container，与原型「宣纸+8%白」对齐）**，globalStyle 背景改宣纸 #f7f4ed，页面标题改为地陪口径。2026-09-26 feat-015：globalStyle 补 app-plus 的页面转场配置（animationType slide-in-right / animationDuration 320，与 $ds-dur-page 对齐）——App 端跳转默认无动画、且只有 App 端认这份配置；小程序是原生转场、H5 官方配置不生效需自己用 CSS 模拟，三端机制不同见 DESIGN.md §13.4。2026-09-27 feat-016 视觉改版：tabBar 改未选中 #9a95ae / 选中 #6f61bd、底色 #fdfcfa，4 张图标按新配色由 scripts/gen-tabbar-icons.mjs 重新生成。2026-09-28 feat-017 角色化底部栏：tabBar.list 由 2 项扩为 **5 项**（新增 pages/guide/orders、pages/admin/appointment、pages/admin/clerk），这三页因此成为 tabBar 页（只能 switchTab 打开）；原生栏在启动与页面 mounted 时被 uni.hideTabBar 隐藏，显示层改用 components/ds-tabbar 自绘，图标形状新增 orders / clerk（共 8 张）",
+      "sha256": "ea0cdacf9c73dad30ac92d056f3d6f737211515c07df164fe8a36467215dc745"
     },
     {
       "path": "package.json",
@@ -76,16 +76,16 @@
       "category": "样式",
       "purpose": "uni-app 内置 SCSS 变量 + 项目设计令牌（$ds-*，与 DESIGN.md 一一对应）",
       "reuse": "adapt",
-      "note": "2026-09-26 定稿「宣纸 · 疏」后重写：主色改为竹青绿 #2f6b5e，新增 $ds-* 令牌体系（色彩角色 / 字阶 / 形状 / 间距 / 层级）。feat-013 完成收口：8 个页面与 pages.json tabBar 的旧色值已全部换成 $ds-* / 新色值，仓库中已无 #FF4D6A 与 #ff6b81 的实际引用。2026-09-26 feat-015：新增 §1.8 动效令牌（$ds-dur-press/fast/slide/base/page/page-leave/spin、$ds-ease-out、$ds-ease-in-out、$ds-stagger-step/max），与 DESIGN.md §13 一一对应；时长预算 ≤ 400ms（内容切换刻意用满 360ms 以看清「从哪边换过来」，加载指示器的 $ds-dur-spin 是常量运动属例外）；这批时长与 utils/motion.js 的 MOTION 必须成对改，不一致由 scripts/check-motion.mjs 直接报错。2026-09-26：`$ds-dur-page-leave` 260 → 200 → 180 → **320ms**（与 `$ds-dur-page` 同值：页面进出对称），`utils/motion.js` 的 `MOTION.pageLeave` 同步改为 320",
-      "sha256": "b4aff337c774a51917c744c655d294365937132f25b1def200305273f71b7568"
+      "note": "2026-09-26 定稿「宣纸 · 疏」后重写：主色改为竹青绿 #2f6b5e，新增 $ds-* 令牌体系（色彩角色 / 字阶 / 形状 / 间距 / 层级）。feat-013 完成收口：8 个页面与 pages.json tabBar 的旧色值已全部换成 $ds-* / 新色值，仓库中已无 #FF4D6A 与 #ff6b81 的实际引用。2026-09-26 feat-015：新增 §1.8 动效令牌（$ds-dur-press/fast/slide/base/page/page-leave/spin、$ds-ease-out、$ds-ease-in-out、$ds-stagger-step/max），与 DESIGN.md §13 一一对应；时长预算 ≤ 400ms（内容切换刻意用满 360ms 以看清「从哪边换过来」，加载指示器的 $ds-dur-spin 是常量运动属例外）；这批时长与 utils/motion.js 的 MOTION 必须成对改，不一致由 scripts/check-motion.mjs 直接报错。2026-09-26：`$ds-dur-page-leave` 260 → 200 → 180 → **320ms**（与 `$ds-dur-page` 同值：页面进出对称），`utils/motion.js` 的 `MOTION.pageLeave` 同步改为 320。2026-09-27 feat-016 视觉改版「气泡漫游」：令牌全量重写 —— 低饱和三色（雾紫 #8f7fe0 / 藕粉 #e58fa6 / 薄荷 #7fc4ae）+ 墨阶 + 玻璃拟态层级 + 七档背景光斑（$ds-bg-*）+ 大圆角 + 纯黑胶囊按钮（$ds-ink-btn）；动效收敛为 150ms（按压 / 颜色）与 200ms（指示器 / 较大表面），$ds-stagger-* 归零、页面转场令牌作废；$ds-h-tabbar（78px，含底部安全区）成为角色化自绘底部栏的高度基准",
+      "sha256": "66174b2e50a896debdaac19b301ab36de50813f81db97b938ffd1ea5a3aa26a5"
     },
     {
       "path": "README.md",
       "category": "文档",
       "purpose": "项目说明：目录结构、功能模块、运行方式、云开发配置、技术栈",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-013 重写：改为 MVP 范围（3 件事 / 7 页面 / 3 角色）、页面与角色对照表、mock 数据层与 6 步验证说明、设计系统入口；技术栈去掉未实际使用的 Pinia 与云开发（gap-005）。2026-09-26 feat-015：验证命令一节补上第 8 项门禁 scripts/check-motion.mjs（动效）",
-      "sha256": "37016a3bde6efed56b4e2e2294326d66f67042d40e82f2bd8fccbbcf2ba0bb4c"
+      "note": "2026-09-26 feat-013 重写：改为 MVP 范围（3 件事 / 7 页面 / 3 角色）、页面与角色对照表、mock 数据层与 6 步验证说明、设计系统入口；技术栈去掉未实际使用的 Pinia 与云开发（gap-005）。2026-09-26 feat-015：验证命令一节补上第 8 项门禁 scripts/check-motion.mjs（动效）。2026-09-27 feat-016 视觉改版：随全站同步（文案与配色口径）。2026-09-28 feat-017：补「底部栏随角色变化」一节与 components/ 目录说明；tabBar 图标由 4 个改为 8 个；视觉基准由 design/html 更正为 design/redesign",
+      "sha256": "17d941fe9d7a3762f723928e0de984145c5a2351958fd7a82cd6c00ac6da7e00"
     },
     {
       "path": "api/index.js",
@@ -108,88 +108,88 @@
       "category": "页面",
       "purpose": "登录页：品牌区/价值说明/微信授权登录/免登录进入/协议勾选/Loading",
       "reuse": "adapt",
-      "note": "平台双通道登录逻辑原样保留（MP-WEIXIN 走 uni.login，H5 走 dev_code 模拟 code，开放能力按钮在 H5 用 click 兜底）。2026-09-26 feat-013：档位由 keep 改为 adapt 并重写样式与文案——品牌「蜀」字块 + 竹青底 + $ds-* 令牌，避免首屏仍是陪玩粉而与全站矛盾；同时修掉 checkLogin 判断旧字段 _id 导致免登录判断失效的问题。2026-09-26 feat-015：登录遮罩改全局 .ds-spinner--lg + 淡入，删除本页自带的 loading-spinner 与 @keyframes spin（页面不许自带 keyframes）；两个按钮与协议勾选框补按压反馈，勾选符号补弹入；接入 createPageMotion（H5 页面进入淡入，小程序原生转场），两个协议链接补按压反馈",
-      "sha256": "0875c316c4abd268e525d6587a45fbc960fc78962b32188a052922aa1f5923b2"
+      "note": "平台双通道登录逻辑原样保留（MP-WEIXIN 走 uni.login，H5 走 dev_code 模拟 code，开放能力按钮在 H5 用 click 兜底）。2026-09-26 feat-013：档位由 keep 改为 adapt 并重写样式与文案——品牌「蜀」字块 + 竹青底 + $ds-* 令牌，避免首屏仍是陪玩粉而与全站矛盾；同时修掉 checkLogin 判断旧字段 _id 导致免登录判断失效的问题。2026-09-26 feat-015：登录遮罩改全局 .ds-spinner--lg + 淡入，删除本页自带的 loading-spinner 与 @keyframes spin（页面不许自带 keyframes）；两个按钮与协议勾选框补按压反馈，勾选符号补弹入；接入 createPageMotion（H5 页面进入淡入，小程序原生转场），两个协议链接补按压反馈。2026-09-27 feat-016 视觉改版：按「气泡漫游」重做（低饱和底色、黑胶囊主按钮、圆形品牌块），平台双通道登录逻辑原样保留；登录成功仍落首页，由底部栏组件按角色把管理员 / 地陪收敛到各自第一屏",
+      "sha256": "72aac297e0f981826676ff09b7ea0ced3c0999de9db6ca7c2f38e294d2ad7322"
     },
     {
       "path": "pages/index/index.vue",
       "category": "页面",
       "purpose": "首页：状态栏占位、搜索框、横向分类标签、卡片列表、分页加载、空状态、右滑筛选抽屉（性别/价格区间）",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-006 重写为景点列表页（首页）：区域文字页签（RegionApi）+ 景点卡（coverUrl 76×76 / 名称 / 区域·场景 /「N 位地陪可约」）+ 20 条数据分页（pageSize 10 → 2 页）；按定稿原型移除陪玩时期的搜索框与性别/价格筛选抽屉（MVP 不做景点搜索与筛选）；全部改用 $ds-* 令牌。同日修复：区域页签在横向滚动容器里被 flex 压缩导致文字竖排（.tabline__item 补 flex: none + white-space: nowrap）。同日交互增强：接入 utils/hscroll.js —— 激活区域自动滚到可视区中间（scroll-into-view 只会停在边缘被裁掉），列表可左右滑动切换区域。2026-09-26 feat-015：接入 utils/motion.js —— 切区域时卡片按行进方向入场（左右各 24px、逐项 +60ms 封顶 300ms，时长 360ms 刻意放慢到看得清方向），加载更多只让新追加的卡片上浮；激活下划线由 ::after 改成真实元素（scaleX 收放，不动 width）；加载态换转圈指示器；卡片与区域页签补按压反馈；接入 createPageMotion（H5 页面进入淡入，小程序原生转场）",
-      "sha256": "dba876030c3fc3a937e7be56e9cc7dea5e3f76bb64b2d5de979db8e75ae7c01a"
+      "note": "2026-09-26 feat-006 重写为景点列表页（首页）：区域文字页签（RegionApi）+ 景点卡（coverUrl 76×76 / 名称 / 区域·场景 /「N 位地陪可约」）+ 20 条数据分页（pageSize 10 → 2 页）；按定稿原型移除陪玩时期的搜索框与性别/价格筛选抽屉（MVP 不做景点搜索与筛选）；全部改用 $ds-* 令牌。同日修复：区域页签在横向滚动容器里被 flex 压缩导致文字竖排（.tabline__item 补 flex: none + white-space: nowrap）。同日交互增强：接入 utils/hscroll.js —— 激活区域自动滚到可视区中间（scroll-into-view 只会停在边缘被裁掉），列表可左右滑动切换区域。2026-09-26 feat-015：接入 utils/motion.js —— 切区域时卡片按行进方向入场（左右各 24px、逐项 +60ms 封顶 300ms，时长 360ms 刻意放慢到看得清方向），加载更多只让新追加的卡片上浮；激活下划线由 ::after 改成真实元素（scaleX 收放，不动 width）；加载态换转圈指示器；卡片与区域页签补按压反馈；接入 createPageMotion（H5 页面进入淡入，小程序原生转场）。2026-09-27 feat-016 视觉改版：按原型重做首页（输入框样式搜索条、快捷图标大卡矩阵、附近热门区块、封面场景角标、七档光斑），选中态统一黑胶囊，列表入场编排与 motion.js 引用删除（切分类只把滚动复位到顶部）。2026-09-28 feat-017 角色化底部栏：页面末尾接入 `<ds-tabbar />`（游客为「首页 · 我的」）；当前身份若不是游客，组件会把页面收敛到该角色第一屏，因此本页只会以游客身份展示",
+      "sha256": "ada42e2a9a57f37d0a63435a4dc424cd16433afd0105a4e3b3ae6ddbb2606001"
     },
     {
       "path": "pages/clerk/detail.vue",
       "category": "页面",
       "purpose": "详情页：达人信息卡、服务项目单选、日期 picker、时段（上午/下午/晚上）、备注、合计价格、提交预约",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-008 重写：身份块（头像/昵称/区域标签/简介 + 接单·本周可约·套餐数三项指标）→ 擅长景点 → 套餐单选 → 可约日期横条 → 底部「立即预约」；按 dev-002 移除评价区块、预约表单整体剥离到 /pages/order/create；改用 GuideApi（含新增的 attractions 字段）与 $ds-* 令牌。2026-09-26 feat-015：套餐选中的底色与单选圈改 160ms 过渡、勾选符号弹入；可约日期块的选中底色与文字色过渡；套餐行、日期块、底部主按钮补按压反馈；接入 createPageMotion（H5 页面进入淡入 + 返回先播离场动画，小程序原生转场），返回图标补按压反馈",
-      "sha256": "e37eed4705323220d3737d454770ebbc899323c2238f1f88e2ccd6c5ad8b3c74"
+      "note": "2026-09-26 feat-008 重写：身份块（头像/昵称/区域标签/简介 + 接单·本周可约·套餐数三项指标）→ 擅长景点 → 套餐单选 → 可约日期横条 → 底部「立即预约」；按 dev-002 移除评价区块、预约表单整体剥离到 /pages/order/create；改用 GuideApi（含新增的 attractions 字段）与 $ds-* 令牌。2026-09-26 feat-015：套餐选中的底色与单选圈改 160ms 过渡、勾选符号弹入；可约日期块的选中底色与文字色过渡；套餐行、日期块、底部主按钮补按压反馈；接入 createPageMotion（H5 页面进入淡入 + 返回先播离场动画，小程序原生转场），返回图标补按压反馈。2026-09-27 feat-016 视觉改版：按「气泡漫游」重做（玻璃卡片、黑胶囊选中态、圆形双环头像），页面转场与 motion.js 相关引用删除",
+      "sha256": "37ad020a4c56f1bf05be2a5dd532796ea34b4686cc619dea16493f2664a8418c"
     },
     {
       "path": "pages/appointment/my.vue",
       "category": "页面",
       "purpose": "我的预约：状态 Tab（全部/待服务/已完成/已取消）、卡片列表、取消预约、下拉刷新",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-010 重写：四态文字页签（待确认/已确认/已完成/已取消，顺序与文案取自 api/constants.js）+ 订单卡（地陪头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约）；保留分页与下拉刷新（pages.json 已开 enablePullDownRefresh）；状态标签四态固定配色；改用 $ds-* 令牌。同日交互增强：四态页签接入 utils/hscroll.js 的横滑切换（等宽不溢出，无需居中）。2026-09-26 feat-015：等宽页签改单根滑动下划线（translateX 的百分比，只动 transform，280ms）；切状态时卡片按方向入场（360ms + 逐项 60ms）、加载更多只让新追加的上浮；加载态换转圈指示器；取消按钮与四态页签补按压反馈；接入 createPageMotion（H5 页面进入淡入 + 返回先播离场动画，小程序原生转场），返回图标补按压反馈",
-      "sha256": "96929059c3f099155b7a0eac626feab1cb584cdc770fed4439f7ae1dc0022b1c"
+      "note": "2026-09-26 feat-010 重写：四态文字页签（待确认/已确认/已完成/已取消，顺序与文案取自 api/constants.js）+ 订单卡（地陪头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约）；保留分页与下拉刷新（pages.json 已开 enablePullDownRefresh）；状态标签四态固定配色；改用 $ds-* 令牌。同日交互增强：四态页签接入 utils/hscroll.js 的横滑切换（等宽不溢出，无需居中）。2026-09-26 feat-015：等宽页签改单根滑动下划线（translateX 的百分比，只动 transform，280ms）；切状态时卡片按方向入场（360ms + 逐项 60ms）、加载更多只让新追加的上浮；加载态换转圈指示器；取消按钮与四态页签补按压反馈；接入 createPageMotion（H5 页面进入淡入 + 返回先播离场动画，小程序原生转场），返回图标补按压反馈。2026-09-27 feat-016 视觉改版：按「气泡漫游」重做（玻璃卡片、四态标签配色、黑胶囊页签），页面转场与 motion.js 相关引用删除",
+      "sha256": "fbb8103e5425d4a74d0e058fbfb7b14d3b9da167786cbec091afcd2d6e9776e4"
     },
     {
       "path": "pages/tabbar/mine.vue",
       "category": "页面",
       "purpose": "个人中心：用户卡、统计（预约/收藏/余额）、菜单组、管理员入口（达人管理/预约管理）、设置/关于占位",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-011 重写：按角色分流入口（游客→我的订单 / 地陪→接单 / 管理员→订单管理 + 地陪审核）+ 协议入口（复用 feat-003 的协议页）+ mock 演示身份切换（USE_MOCK 为真时可一键切三端，接后端后删除）；移除钱包/收藏/设置/关于等 MVP 外的「开发中」占位项；改用 $ds-* 令牌。2026-09-26 feat-015：演示身份切换的 chip 与菜单行补按压反馈，chip 选中态底色/边框/文字色改 160ms 过渡；接入 createPageMotion（H5 页面进入淡入，小程序原生转场）",
-      "sha256": "d5116ed956144fa3468cc300329e671ef71c00fe7c6ba6cfee81008e235c6572"
+      "note": "2026-09-26 feat-011 重写：按角色分流入口（游客→我的订单 / 地陪→接单 / 管理员→订单管理 + 地陪审核）+ 协议入口（复用 feat-003 的协议页）+ mock 演示身份切换（USE_MOCK 为真时可一键切三端，接后端后删除）；移除钱包/收藏/设置/关于等 MVP 外的「开发中」占位项；改用 $ds-* 令牌。2026-09-26 feat-015：演示身份切换的 chip 与菜单行补按压反馈，chip 选中态底色/边框/文字色改 160ms 过渡；接入 createPageMotion（H5 页面进入淡入，小程序原生转场）。2026-09-27 feat-016 视觉改版：按「气泡漫游」重做（玻璃卡片 + 黑胶囊角色 chip）。2026-09-28 feat-017 角色化底部栏：新增「成为地陪」占位入口（游客可见，对应 dev-003 的后续升级）；页面末尾接入 `<ds-tabbar />`；接单 / 订单管理 / 地陪审核三个入口改走 switchTab（这三页已登记为 tabBar 页）；演示身份切换成功后广播 `role:change`，让底部栏换项",
+      "sha256": "7684177a28bc54a708b52eec69ed9032a59328c5b4768c7b87fbe7329ddb67ca"
     },
     {
       "path": "pages/admin/clerk.vue",
       "category": "页面",
       "purpose": "达人管理：已通过/待审核 Tab、待审数量徽标、列表、（审核通过/拒绝、编辑、添加，其中编辑/添加页尚未创建）",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-012 重写为「地陪审核」：统计条（待审核/已通过/合计）+ 待审核与已通过页签 + 通过/拒绝（GUIDE_STATUS 白名单）；**移除**指向未创建页面的「添加/编辑达人」入口，gap-003 随之关闭（全仓库已无悬空页面引用，保真校验告警 0 条）；改用 GuideApi 与 $ds-* 令牌。2026-09-26 feat-015：两个页签改单根滑动下划线（280ms）；切页签时卡片按方向入场（360ms + 逐项 60ms）、加载更多只让新追加的上浮；加载态换转圈指示器；通过/拒绝与页签补按压反馈；接入 createPageMotion（H5 页面进入淡入 + 返回先播离场动画，小程序原生转场），返回图标补按压反馈",
-      "sha256": "50f342b7b0f35bc2adb48138e6c72f8bce5dc18ab4487844ced8d2981374baf9"
+      "note": "2026-09-26 feat-012 重写为「地陪审核」：统计条（待审核/已通过/合计）+ 待审核与已通过页签 + 通过/拒绝（GUIDE_STATUS 白名单）；**移除**指向未创建页面的「添加/编辑达人」入口，gap-003 随之关闭（全仓库已无悬空页面引用，保真校验告警 0 条）；改用 GuideApi 与 $ds-* 令牌。2026-09-26 feat-015：两个页签改单根滑动下划线（280ms）；切页签时卡片按方向入场（360ms + 逐项 60ms）、加载更多只让新追加的上浮；加载态换转圈指示器；通过/拒绝与页签补按压反馈；接入 createPageMotion（H5 页面进入淡入 + 返回先播离场动画，小程序原生转场），返回图标补按压反馈。2026-09-27 feat-016 视觉改版：按「气泡漫游」重做（玻璃卡片、黑胶囊页签），页面转场与 motion.js 相关引用删除。2026-09-28 feat-017 角色化底部栏：本页成为管理员底部栏第 2 项「地陪审核」，导航栏去掉返回键改空占位，页面末尾接入 `<ds-tabbar />`",
+      "sha256": "527d915cdee068db1a72578fad73395230f27cd14df4761504a662ec4e093682"
     },
     {
       "path": "pages/admin/appointment.vue",
       "category": "页面",
       "purpose": "预约管理：按日期 + 状态筛选、预约列表、标记完成",
       "reuse": "adapt",
-      "note": "2026-09-26 feat-012 视觉重做（原型 07 屏）：统计条（待确认/已确认/今日订单，取自接口 counts）+ 日期 picker 与状态 chip 筛选 + 订单卡（游客信息）+ 一单一个主操作（确认档期 filled / 标记完成 tonal / 处理取消 danger）；按后台密度收紧字号与内边距；改用 $ds-* 令牌。同日修复：筛选 chip 与日期 picker 在横向滚动容器里被 flex 压缩导致竖排换行（.chip / .chip-picker / .chip__text 补 flex: none + white-space: nowrap）。同日交互增强：状态 chip 激活项自动滚到中间 + 列表左右滑动切换状态；日期 chip 在行首，选完滚回最左保证完整可见。2026-09-26 feat-015：chip 选中态底色/边框/文字色改 160ms 过渡；切状态时卡片按方向入场（360ms + 逐项 60ms），改日期时整批重播上浮入场；加载态换转圈指示器；三个操作按钮与状态/日期 chip 补按压反馈；接入 createPageMotion（H5 页面进入淡入 + 返回先播离场动画，小程序原生转场），返回图标补按压反馈",
-      "sha256": "c23ae73bc9d5cc33a72969455a588f229b517682ab5ae1bb57f9dbdef03ce782"
+      "note": "2026-09-26 feat-012 视觉重做（原型 07 屏）：统计条（待确认/已确认/今日订单，取自接口 counts）+ 日期 picker 与状态 chip 筛选 + 订单卡（游客信息）+ 一单一个主操作（确认档期 filled / 标记完成 tonal / 处理取消 danger）；按后台密度收紧字号与内边距；改用 $ds-* 令牌。同日修复：筛选 chip 与日期 picker 在横向滚动容器里被 flex 压缩导致竖排换行（.chip / .chip-picker / .chip__text 补 flex: none + white-space: nowrap）。同日交互增强：状态 chip 激活项自动滚到中间 + 列表左右滑动切换状态；日期 chip 在行首，选完滚回最左保证完整可见。2026-09-26 feat-015：chip 选中态底色/边框/文字色改 160ms 过渡；切状态时卡片按方向入场（360ms + 逐项 60ms），改日期时整批重播上浮入场；加载态换转圈指示器；三个操作按钮与状态/日期 chip 补按压反馈；接入 createPageMotion（H5 页面进入淡入 + 返回先播离场动画，小程序原生转场），返回图标补按压反馈。2026-09-27 feat-016 视觉改版：按「气泡漫游」重做（玻璃卡片、黑胶囊 chip、统计条），页面转场与 motion.js 相关引用删除。2026-09-28 feat-017 角色化底部栏：本页成为管理员底部栏第 1 项「订单管理」（= 管理员的「首页」），导航栏去掉返回键改空占位，页面末尾接入 `<ds-tabbar />`",
+      "sha256": "b76db885110a8dd4b02a60ac88c8eb0410fbdf822eaa2a55c715bdaf817b6caf"
     },
     {
       "path": "static/tabbar/home.png",
       "category": "静态资源",
       "purpose": "tabBar 首页图标（未选中）",
       "reuse": "replace",
-      "note": "2026-09-26 修复：原图标是陪玩时期的灰+粉红填充图，与 tabBar 的竹青 selectedColor 冲突（选中态出现「粉图标 + 绿文字」）。现按 DESIGN.md §9 的线性规范（24 网格 / stroke 1.6）由 scripts/gen-tabbar-icons.mjs 代码生成，颜色直接取自 uni.scss 的 $ds-ink-2。改令牌后重跑该脚本即可，不做手工图片维护",
-      "sha256": "6b8505d80b7358eb71372bc88438d7680acf80e3884a03d86a5e9c23fdd5e42b"
+      "note": "2026-09-26 修复：原图标是陪玩时期的灰+粉红填充图，与 tabBar 的竹青 selectedColor 冲突（选中态出现「粉图标 + 绿文字」）。现按 DESIGN.md §9 的线性规范（24 网格 / stroke 1.6）由 scripts/gen-tabbar-icons.mjs 代码生成，颜色直接取自 uni.scss 的 $ds-ink-2。改令牌后重跑该脚本即可，不做手工图片维护。2026-09-27 feat-016：按「气泡漫游」配色重新生成 —— 未选中 #9a95ae（$ds-ink-3）、描边 1.7。2026-09-28 feat-017：图标形状集扩为 home / orders / clerk / mine 共 8 张，本图同时供自绘底部栏（components/ds-tabbar）使用，由 `--check` 校验一致性",
+      "sha256": "6a01c041a7129cfed27fe9b6292670aa20e9001d9a1acdd81c03559db5b8468d"
     },
     {
       "path": "static/tabbar/home-active.png",
       "category": "静态资源",
       "purpose": "tabBar 首页图标（选中）",
       "reuse": "replace",
-      "note": "2026-09-26 修复：同上，选中态改为 $ds-primary 竹青绿（原为陪玩粉 #FF4D6A 系）",
-      "sha256": "a664e0ccf00c5a9a91032fc98b1ff07d1cec2033eabd9da4142d9c041a26dd77"
+      "note": "2026-09-26 修复：同上，选中态改为 $ds-primary 竹青绿（原为陪玩粉 #FF4D6A 系）。2026-09-27 feat-016：按「气泡漫游」重新生成为选中态 #6f61bd（$ds-secondary）。2026-09-28 feat-017：同时供自绘底部栏（components/ds-tabbar）使用",
+      "sha256": "fff2256c42db05d8190fb55b597df4e5ccf71c371a30a4c41c92800b2ac820e3"
     },
     {
       "path": "static/tabbar/mine.png",
       "category": "静态资源",
       "purpose": "tabBar 我的图标（未选中）",
       "reuse": "replace",
-      "note": "2026-09-26 修复：同 home.png，线性人形 + $ds-ink-2 灰",
-      "sha256": "ed3fea7a875cd9e55dec3e2a1742dd464af1243a11169c470b4d5fc0c434af39"
+      "note": "2026-09-26 修复：同 home.png，线性人形 + $ds-ink-2 灰。2026-09-27 feat-016：按「气泡漫游」配色重新生成（未选中 #9a95ae / $ds-ink-3、描边 1.7）。2026-09-28 feat-017：同时供自绘底部栏（components/ds-tabbar）使用",
+      "sha256": "171e6c8ca8b668a13f8c6bd14e10fd0db330b18422a3914b0935402f2824a87f"
     },
     {
       "path": "static/tabbar/mine-active.png",
       "category": "静态资源",
       "purpose": "tabBar 我的图标（选中）",
       "reuse": "replace",
-      "note": "2026-09-26 修复：同 home-active.png，选中态改为 $ds-primary 竹青绿",
-      "sha256": "97488f66ec7a86be5790f88e8f9493bd43ca738a9a1c78f1215cb10acdffd1f9"
+      "note": "2026-09-26 修复：同 home-active.png，选中态改为 $ds-primary 竹青绿。2026-09-27 feat-016：按「气泡漫游」重新生成为选中态 #6f61bd（$ds-secondary）。2026-09-28 feat-017：同时供自绘底部栏（components/ds-tabbar）使用",
+      "sha256": "f31ca3d9fc55cc4caad5361cca4b8302edb25f4d56d61f670429346176097754"
     }
   ],
   "removedAssets": [

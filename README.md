@@ -29,7 +29,9 @@
 | 订单管理 / 地陪审核 | `pages/admin/appointment`、`pages/admin/clerk` | 管理员 |
 | 登录 / 协议 | `pages/login/login`、`pages/webview/agreement` | 公共 |
 
-「我的」页按角色显示入口。mock 阶段该页底部有**演示身份切换**（游客 / 地陪 / 管理员），切完即可走通三端闭环；接后端后删除该区块。
+「我的」页按角色显示入口，并带一个「成为地陪」占位入口（地陪自助申请开通属后续升级，见 `docs/mvp-scope.json` 的 dev-003）。mock 阶段该页底部有**演示身份切换**（游客 / 地陪 / 管理员），切完即可走通三端闭环；接后端后删除该区块。
+
+**底部栏随角色变化**：游客「首页 · 我的」、地陪「接单 · 我的」、管理员「订单管理 · 地陪审核 · 我的」。原生 tabBar 的项数与文案是编译期固定的，所以运行时用 `uni.hideTabBar` 隐藏原生栏、由 `components/ds-tabbar` 按角色自绘（配置唯一来源 `utils/tabbar.js`，规范见 `DESIGN.md` §8）；`pages.json` 仍把 5 个页面登记为 tabBar 页，页间跳转一律 `switchTab`。
 
 ## 项目结构
 
@@ -42,8 +44,9 @@ peiwan-lite/
 │   ├── http.js             # HTTP 适配层骨架 + 路由表（对接后端时补实现）
 │   └── mock/               # 确定性 mock 数据与接口实现
 ├── pages/                  # 页面（见上表）
-├── static/tabbar/          # tabBar 图标（4 个 png；页面内图片一律用后端 URL）
-├── design/html/            # 7 屏 HTML 原型（视觉基准）
+├── components/             # 公共组件（ds-tabbar：角色化底部栏）
+├── static/tabbar/          # tabBar 图标（8 个 png：home / orders / clerk / mine 各 2 态；页面内图片一律用后端 URL）
+├── design/redesign/        # 七屏原型与 tokens.css（视觉基准；design/html 为历史存档）
 ├── docx/                   # 设计实现文档 / Bug 修复文档 / 数据库设计
 ├── docs/                   # MVP 范围、原有资产台账与保真数据
 ├── scripts/                # 4 个零依赖校验脚本

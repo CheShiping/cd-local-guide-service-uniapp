@@ -172,7 +172,7 @@ $ds-font-body:  同上;
 - **分段控件**：胶囊槽 + 白色滑块（`translateX` 移动，选中文字深紫）。
 - **开关**：雾紫实底 + 白色圆点，关闭态灰底；滑块用 `transform` 位移。
 - **底部操作栏**：左侧金额（25px 深紫）+ 右侧黑胶囊主按钮，玻璃底、向上柔影、sticky 贴底。
-- **tabBar**：2 项（首页 / 我的），背景 `#fdfcfa`，未选中 `#9a95ae`、选中 `#6f61bd`。图标由 `scripts/gen-tabbar-icons.mjs` **代码生成**（24 网格 / stroke 1.7 / 4× 超采样），颜色直接读 `uni.scss`。改令牌后重跑：`node scripts/gen-tabbar-icons.mjs`；校验：`node scripts/gen-tabbar-icons.mjs --check`。**不要手工替换这 4 张图**。
+- **tabBar（角色化）**：项数与文案随角色变化 —— 游客「首页 · 我的」、地陪「接单 · 我的」、管理员「订单管理 · 地陪审核 · 我的」（配置唯一来源 `utils/tabbar.js`）。原生 tabBar 是编译期静态的、增删不了，所以运行时用 `uni.hideTabBar` 隐藏它，由 `components/ds-tabbar/ds-tabbar.vue` 自绘：**页面只要在根节点内容末尾放一个 `<ds-tabbar />`，组件自带 `$ds-h-tabbar` 占位，各页不必再写 `padding-bottom`**。`pages.json` 仍把 5 个页面登记为 tabBar 页（`switchTab` 才可用），因此页间跳转一律 `switchTab`，tab 页不放返回键。玻璃底 `#fdfcfa` + 向上柔影 `$ds-el-3`，未选中 `#9a95ae`、选中 `#6f61bd`，未选中→选中只过渡 `color`（150ms）。图标由 `scripts/gen-tabbar-icons.mjs` **代码生成**（24 网格 / stroke 1.7 / 4× 超采样），4 个形状 `home / orders / clerk / mine` 共 8 张，颜色直接读 `uni.scss`。改令牌后重跑：`node scripts/gen-tabbar-icons.mjs`；校验：`node scripts/gen-tabbar-icons.mjs --check`。**不要手工替换这些图**。
 - **搜索条**（首页）：玻璃胶囊 + 紫色放大镜 + 雾紫 GO 圆钮；MVP 为装饰入口，点击 toast。
 
 ---
@@ -227,7 +227,7 @@ $ds-font-body:  同上;
 2. 小程序端 `backdrop-filter` 不生效 —— 玻璃卡片退化为半透明白底，视觉仍成立；不要为它写条件编译
 3. `color-mix()` 不用于页面样式（原型用，落地直接写色值）
 4. 保留 `pages.json` 的 `navigationStyle: custom`，自绘 status-bar（`uni.getSystemInfoSync().statusBarHeight`）+ 52px 导航栏
-5. tabBar：`color: #9a95ae`、`selectedColor: #6f61bd`、`backgroundColor: #fdfcfa`、`borderStyle: white`；图标由 `scripts/gen-tabbar-icons.mjs` 生成（见 §8）
+5. tabBar：运行时按角色变化（见 §8）—— `pages.json` 的 `tabBar.list` 登记全部 5 个 tab 页只为让 `switchTab` 可用，实际显示由 `components/ds-tabbar` 自绘、原生栏在启动与页面 `mounted` 时 `uni.hideTabBar` 隐藏；`color: #9a95ae`、`selectedColor: #6f61bd`、`backgroundColor: #fdfcfa`、`borderStyle: white` 保留为隐藏前的兜底；图标由 `scripts/gen-tabbar-icons.mjs` 生成（8 张）
 
 ---
 
@@ -285,3 +285,4 @@ $ds-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);  /* Radix content-show，进场 *
 | 日期 | 变更 |
 |---|---|
 | 2026-09-26 | 定稿「宣纸 · 疏」→ 视觉改版定稿**「气泡漫游」**（来源 `design/redesign/`）：低饱和三色 + 墨阶 + 玻璃拟态 + 大圆角；按钮全部去渐变改纯色（主按钮纯黑胶囊）；背景光斑按屏分配七档；页签 / chip / 日期 / 单选选中态统一黑胶囊；头像改圆形双环；动效与 shadcn/ui 对齐（150-200ms、退场 100ms、禁止 stagger）；tabBar 图标按新配色代码生成 |
+| 2026-09-28 | 底部栏按角色化改造（feat-017）：游客「首页 · 我的」/ 地陪「接单 · 我的」/ 管理员「订单管理 · 地陪审核 · 我的」；原生 tabBar 隐藏、由 `components/ds-tabbar` 自绘（配置唯一来源 `utils/tabbar.js`）；`pages.json` 登记 5 个 tab 页，页间跳转一律 `switchTab`，三个工作台页去掉返回键；图标新增 `orders` / `clerk` 两个形状（共 8 张）；「我的」页补「成为地陪」占位入口 |
