@@ -193,12 +193,15 @@
 - **底部栏自绘，而不是用原生 tabBar**（feat-017）：原生 `tabBar.list` 编译期静态，`setTabBarItem` 只能改文案与图标、**没有删除项的 API**，做不到「管理员比游客多一项地陪审核」；同时否掉微信原生 `custom-tab-bar`（H5 不支持，而本项目要求 H5 可调试；且只能写 wxml/wxss、用不了 `$ds-*`）。落点：`pages.json` 保留 5 个 tab 页（`switchTab` 才可用）+ 运行时 `uni.hideTabBar` + `components/ds-tabbar` 自绘，配置收在 `utils/tabbar.js` 一处
 - **不做「一页装三种首页」**（feat-017）：游客首页仍是景点列表，地陪 / 管理员的「首页」是各自的工作台页（接单 / 订单管理）。靠 `ds-tabbar` 的 `guard()` **一处**把「当前页不属于当前角色」收敛到该角色第一屏（登录后落首页、切换身份后都走它），避免把三套首页塞进 `pages/index/index.vue`
 - **`<ds-tabbar />` 自带高度占位**（feat-017）：78px 占位由组件根节点提供、视觉栏是 `position: fixed`，所以页面只要把它写在根节点内容末尾 —— 4 个 `height: 100vh` 的 flex 页面不必各改布局，普通滚动页也不会被 fixed 栏压住最后一行
+- **返回落点按「入口」区分，而不是给页面写死一个方向**（2026-09-28，用户走查反馈）：订单页有两个入口 —— 下单页 `redirectTo` 进来（返回该回首页，因为表单已提交、这一步没有回去的意义）、「我的」页 `navigateTo` 进来（返回该回「我的」）。做法是入口方在 URL 上带标记（`from=create`），订单页读取后分支；**不采用**「一律回首页」（会打断「我的 → 我的订单」这条路径），也**不采用**「先 switchTab 首页再 navigateTo 订单页」（两次跳转、首页会闪一下，且订单页仍不知道入口）
 
 ## 未来候选（MVP 之后再说，现在不许实现）
 
 地陪自助申请开通 + 平台审核、后台区域管理界面（表结构已就绪，只差页面）、景点池继续扩展、评价与评分体系、真实后端 HTTP 对接、在线开关落库、支付与自动结算、IM 聊天、多城市、动态定价、团购/分销、广场发单、达人等级、复杂排班、行程日志与轨迹回放、门店管理、把 tabBar 图标形状换成成都主题图形（生成器已就绪，改 `SHAPES` 即可）、排序切换的列表重排动画（需 FLIP，与「只动 transform」的预算冲突，MVP 不做）、接单页与地陪审核页的横滑切换（`createTabRow()` 已就绪，接上只需 5 行）
 
-**页面层门禁（本次 bug 暴露的缺口，值得单独立项）**：`check-tokens` / `check-motion` / `check-schema` / `check-mock` / `smoke-flow` 都看不见「页面把 URL 参数（字符串）与接口 id（数字）用 `===` 比较」。本次下单页就是这么静默回落成 `packages[0]` 的。可行做法：在 `scripts/check-mock.mjs` 已有的页面扫描里加一条规则 —— 与 `xxxId` 做严格比较时必须显式数值化（要求 `Number(a) === Number(b)`，或在 `onLoad` 用 `toId()` 归一化后不再出现裸 `=== this.xxxId`）；需配 `--self-test` 夹具。
+**页面层门禁（缺口，值得单独立项）**：`check-tokens` / `check-motion` / `check-schema` / `check-mock` / `smoke-flow` 都看不见「页面把 URL 参数（字符串）与接口 id（数字）用 `===` 比较」。本次下单页就是这么静默回落成 `packages[0]` 的。可行做法：在 `scripts/check-mock.mjs` 已有的页面扫描里加一条规则 —— 与 `xxxId` 做严格比较时必须显式数值化（要求 `Number(a) === Number(b)`，或在 `onLoad` 用 `toId()` 归一化后不再出现裸 `=== this.xxxId`）；需配 `--self-test` 夹具。
+
+**同类缺口（2026-09-28 走查又暴露一个）**：门禁也看不见「**返回键落在哪一页**」。订单页原先固定 `navigateBack()`，从下单页（`redirectTo`）进来就会退回已提交的表单前一步 —— 这类「跳转与返回的落点」问题既不报错、也不违规，静态门禁全绿。候选做法：把「页面 → 出口」写成声明式清单（哪个入口用 `switchTab` / `navigateBack` / `redirectTo`）再由脚本比对页面里的调用，或引入页面级冒烟（`uni-automator` 已在 `devDependencies` 里，但需要真编译器，本仓库长期跳过第 8 步，优先级低于人工走查）。
 
 ## 本次会话修改的文件
 
@@ -229,6 +232,14 @@
 - `feature_list.json` - 新增 **feat-017**（`done` + 证据）
 - `docx/codeimpl-sum/设计文档-feat-017-角色化底部栏与首页分流.md` - **新建**：本轮设计文档（六章节齐全）
 - `progress.md` / `session-handoff.md` - 本文件与交接文件
+
+**四、用户走查反馈修复：订单页返回落点**
+
+- `pages/order/create.vue` - 提交成功后 `redirectTo` 的 url 加 `?from=create`（给订单页一个入口标记）
+- `pages/appointment/my.vue` - `data` 加 `fromCreate`；`onLoad(options)` 读标记；`goBack()` 分支：`fromCreate` → `switchTab` 回首页，否则 `navigateBack`（从「我的」页进来的路径不变）；文件头与 `goBack` 补注释
+- `docx/bugfix/BUG修复-20260928-订单页返回未回首页.md` - **新建**：本次修复归档（含两个入口的返回语义对照表与「为什么不做一律回首页」的取舍）
+- `docs/legacy-assets.json` - `pages/appointment/my.vue` 的 note 登记本次原因后 `--update` 刷新哈希（`order/create.vue` 为新增页面，不在保真台账内）
+- `feature_list.json` - feat-010 的 `evidence` 补本次修复说明
 
 ### 本次（2026-09-27：恢复被删文档 + 按真实项目与阶段同步 harness）
 

@@ -377,7 +377,8 @@ export default {
         uni.showToast({ title: '预约已提交', icon: 'success' });
         setTimeout(() => {
           // 用 redirectTo：提交成功后再返回表单页没有意义
-          uni.redirectTo({ url: '/pages/appointment/my' });
+          // from=create 告诉订单页「这一单是刚下完进来的」，它的返回键要回首页（景点列表）而不是上一页
+          uni.redirectTo({ url: '/pages/appointment/my?from=create' });
         }, 1200);
       } catch (e) {
         console.error('提交预约失败', e);

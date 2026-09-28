@@ -82,7 +82,7 @@
       "description": "改造 pages/appointment/my.vue（原型 05 屏）：四态页签（待确认/已确认/已完成/已取消）+ 订单卡（头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约），保留分页与下拉刷新。注：状态机、页签语义与数据源已在 feat-005 落地，本 feat 只做视觉与订单卡字段补全",
       "dependencies": ["feat-005", "feat-009"],
       "status": "done",
-      "evidence": "pages/appointment/my.vue 按原型 05 屏重做：四态文字页签（待确认/已确认/已完成/已取消，默认待确认）+ 订单卡（地陪头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约）+ 四态固定配色（姜黄/竹青/灰/朱砂）+ 分页与下拉刷新（pages.json 开 enablePullDownRefresh）；时段与金额文案含小时加购分支；产出 docx/codeimpl-sum/设计文档-feat-010-订单页.md"
+      "evidence": "pages/appointment/my.vue 按原型 05 屏重做：四态文字页签（待确认/已确认/已完成/已取消，默认待确认）+ 订单卡（地陪头像 / 景点·套餐 / 订单号 / 状态标签 / 时间·人数·地陪·备注 / 金额 / 取消预约）+ 四态固定配色（姜黄/竹青/灰/朱砂）+ 分页与下拉刷新（pages.json 开 enablePullDownRefresh）；时段与金额文案含小时加购分支；产出 docx/codeimpl-sum/设计文档-feat-010-订单页.md。2026-09-28 修复返回落点（用户走查反馈）：下单页提交后 redirectTo 带 `from=create`，本页 goBack 据此 switchTab 回首页（刚下完单不该退回已提交的表单前一步），从「我的」页进入仍 navigateBack；见 docx/bugfix/BUG修复-20260928-订单页返回未回首页.md"
     },
     {
       "id": "feat-011",

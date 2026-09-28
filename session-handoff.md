@@ -17,6 +17,7 @@
    - 图标由 2 个形状扩为 **4 个形状 8 张**（新增 `orders` / `clerk`）；`check-motion.mjs` 扫描范围加入 `components/`
 2. **收尾 feat-016 遗留的资产保真红项**：16 条被改资产的 `note` 补登记原因（本次改动的再加一段 feat-017 原因）→ `node scripts/verify-assets.mjs --update` → `./init.ps1` 第 2 步**由红转绿**。
 3. **同步文档**：`DESIGN.md`（§8 / §12 / §14）、`README.md`、`AGENTS.md`（新增「导航与角色（feat-017 定稿）」）、`feature_list.json`（新增 feat-017）、`progress.md`、设计文档 `docx/codeimpl-sum/设计文档-feat-017-角色化底部栏与首页分流.md`。
+4. **用户走查反馈修复：订单页返回落点**：游客提交预约后跳转订单页没问题，但返回键退回了「已提交过的表单前一步」（地陪详情页）。改为**按入口区分返回语义** —— 下单页 `redirectTo` 带 `?from=create`，订单页 `onLoad` 记 `fromCreate`，`goBack()` 据此 `switchTab` 回首页；从「我的」页进来的仍 `navigateBack`。见 `docx/bugfix/BUG修复-20260928-订单页返回未回首页.md`。
 
 ## 门禁现状（2026-09-28 实测）
 
@@ -109,6 +110,7 @@
 - 不要删改台账里的 22 个资产；确需删除必须登记到 `removedAssets` 并写原因
 - 不要无脑 `--update`（先登记 `note` 再刷新，否则等于掩盖改动）
 - **不要用 `navigateTo` 打开 tabBar 页**（接单 / 订单管理 / 地陪审核 / 首页 / 我的）—— 会失败，一律 `switchTab`
+- **返回键的落点要按入口区分**：同一页面若有多个入口，不要在页面里写死一个方向。参照订单页（`pages/appointment/my.vue`）：下单页 `redirectTo` 带 `from=create` → 返回 `switchTab` 回首页；「我的」页 `navigateTo` → 返回 `navigateBack`
 - **不要给 tab 页加返回键**：它们是底部栏页，靠底部栏回退
 - **不要在页面里重写底部栏或角色兜底逻辑**：配置在 `utils/tabbar.js`、兜底在 `ds-tabbar` 的 `guard()`，各页只放一个 `<ds-tabbar />`
 - **不要手工替换 `static/tabbar/*.png`**（8 张）：由 `scripts/gen-tabbar-icons.mjs` 生成、颜色取自令牌；改了 `uni.scss` 就重跑
